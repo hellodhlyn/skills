@@ -12,6 +12,10 @@ skills/
     SKILL.md
     scripts/
       advisor.sh
+  notify-discord-webhook/
+    SKILL.md
+    scripts/
+      send_discord_webhook.sh
 ```
 
 ## Requirements
@@ -19,6 +23,7 @@ skills/
 - GitHub CLI `gh` v2.90.0 or later
 - `gh skill` support
 - For the `advisor` skill: a working `claude` CLI in `PATH`
+- For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
 
 ## Preview
 
