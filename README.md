@@ -8,14 +8,10 @@ The repository is the source of truth. Install skills into Codex or other suppor
 
 ```text
 skills/
-  advisor/
+  skill_name/
     SKILL.md
     scripts/
-      advisor.sh
-  notify-discord-webhook/
-    SKILL.md
-    scripts/
-      send_discord_webhook.sh
+      some_script.sh
 ```
 
 ## Requirements

@@ -1,7 +1,8 @@
 ---
+name: plan-and-codex
 description: Analyze codebase, plan implementation, then delegate to Codex CLI with review-and-retry loop
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
-argument-hint: [goal] [--model <model>] [--issue <org/repo#N or N>]
+argument-hint: "[goal] [--model <model>] [--issue <org/repo#N or N>]"
 ---
 
 Analyze the codebase, clarify requirements, generate a detailed implementation
