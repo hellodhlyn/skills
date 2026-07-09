@@ -155,17 +155,13 @@ Repeat until UNDERSTOOD or REVIEW_ITERATION > MAX_REVIEW_ITERATIONS:
 
 **4a.** Run Codex in dry-run mode.
 
-When invoking the Bash tool for this step, set the tool input `timeout` to
-`60000` milliseconds exactly.
+First, use the Write tool to create
+`~/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/prompt.md`. It must
+contain the question block below, then a blank line, then `INSTRUCTION:`, then
+the verbatim contents of `instructions.md`:
 
-```bash
-codex exec \
-  --full-auto \
-  --ephemeral \
-  -c model="MODEL" \
-  -C "WORKDIR" \
-  --output-last-message "~/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/understanding.md" \
-  "You are about to receive an implementation instruction. Before writing any code,
+```
+You are about to receive an implementation instruction. Before writing any code,
 answer ONLY these three questions:
 
 1. SUMMARY: Summarize in one sentence what you are being asked to build.
@@ -173,12 +169,20 @@ answer ONLY these three questions:
 3. BLOCKERS: Is there anything you must clarify before starting? If yes, list each item specifically. If no, write NONE.
 
 Do not write any code. Do not suggest improvements. Just answer the three questions.
-
-INSTRUCTION:
-$(cat ~/.plan-and-codex/codex-TIMESTAMP/instructions.md)" \
-  > "~/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/stdout.log" 2>&1
-echo $? > "~/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/exit_code.txt"
 ```
+
+Then invoke Codex with the Bash tool, `timeout` set to `60000` milliseconds
+exactly. Issue it as a **single line**. Codex reads the prompt from stdin because
+of the `-` argument.
+
+```bash
+codex exec --sandbox workspace-write --ephemeral -c model="MODEL" -C "WORKDIR" --output-last-message "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/understanding.md" - < "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/prompt.md" > "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/stdout.log" 2>&1
+```
+
+Never append `&&`, `;`, or `echo $?` to this command. Shell separators split it
+into subcommands that the `Bash(codex exec *)` permission rule no longer covers,
+which brings the permission prompt back. Read the exit code from the Bash tool
+result instead of writing it to a file.
 
 **4b.** Read `understanding.md`. Extract SUMMARY, DONE_CRITERIA answer, and BLOCKERS.
 
@@ -224,28 +228,35 @@ Repeat until COMPLETE or ITERATION > MAX_ITERATIONS:
 
 **6c.** Run Codex.
 
-When invoking the Bash tool for this step, set the tool input `timeout` to
-`3600000` milliseconds exactly. Do not use the default timeout.
+First, use the Write tool to write CURRENT_PROMPT verbatim to
+`~/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/prompt.md`.
+
+Then invoke Codex with the Bash tool and `run_in_background: true`. Do not run
+this in the foreground: the Bash tool caps a foreground command at 600000 ms
+(10 minutes) and kills it with SIGTERM, and a real implementation run routinely
+exceeds that. Wait for the completion notification.
+
+Issue it as a **single line**. Codex reads the prompt from stdin via `-`.
 
 ```bash
-codex exec \
-  --full-auto \
-  --ephemeral \
-  -c model="MODEL" \
-  -c reasoning_effort="xhigh" \
-  -C "WORKDIR" \
-  --output-last-message "~/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/result.md" \
-  "CURRENT_PROMPT" \
-  > "~/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/stdout.log" 2>&1
-echo $? > "~/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/exit_code.txt"
+codex exec --sandbox workspace-write --ephemeral -c model="MODEL" -c reasoning_effort="xhigh" -C "WORKDIR" --output-last-message "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/result.md" - < "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/prompt.md" > "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/stdout.log" 2>&1
 ```
 
-**6d.** Read `result.md` and `exit_code.txt`.
+Never append `&&`, `;`, or `echo $?` to this command. Shell separators split it
+into subcommands that the `Bash(codex exec *)` permission rule no longer covers,
+which brings the permission prompt back. Read the exit code from the Bash tool
+result instead of writing it to a file.
+
+If the run is cut short anyway, do not guess at completion. Run the acceptance
+command from the Test Plan directly and use its result as ground truth (STEP 6e
+priority 1). Run large test suites in the background too.
+
+**6d.** Read `result.md` and take the exit code from the Bash tool result.
 
 **6e.** Assess completeness (in priority order):
 
 1. Run the acceptance command from the Test Plan. If it passes → **COMPLETE**.
-2. `exit_code != 0` → INCOMPLETE
+2. Codex exited non-zero → INCOMPLETE
 3. `result.md` is empty → INCOMPLETE
 4. `result.md` contains "unable to" / "I need more information" / "TODO:" /
    "please clarify" / "next steps:" / "I cannot" → INCOMPLETE
