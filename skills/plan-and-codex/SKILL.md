@@ -27,24 +27,28 @@ Follow every step in order. Do not skip steps.
 1. Run `date +%s` via Bash. Store as TIMESTAMP.
 2. Create the session directory: `mkdir -p ~/.plan-and-codex/codex-TIMESTAMP/`.
 3. Set WORKDIR = current working directory.
-4. Determine MODEL:
+4. Resolve RUNNER = the absolute path to the bundled `scripts/run-codex.sh`
+   adjacent to this installed SKILL.md. Do not assume WORKDIR is the skill
+   directory. If the host provides a skill-root variable such as `$SKILL_DIR`,
+   use it; otherwise resolve the installed skill directory first.
+5. Determine MODEL:
    - If `$ARGUMENTS` contains `--model <value>`, extract that value and remove
      the flag from the remaining arguments.
    - Otherwise MODEL = `gpt-5.5`.
-5. Determine ISSUE:
+6. Determine ISSUE:
    - If `$ARGUMENTS` contains `--issue <value>`, extract that value and remove
      the flag from the remaining arguments. Store as ISSUE_REF.
    - ISSUE_REF can be in two forms:
      - `org/repo#N` — explicit repo (e.g. `myorg/backend#39`)
      - `N` (number only) — resolve repo from `git -C WORKDIR remote get-url origin`
    - Otherwise ISSUE_REF = none.
-6. Determine GOAL:
+7. Determine GOAL:
    - If arguments remain after stripping all flags, GOAL = that text.
    - If ISSUE_REF is set and GOAL is empty, GOAL will be filled from the issue
      body in STEP 1. Do not ask the user yet.
    - If both are empty, ask the user for a high-level goal before continuing.
-7. Write GOAL (or placeholder "see issue") to `~/.plan-and-codex/codex-TIMESTAMP/original_prompt.md`.
-8. Set MAX_ITERATIONS = 3.
+8. Write GOAL (or placeholder "see issue") to `~/.plan-and-codex/codex-TIMESTAMP/original_prompt.md`.
+9. Set MAX_ITERATIONS = 3.
 
 ### STEP 1: Codebase Analysis
 
@@ -171,18 +175,17 @@ answer ONLY these three questions:
 Do not write any code. Do not suggest improvements. Just answer the three questions.
 ```
 
-Then invoke Codex with the Bash tool, `timeout` set to `60000` milliseconds
-exactly. Issue it as a **single line**. Codex reads the prompt from stdin because
-of the `-` argument.
+Then invoke RUNNER with the Bash tool, `timeout` set to `60000` milliseconds
+exactly. Issue it as a **single line**. The runner validates its fixed argument
+shape and passes the prompt to Codex through stdin.
 
 ```bash
-codex exec --sandbox workspace-write --ephemeral -c model="MODEL" -C "WORKDIR" --output-last-message "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/understanding.md" - < "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/prompt.md" > "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/stdout.log" 2>&1
+"RUNNER" review "MODEL" "WORKDIR" "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/prompt.md" "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/understanding.md" "$HOME/.plan-and-codex/codex-TIMESTAMP/review-REVIEW_ITERATION/stdout.log"
 ```
 
 Never append `&&`, `;`, or `echo $?` to this command. Shell separators split it
-into subcommands that the `Bash(codex exec *)` permission rule no longer covers,
-which brings the permission prompt back. Read the exit code from the Bash tool
-result instead of writing it to a file.
+into subcommands and may trigger separate permission handling. Read the exit
+code from the Bash tool result instead of writing it to a file.
 
 **4b.** Read `understanding.md`. Extract SUMMARY, DONE_CRITERIA answer, and BLOCKERS.
 
@@ -231,21 +234,21 @@ Repeat until COMPLETE or ITERATION > MAX_ITERATIONS:
 First, use the Write tool to write CURRENT_PROMPT verbatim to
 `~/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/prompt.md`.
 
-Then invoke Codex with the Bash tool and `run_in_background: true`. Do not run
+Then invoke RUNNER with the Bash tool and `run_in_background: true`. Do not run
 this in the foreground: the Bash tool caps a foreground command at 600000 ms
 (10 minutes) and kills it with SIGTERM, and a real implementation run routinely
 exceeds that. Wait for the completion notification.
 
-Issue it as a **single line**. Codex reads the prompt from stdin via `-`.
+Issue it as a **single line**. The runner validates its fixed argument shape
+and passes the prompt to Codex through stdin.
 
 ```bash
-codex exec --sandbox workspace-write --ephemeral -c model="MODEL" -c reasoning_effort="xhigh" -C "WORKDIR" --output-last-message "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/result.md" - < "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/prompt.md" > "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/stdout.log" 2>&1
+"RUNNER" execute "MODEL" "WORKDIR" "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/prompt.md" "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/result.md" "$HOME/.plan-and-codex/codex-TIMESTAMP/iteration-ITERATION/stdout.log"
 ```
 
 Never append `&&`, `;`, or `echo $?` to this command. Shell separators split it
-into subcommands that the `Bash(codex exec *)` permission rule no longer covers,
-which brings the permission prompt back. Read the exit code from the Bash tool
-result instead of writing it to a file.
+into subcommands and may trigger separate permission handling. Read the exit
+code from the Bash tool result instead of writing it to a file.
 
 If the run is cut short anyway, do not guess at completion. Run the acceptance
 command from the Test Plan directly and use its result as ground truth (STEP 6e
