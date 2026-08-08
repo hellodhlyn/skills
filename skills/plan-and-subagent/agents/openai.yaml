@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan and Subagent"
+  short_description: "Plan with Codex, build with Luna, require OpenCode review"
+  default_prompt: "Use $plan-and-subagent to plan this code change, delegate implementation to the user-global Luna implementer at max reasoning, validate and review it directly, then complete the required OpenCode reviewer agent review at max variant."
