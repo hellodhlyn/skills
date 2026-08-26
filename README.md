@@ -18,7 +18,7 @@ skills/
 
 - GitHub CLI `gh` v2.90.0 or later
 - `gh skill` support
-- For the `advisor` skill: a working `claude` CLI in `PATH`
+- For the `advisor` skill: a working `opencode` CLI authenticated for OpenCode Go
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
 
 ## Preview

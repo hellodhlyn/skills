@@ -1,12 +1,15 @@
 ---
 name: advisor
 description: Use this skill when the task needs broad architectural judgment, tradeoff analysis, design review, refactoring direction, or cross-cutting technical decision support.
-compatibility: Requires a working `claude` CLI in PATH and an environment that can execute the bundled shell script with escalated permissions when needed.
 ---
 
 # Advisor
 
-This skill asks Claude Code CLI for read-only architectural advice.
+This skill asks the configured OpenCode Go advisor agent for read-only architectural advice. Its default model is `opencode-go/glm-5.3`.
+
+## Requirements
+
+Requires a working `opencode` CLI authenticated for OpenCode Go and an environment that can execute the bundled shell script with escalated permissions when needed.
 
 ## When to use
 
@@ -27,11 +30,11 @@ Do not use this skill for:
 
 ## Rules
 
-- Claude is an advisor only, not an editor.
-- Never ask Claude to modify files.
+- The advisor is an advisor only, not an editor.
+- Never ask the advisor to modify files.
 - Prefer concise, structured prompts with focused context.
 - Minimize token usage: send only the most relevant files, diffs, constraints, and open questions.
-- Treat Claude's output as advisory input. You still own the final decision.
+- Treat the advisor's output as advisory input. You still own the final decision.
 
 ## Execution rule
 
@@ -43,7 +46,7 @@ Do not use this skill for:
 - Resolve the bundled script path from the installed skill root: `scripts/advisor.sh`
 - Do not assume the current working directory is the skill directory.
 - If your host exposes a skill-root variable such as `$SKILL_DIR`, use it. Otherwise resolve the installed absolute path first.
-- Do not run the advisor script inside the sandbox when Claude authentication is unavailable there.
+- Do not run the advisor script inside the sandbox when OpenCode authentication is unavailable there.
 - Execute the advisor script with escalated permissions.
 
 - Use an execution mode equivalent to `sandbox_permissions: "require_escalated"` when available.
@@ -55,7 +58,7 @@ Do not use this skill for:
 
 - After execution starts, wait for the advisor response to complete.
 - Never terminate the advisor call early just because it is slow.
-- Architectural review with Opus may take significantly longer than ordinary commands; this is expected.
+- Architectural review may take significantly longer than ordinary commands; this is expected.
 - Only treat the call as failed if the process exits with a real error or returns no usable output.
 
 ## Required workflow
@@ -97,7 +100,7 @@ Prefer specific questions such as:
 
 ## Output expectations
 
-Ask Claude to respond with the following sections:
+Ask the advisor to respond with the following sections:
 
 1. Recommendation
 2. Why
@@ -124,4 +127,4 @@ When supported by the execution environment, run it with escalated permissions, 
       "max_output_tokens": 5000
     }
 
-If the script fails because Claude Code CLI is unavailable, explain that the local `claude` command must be installed and authenticated first.
+If the script fails because OpenCode CLI is unavailable or unauthenticated, explain that the local `opencode` command must be installed and authenticated for OpenCode Go first.

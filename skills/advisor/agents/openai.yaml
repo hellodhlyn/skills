@@ -1,0 +1,4 @@
+interface:
+  display_name: "Advisor"
+  short_description: "OpenCode Go architecture advisor"
+  default_prompt: "Use $advisor to compare these architecture options and recommend one."
