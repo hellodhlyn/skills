@@ -1,13 +1,14 @@
 ---
 name: plan-and-subagent
-description: Plan and design a code change in the primary agent, delegate implementation to a dedicated implementer subagent, validate and review directly, then require an independent external review gate. The implementer and reviewer are parameters; defaults are the bundled Luna implementer (gpt-5.6-luna, max reasoning) and the OpenCode reviewer agent at max variant. Use when the user wants an architect/reviewer and implementer split with mandatory performance, stability, bug, quality, and maintainability review gates.
+description: Plan a code change, delegate implementation, validate it, require an independent external review, then commit coherent milestones and create a pull request. Use when the user wants an architect/reviewer and implementer split with mandatory review gates and GitHub delivery.
 ---
 
 # Plan And Subagent
 
-Keep architecture, requirements, approval, validation, and finding triage in the
-primary agent. Delegate all edits to one implementer subagent. Gate completion
-on an independent external review. Never invoke `codex exec`.
+Keep architecture, requirements, approval, validation, finding triage, commits,
+and pull-request delivery in the primary agent. Delegate all edits to one
+implementer subagent. Gate delivery on an independent external review. Never
+invoke `codex exec`.
 
 ## Parameters
 
@@ -42,7 +43,7 @@ personal/customer data, and note the redaction.
 
 ```text
 ~/.plan-and-subagent/subagent-TIMESTAMP-RANDOM/
-  session.md                 # worktree, starting branch/HEAD, BASE_BRANCH, creation time
+  session.md                 # worktree, starting branch/HEAD, BASE_BRANCH, pre-existing paths, creation time
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
   decisions.md               # material decisions, approvals, and scope changes
@@ -62,58 +63,6 @@ personal/customer data, and note the redaction.
   final_summary.md
 ```
 
-## Reviewer permissions
-
-The external reviewer must stay behaviorally read-only — never edit files,
-create tasks, use web tools, or modify external state — while holding the
-permissions a complete review needs: project files, `~/.knowledges`, and
-read-only shell inspection. Configure the default user-global `reviewer` agent
-with at least:
-
-```yaml
-permission:
-  read: allow
-  glob: allow
-  grep: allow
-  lsp: allow
-  external_directory: allow
-  edit: deny
-  task: deny
-  webfetch: deny
-  websearch: deny
-  bash:
-    "*": allow
-```
-
-The runner passes `--auto` so allowed permissions are not held up by prompts;
-`--auto` does not authorize edits, tasks, web access, or external-state
-changes. Also configure the host's `[auto_review]` policy to trust the
-installed runner for this read-only workflow, covering task-relevant code,
-uncommitted diffs, notes, configuration, logs, and `~/.knowledges`, while still
-requiring intervention for credentials, secrets, unrelated personal or customer
-data, destructive actions, or commands outside the runner. The user-approved
-skill is the authorization for this review; do not ask a second generic
-question because the prompt contains private repository context.
-
-Run the runner with escalated sandbox permissions on the first attempt — local
-reviewer authentication and provider network access are not expected to work in
-the normal sandbox, so do not make a speculative sandboxed attempt. If a host
-runs it sandboxed anyway and it fails with a network, authentication, keychain,
-process, or permission error, that is not a review conclusion: retry the same
-command once with escalated permissions. If the escalation is rejected, report
-the rejected policy condition; do not work around it or claim the gate passed.
-Treat a permission rejection as a configuration defect: fix the required
-configuration and re-run the same review instead of weakening the contract.
-
-If the reviewer CLI is missing, unauthenticated, the agent or variant is
-unavailable, or the command exits unsuccessfully, report the exact failure and
-stop. Do not skip the review, lower the variant, or substitute a reviewer.
-
-The reviewer's response is an advisory report for the primary agent to
-interpret. Do not require approval phrases, fixed headings, or a
-machine-readable schema; keep execution and artifact capture deterministic and
-leave semantic judgment to the primary agent.
-
 ## Workflow
 
 ### 1. Establish the task
@@ -127,16 +76,21 @@ leave semantic judgment to the primary agent.
    `SESSION_DIR/original_prompt.md`.
 3. Read applicable `AGENTS.md`, project knowledge, repository documentation,
    dependency manifests, and relevant code and tests.
-4. Inspect `git status`; record the starting branch, HEAD, pre-existing
-   changes, `WORKDIR`, and creation time in `SESSION_DIR/session.md`. Treat
-   pre-existing changes as user-owned and outside the delegated and review
-   scope.
+4. Inspect `git status`; record the starting branch, HEAD, staged/untracked
+   pre-existing paths, `WORKDIR`, and creation time in `SESSION_DIR/session.md`.
+   Treat pre-existing changes as user-owned and outside the delegated, commit,
+   and review scope.
 5. Resolve `BASE_BRANCH` from the user's explicit target, the branch upstream
    or remote default, or the repository's unambiguous convention; ask the user
    if ambiguous. Record it in `session.md`.
-6. If the request references an issue, read the full issue and comments before
+6. Ensure `CURRENT_BRANCH` is a task branch, not `BASE_BRANCH` or a detached
+   HEAD. If needed, create one using the repository convention (default
+   `codex/<short-task-slug>`). If pre-existing changes make that branch unsafe
+   to use for a task-only commit, stop and ask the user rather than carrying
+   their work into a PR.
+7. If the request references an issue, read the full issue and comments before
    deriving requirements.
-7. Identify the exact validation commands, using the repository's configured
+8. Identify the exact validation commands, using the repository's configured
    runtime manager and local instructions.
 
 Do this investigation in the primary agent; do not delegate routine
@@ -206,9 +160,9 @@ brief, not drafts.
 
 Show the user the complete brief, any unresolved blocker, and material
 decisions resolved during planning, then ask whether to execute it; approval
-covers the brief and those decisions. Do not spawn the implementer before
-approval. Treat requested edits as the new contract: revise and re-approve
-before continuing.
+covers the brief, those decisions, task-only commits, and pull-request delivery.
+Do not spawn the implementer before approval. Treat requested edits as the new
+contract: revise and re-approve before continuing.
 
 Once approved, write the verbatim brief to `SESSION_DIR/approved_brief.md` and
 append the approval and its scope impact to `decisions.md`.
@@ -229,27 +183,8 @@ Increment the `task_name` suffix if taken. Store the returned agent id or task
 name as `IMPLEMENTER` and target every later `followup_task` at it. Put all
 needed context in the `message`; the implementer inherits nothing.
 
-Give it the approved brief verbatim plus this preamble — a read-only handoff
-validation, not an input that shapes the initial approval:
-
-```text
-Perform a read-only understanding check. Do not edit files and do not spawn subagents.
-Read the relevant repository files yourself, then return only:
-
-SUMMARY: one sentence describing the intended change
-DONE_CRITERIA: YES or NO; list missing observable criteria when NO
-BLOCKERS: NONE or concrete blockers that prevent implementation
-SCOPE: the exact files or modules you expect to own
-APPROACH: the concise implementation approach and why it fits the brief
-QUALITY: how you will satisfy the brief's Code quality section — what you will
-  extend or reuse, what you will delete, and any overlap the brief missed
-ASSUMPTIONS: concrete assumptions that could affect behavior or scope, or NONE
-RISKS: material correctness, compatibility, or divergence risks, or NONE
-VALIDATION: exact focused checks you will run and what each proves
-```
-
-Also tell it that it is not alone in the codebase, must preserve unrelated
-changes, and owns only the paths in the brief.
+Read [the implementer handoff](references/implementer-handoff.md), then send
+the approved brief verbatim followed by its `Understanding check` preamble.
 
 Inspect every field before implementation. Save only the structured response
 to `SESSION_DIR/reviews/implementer/understanding-N.md`. Then:
@@ -271,27 +206,8 @@ most 60 seconds and keep the user updated.
 ### 6. Delegate implementation
 
 Only after the check passes, send `followup_task` to the same implementer with
-the approved brief and:
-
-```text
-Implement the approved brief now. You own only the listed files or modules.
-You are not alone in the codebase: do not revert or overwrite unrelated changes,
-and accommodate concurrent edits if they overlap. Do not spawn subagents.
-Run the focused validation commands appropriate to your changes. Report changed
-files, tests run, failures, and anything still incomplete. Do not commit, push,
-deploy, or modify external systems unless the user explicitly authorized it.
-If new evidence would require changing the approved approach, ownership, or an
-important product, architecture, data-model, UX, or domain-semantic decision,
-stop before editing and report:
-
-DEVIATION:
-EVIDENCE: <what was observed>
-IMPACT: <how the approved brief would be affected>
-DECISION_NEEDED: <the decision required to proceed>
-
-Do not continue until the primary resolves the deviation. Resume only through
-`followup_task` on this same IMPLEMENTER thread.
-```
+the approved brief and the `Implementation` preamble from
+[the implementer handoff](references/implementer-handoff.md).
 
 If the original implementer is no longer usable, spawn a replacement with the
 same fixed configuration and the complete approved brief plus current
@@ -342,7 +258,7 @@ requested revision. Save the summary to
 expected behavior, requested scope only — to
 `SESSION_DIR/reviews/primary/fix-request-N.md`.
 
-### 8. Iterate narrowly
+### 8. Iterate narrowly and commit coherent milestones
 
 For each real issue, send a focused `followup_task` with the failed command and
 output or the evidence-backed finding, the expected behavior, and the
@@ -350,6 +266,15 @@ instruction to change only what that issue needs. Allow at most five
 implementation attempts total. Do not proceed to the external review until
 validation passes and the direct review is clean. If still incomplete, stop and
 report rather than weakening tests, inventing fallbacks, or expanding scope.
+
+Before the initial external review, create one `work complete` commit for the
+approved implementation. First confirm that task-owned changes are distinguishable
+from the paths recorded in `session.md`; stage only the owned paths or selected
+hunks, never `git add -A` or `git add .`. Use the repository's commit convention
+and one descriptive, task-level subject. Do not split a coherent feature into
+micro-commits. Record the commit hash and scope in `decisions.md`. If safe
+task-only staging is not possible, stop and ask the user; do not commit or create
+a PR containing pre-existing work.
 
 ### 9. Run the required external review
 
@@ -369,78 +294,8 @@ re-reviews after accepted findings are fixed.
    accepted findings and triage reasoning verbatim, the fix request, the
    implementer's response, the post-fix validation and direct-review result,
    and the changes since that round.
-3. For `ROUND = 1`, append this contract to the prompt:
-
-```text
-Act as an independent senior engineer reviewing the current task branch. Work read-only.
-Use the available read, glob, grep, LSP, and shell tools as needed; you are authorized to
-inspect the project, its complete task diff, and ~/.knowledges. Before reviewing, locate and
-read applicable AGENTS.md and CLAUDE.md files. If they require project knowledge, read
-~/.knowledges/INDEX.md and the relevant project documents. Inspect the repository and the
-complete task diff against BASE_BRANCH, including task-owned staged, unstaged, and untracked
-changes. Do not judge from the diff alone: read every materially changed file in full, and
-read the adjacent surfaces — sibling components, similar screens, and shared utilities with
-overlapping responsibilities — needed to judge duplication and consistency. Respect the
-repository instructions and the approved brief.
-
-Review only from these perspectives:
-1. PERFORMANCE_STABILITY: Meaningful performance regressions or stability risks, including
-   unbounded work, inefficient hot paths or queries, resource leaks, concurrency hazards,
-   timeout/retry problems, partial-failure behavior, and state consistency.
-2. BUG: Explicit defects or potential bugs with a concrete, plausible execution path,
-   including incorrect logic, error handling, nullability, state transitions, compatibility,
-   and edge cases supported by the task contract or code.
-3. QUALITY_MAINTAINABILITY: Check each of these concretely:
-   - New code that duplicates existing components, hooks, utilities, or copy instead of
-     extending them, including parallel mechanisms beside an established shared abstraction.
-   - Dead or unreachable code introduced by the change: unused exports, props, parameters,
-     branches that cannot be reached, or state that is never read.
-   - State proliferation: derived values stored as separate state, or state atoms that grow
-     without consolidation.
-   - Consistency of user-facing copy, UX states, and naming with the adjacent surfaces you
-     read.
-   - Promised deletions from the brief's Code quality section that were not performed.
-   - Significant duplication, unnecessary complexity, hidden coupling, poor ownership
-     boundaries or testability, and pattern deviations that materially increase future
-     change cost.
-
-Do not flag style preferences, minor readability suggestions, speculative concerns without a
-concrete trigger, or requirements outside the approved brief. Do not flag unrelated
-pre-existing code, with one exception: when this task's new code duplicates existing code,
-that duplication is in scope even though the duplicated original predates the task. Do not
-edit files or run commands that can modify repository or external state. Do not stop because
-a read-only command, project file, or knowledge document is needed: use your authorized
-tools to inspect it. Do not output progress logs, tool narration, or an incomplete review as
-the final response.
-
-Return a concise review report. For each concern, provide enough location, evidence, trigger,
-and impact for the primary agent to verify it, and suggest a reasonable fix direction when
-useful. If no actionable concern exists, say so plainly. Use whatever structure communicates
-the review clearly; no exact phrase, heading, field order, or machine-readable format is
-required. The report is advisory input, and the primary/orchestrator agent makes the final
-finding and completion decisions.
-```
-
-For `ROUND > 1`, append this re-review contract instead:
-
-```text
-Act as an independent senior engineer performing a narrow read-only re-review.
-This is not a new whole-branch review. Review only whether each previously accepted
-finding included in this prompt has been correctly addressed by the changes since the
-prior review. Read the relevant surrounding code, task diff, and validation evidence
-as needed to make that determination.
-
-For each previously accepted finding, report RESOLVED, NOT_RESOLVED, or INCONCLUSIVE,
-with concise location and evidence. A finding is RESOLVED only when its original
-trigger and impact are no longer present; report NOT_RESOLVED when the attempted fix
-does not address that finding or violates its expected behavior. Do not identify new
-findings, repeat a full review of the branch, revisit findings previously rejected by
-the primary agent, or broaden the task scope. Do not edit files or run commands that
-can modify repository or external state. Return only this finding-by-finding
-verification; the report is advisory input, and the primary/orchestrator agent makes
-the final decision.
-```
-
+3. Read [the external review operation](references/external-review.md). Append
+   the initial-review or re-review contract that matches `ROUND`.
 4. Invoke the runner through `sh` as a single command with the Bash tool,
    omitting the trailing agent/variant arguments unless the user overrode the
    reviewer. On the first attempt set `sandbox_permissions` to
@@ -469,27 +324,57 @@ sh "$RUNNER" "$WORKDIR" "$REVIEW_DIR/prompt.md" "$REVIEW_DIR/result.md" "$REVIEW
    responsible conclusion, request a clearer re-review within the round limit
    or report the limitation. Write `REVIEW_DIR/triage.md` with accepted and
    rejected findings, reasons, and the round conclusion.
-6. No accepted actionable findings: proceed to the final report. Accepted
+6. No accepted actionable findings: proceed to pull-request delivery. Accepted
    findings: tell the user what was accepted or rejected and why, send only
    accepted findings to the same implementer with evidence and expected
    behavior, stay within the approved scope and the five-attempt limit
    (material contract changes need user approval), re-run validation and the
-   direct review, then run the next re-review round.
+   direct review, then create one `review feedback complete` commit containing
+   every accepted finding fixed in that round. Reconfirm task-only staging,
+   record its hash and scope, then run the next re-review round. Do not create
+   one commit per finding.
 7. If accepted findings remain after the fifth round, or the attempt limit is
    exhausted, stop and report the work as partial or blocked. Do not weaken
    the review criteria or silently approve.
 
-### 10. Report the result
+### 10. Create the pull request
+
+Only after the external review has no accepted actionable findings:
+
+1. Re-inspect `git status`, `git log "$BASE_BRANCH..HEAD"`, and the complete
+   `BASE_BRANCH...HEAD` diff. Confirm every task-owned change is committed and
+   no pre-existing path was staged or absorbed.
+2. Push `CURRENT_BRANCH` to its selected remote without force-pushing. Do not
+   rebase, reset, or otherwise rewrite history merely to create the PR.
+3. Locate and faithfully follow the repository's applicable PR template. Write
+   the title and all authored PR prose in English, with a descriptive summary
+   and independently run validation. Do not include personal data (including
+   inquiry contents or account information), secrets, session/artifact data, or
+   local file paths. Preserve every applicable template section; translate its
+   prose headings to English when necessary, omit only sections the template
+   permits, and never invent validation results.
+4. Create a PR from `CURRENT_BRANCH` to `BASE_BRANCH`. If a PR for that exact
+   head/base already exists, reuse and report its URL instead of creating a
+   duplicate.
+
+If the remote, push, GitHub CLI, authentication, or PR creation fails, report
+the exact failure and the committed hashes. The implementation is not a
+successfully delivered PR until a PR URL is verified. Never push or create a PR
+for partial, blocked, unreviewed, or user-mixed changes.
+
+### 11. Report the result
 
 Tell the user: whether the approved brief is complete, partial, or blocked;
 which files changed; which validation commands passed or failed; the direct
 review conclusion; the primary agent's conclusion after the external review,
-with accepted and rejected findings and the artifact path; `SESSION_DIR`; and
-any remaining work or decision needed.
+with accepted and rejected findings and the artifact path; commit hashes; PR
+URL or exact delivery failure; `SESSION_DIR`; and any remaining work or decision
+needed.
 
 Write `SESSION_DIR/final_summary.md` with the final status, implementation
 attempts, validation results, both review conclusions, accepted and rejected
-findings, and remaining work. Record the final outcome in `decisions.md`.
+findings, commit hashes, PR URL or failure, and remaining work. Record the
+final outcome in `decisions.md`.
 
 Distinguish verified repository state from the implementer's claims. Do not
 claim deployment or external-state success unless independently verified.
