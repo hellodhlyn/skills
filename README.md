@@ -12,6 +12,12 @@ skills/
     SKILL.md
     scripts/
       some_script.sh
+opencode/
+  agents/
+    advisor.md
+    reviewer.md
+scripts/
+  install-opencode-agents.sh
 ```
 
 ## Requirements
@@ -20,6 +26,27 @@ skills/
 - `gh skill` support
 - For the `advisor` skill: a working `opencode` CLI authenticated for OpenCode Go
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
+
+## OpenCode Agents
+
+The OpenCode agent definitions used by this repository are managed under
+`opencode/agents/`. They are separate from the installed Codex skills because
+OpenCode loads them from the user-global `~/.opencode/agents/` directory.
+
+- `advisor`: `opencode-go/glm-5.3`
+- `reviewer`: `opencode-go/glm-5.3-flash`
+
+Install or update both definitions on a new environment with:
+
+```bash
+bash scripts/install-opencode-agents.sh
+mise exec -- opencode agent list
+```
+
+The installer refuses to replace a different existing definition. Inspect the
+diff first, then use `bash scripts/install-opencode-agents.sh --force` only when
+the repository version should replace it. Set `OPENCODE_CONFIG_DIR` to use a
+different OpenCode configuration root, which is useful for a disposable test.
 
 ## Preview
 
