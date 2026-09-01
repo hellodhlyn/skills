@@ -5,15 +5,15 @@ description: Use this skill when the task needs broad architectural judgment, tr
 
 # Advisor
 
-This skill asks the configured OpenCode Go advisor agent for read-only architectural advice. Its default model is `opencode-go/glm-5.3`.
+This skill gets read-only architectural advice from the OpenCode Go advisor agent. Default model: `opencode-go/glm-5.3`.
 
 ## Requirements
 
-Requires a working `opencode` CLI authenticated for OpenCode Go and an environment that can execute the bundled shell script with escalated permissions when needed.
+Requires an authenticated `opencode` CLI and permission to run the bundled script with escalation when needed.
 
 ## When to use
 
-Use this skill when at least one of the following is true:
+Use this skill for:
 
 - The task requires architecture-level judgment across multiple modules or layers.
 - You need tradeoff analysis between multiple designs.
@@ -21,7 +21,7 @@ Use this skill when at least one of the following is true:
 - The user explicitly asks for outside advice or architectural review.
 - You need help turning fuzzy system concerns into a concrete recommendation.
 
-Do not use this skill for:
+Do not use it for:
 
 - Small implementation details
 - Trivial bug fixes
@@ -30,36 +30,23 @@ Do not use this skill for:
 
 ## Rules
 
-- The advisor is an advisor only, not an editor.
-- Never ask the advisor to modify files.
-- Prefer concise, structured prompts with focused context.
-- Minimize token usage: send only the most relevant files, diffs, constraints, and open questions.
-- Treat the advisor's output as advisory input. You still own the final decision.
+- The advisor is read-only; never ask it to modify files.
+- Send only the relevant files, diffs, constraints, and questions.
+- Its output is advisory. You own the decision.
 
 ## Execution rule
 
-- You may decide to use the `$advisor` skill without asking for approval first.
-- Do not ask for approval to consider, select, recommend, or prepare the `$advisor` skill itself.
-- Do not ask for approval while drafting the advisor prompt.
-- Request approval only for the actual command that executes the bundled script.
+- Decide, select, and prepare `$advisor` without approval. Request escalation only for the script command.
+- Resolve `scripts/advisor.sh` from the installed skill root; do not depend on the current directory. Use `$SKILL_DIR` when available, otherwise resolve the installed absolute path.
+- Run the script with escalation when required. Give a short factual justification, for example: `[topic] advisor execution for architecture review`.
 
-- Resolve the bundled script path from the installed skill root: `scripts/advisor.sh`
-- Do not assume the current working directory is the skill directory.
-- If your host exposes a skill-root variable such as `$SKILL_DIR`, use it. Otherwise resolve the installed absolute path first.
-- Do not run the advisor script inside the sandbox when OpenCode authentication is unavailable there.
-- Execute the advisor script with escalated permissions.
+### Completion contract
 
-- Use an execution mode equivalent to `sandbox_permissions: "require_escalated"` when available.
-- When requesting escalation, provide a short factual justification.
-- Do not ask whether `$advisor` may be used.
-- Do not phrase the escalation justification as a question.
-- Example justification:
-  `[topic] advisor execution for architecture review`
-
-- After execution starts, wait for the advisor response to complete.
-- Never terminate the advisor call early just because it is slow.
-- Architectural review may take significantly longer than ordinary commands; this is expected.
-- Only treat the call as failed if the process exits with a real error or returns no usable output.
+- Start one advisor process for one prepared prompt. Keep its returned `session_id`.
+- `Script completed`, streamed text, or a tool response with a `session_id` but no `exit_code` means **still running**. It is not a result.
+- Poll that exact session until a terminal response includes an `exit_code`. Never terminate it because it is slow, and never start a replacement run while it remains unconfirmed.
+- A successful advisor result requires both `exit_code: 0` and non-empty final output containing all five required sections below. Read and use the output only after those checks.
+- A non-zero exit code or missing/invalid final output is a failed or incomplete run. Report that evidence; do not disguise it as advice or retry by silently starting a new session.
 
 ## Required workflow
 
@@ -71,7 +58,7 @@ Do not use this skill for:
    - relevant files or diff summary
 3. Build the advisor prompt.
 4. Execute the bundled advisor script with escalated permissions.
-5. Wait for the advisor result.
+5. Confirm completion under the completion contract, then read the result.
 6. Return a short decision memo containing:
    - recommendation
    - reasoning
@@ -80,7 +67,7 @@ Do not use this skill for:
 
 ## Prompt construction
 
-Build the advisor request in this shape:
+Use this shape:
 
 - Goal
 - Current design
