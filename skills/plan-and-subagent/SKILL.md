@@ -12,8 +12,7 @@ invoke `codex exec`.
 
 ## Parameters
 
-Both roles are parameters. Use the defaults unless the user names a different
-implementer or reviewer in the invocation. If a requested implementer or
+Use the defaults unless the user supplies an override. If a required agent or
 reviewer is unavailable, stop and report the exact error; never silently
 substitute another agent, model, variant, or runner.
 
@@ -30,6 +29,15 @@ installed `SKILL.md` invokes it; resolve the runner's absolute path yourself
 and store it as `RUNNER` — do not assume the project contains it. To override
 the reviewer agent or variant, pass them as the runner's optional 5th and 6th
 arguments.
+
+**UI_UX_REVIEW** (default `auto`; overrides `on` or `off`) and
+**UI_UX_AGENT** (default `ui_ux_designer`): a conditional read-only specialist.
+`auto` applies when the task changes a user-visible interface, interaction,
+navigation, copy or meaning, visible state, responsive behavior, or
+accessibility — not merely because the repository contains frontend code.
+The default template is `agents/ui_ux_designer.toml`; install it as
+`~/.codex/agents/ui_ux_designer.toml` and start a new session so the role is
+discovered.
 
 ## Session journal
 
@@ -54,6 +62,9 @@ personal/customer data, and note the redaction.
     primary/
       round-N.md             # primary validation and direct review
       fix-request-N.md       # accepted findings sent back for revision
+    uiux/
+      design-N.md            # pre-approval UI/UX contract proposal
+      conformance-N.md       # post-implementation conformance review
     external/
       round-N/
         prompt.md
@@ -71,7 +82,7 @@ personal/customer data, and note the redaction.
    `mkdir -p "$HOME/.plan-and-subagent"` then
    `mktemp -d "$HOME/.plan-and-subagent/subagent-$TIMESTAMP-XXXXXX"`; store the
    absolute path as `SESSION_DIR` and create `reviews/implementer`,
-   `reviews/primary`, and `reviews/external` under it.
+   `reviews/primary`, `reviews/uiux`, and `reviews/external` under it.
 2. Set `WORKDIR` to the project root. Save the user's goal verbatim to
    `SESSION_DIR/original_prompt.md`.
 3. Read applicable `AGENTS.md`, project knowledge, repository documentation,
@@ -96,6 +107,10 @@ personal/customer data, and note the redaction.
 Do this investigation in the primary agent; do not delegate routine
 exploration.
 
+Classify `UI_UX_REVIEW` and record the result with its evidence in `session.md`.
+`on` forces the specialist, `off` skips it, and `auto` follows the user-visible
+change rule above.
+
 ### 2. Resolve important decisions
 
 Separate observed behavior, assumptions, and proposed decisions. Ask the user
@@ -111,6 +126,14 @@ mechanisms; avoid speculative flexibility and unrelated refactoring. Do not
 optimize for fewer lines of code: readability, maintainability, correctness,
 testability, and project conventions take priority.
 
+When UI/UX review applies, spawn one `UI_UX_AGENT` with `fork_turns: "none"`
+and keep its target for later conformance review. Read
+[the UI/UX handoff](references/ui-ux-handoff.md), send the task context and its
+design-review preamble, and save the structured result to `reviews/uiux/`.
+Verify its evidence yourself. The specialist advises only: surface material UX
+or product-meaning choices to the user, and put only resolved decisions into
+the implementation brief.
+
 Do not continue until requirements are concrete enough to define observable
 completion criteria. Maintain `SESSION_DIR/decisions.md` as a concise ledger of
 material decisions only.
@@ -120,37 +143,38 @@ material decisions only.
 Create a concise brief with these sections:
 
 ```markdown
-## Project context
-- Absolute project root
-- Relevant architecture and existing patterns
+## 프로젝트 맥락
+- 프로젝트 절대 경로
+- 관련 아키텍처와 기존 패턴
 
-## Task
-<What to implement and why>
+## 작업
+<구현할 내용과 이유>
 
-## Done criteria
-- <Observable result>
-- <Removal of code superseded by this change, when any>
+## 완료 조건
+- <관찰 가능한 결과>
+- <이번 변경으로 대체되어 삭제할 코드가 있다면 그 내용>
 
-## Code quality
-- Overlap inventory: existing components, hooks, utilities, and screens whose
-  responsibilities overlap this task
-- Extend vs. create: which of them this change extends or reuses, what is
-  newly created, and why extension is not viable for each new creation
-- Deletions: code this change supersedes and must remove
-- Consistency: user-facing copy, UX states, and naming that adjacent surfaces
-  already use and this change must stay consistent with
+## 코드 품질
+- 중복 가능성: 이 작업과 책임이 겹치는 기존 component, hook, utility, 화면
+- 확장 또는 신규 작성: 재사용·확장할 대상, 새로 만들 대상, 확장할 수 없는 이유
+- 삭제: 이번 변경으로 대체되어 제거할 코드
+- 일관성: 인접 화면과 맞춰야 할 사용자 문구, UX 상태, 이름
 
-## Ownership
-- <Files or modules the implementer owns>
+## UI/UX 계약
+<UI/UX review가 적용될 때만 사용자 목표, 근거, 상호작용과 상태,
+디자인 시스템, 접근성, 의미 변경, 검증 시나리오, 미결정 사항을 기록>
 
-## Constraints
-- <Scope boundaries, compatibility requirements, and user-owned changes>
+## 담당 범위
+- <구현자가 담당할 파일 또는 module>
 
-## Validation
-- <Exact focused test and acceptance commands>
+## 제약사항
+- <범위 경계, 호환성 요구사항, 사용자 소유 변경>
+
+## 검증
+- <실행할 검증 명령과 각 명령이 확인할 결과>
 ```
 
-Build the Code quality section from the Step 1 investigation, not from
+Build the `코드 품질` section from the Step 1 investigation, not from
 assumption: name the concrete overlapping files. Reference concrete files
 throughout, but leave implementation mechanics to the implementer unless a
 mechanism is part of the approved design. Persist only the final approved
@@ -242,7 +266,7 @@ After the implementer finishes, in the primary agent:
    accept the implementer's report as proof.
 4. Review from exactly these perspectives:
    - `REQUIREMENTS`: missing or partial behavior from the request and approved
-     brief, including promised deletions from the Code quality section.
+     brief, including promised deletions from the `코드 품질` section.
    - `BUG`: concrete logic, error-handling, state, concurrency, or edge-case
      defects.
    - `QUALITY`: new code that duplicates existing code, dead or unreachable
@@ -251,12 +275,20 @@ After the implementer finishes, in the primary agent:
    - `MAINTAINABILITY`: unclear ownership, hidden coupling, poor testability,
      or costly future change.
 
-Do this review directly; do not spawn another reviewer. Ignore minor style
-preferences and unsupported hypotheticals; cite files and evidence for every
-requested revision. Save the summary to
+Do this engineering review directly; apart from the conditional UI/UX
+specialist, do not spawn another reviewer. Ignore minor style preferences and
+unsupported hypotheticals; cite files and evidence for every requested
+revision. Save the summary to
 `SESSION_DIR/reviews/primary/round-N.md` and any fix request — evidence,
 expected behavior, requested scope only — to
 `SESSION_DIR/reviews/primary/fix-request-N.md`.
+
+When UI/UX review applies, follow up with the same specialist using the
+approved UI/UX contract, task diff, and available visual or interaction
+evidence plus the conformance preamble from the UI/UX handoff. Save the result
+to `reviews/uiux/` and verify it yourself. Route accepted deviations through
+the existing fix loop; material meaning changes require reapproval. Recheck
+only accepted findings after fixes, and never claim an `UNVERIFIED` item passed.
 
 ### 8. Iterate narrowly and commit coherent milestones
 
@@ -286,7 +318,7 @@ re-reviews after accepted findings are fixed.
    tell the user the external review is starting. Never reuse a prior round's
    files.
 2. Write `REVIEW_DIR/prompt.md`. Initial review: the approved brief verbatim
-   (including its Code quality section), `BASE_BRANCH`, current branch and
+   (including its `코드 품질` section), `BASE_BRANCH`, current branch and
    HEAD, task-owned paths, pre-existing changes to exclude, current task
    changes including uncommitted and untracked files, and validation commands
    with results. Include task-relevant primary-agent context, but not as a
@@ -366,15 +398,15 @@ for partial, blocked, unreviewed, or user-mixed changes.
 
 Tell the user: whether the approved brief is complete, partial, or blocked;
 which files changed; which validation commands passed or failed; the direct
-review conclusion; the primary agent's conclusion after the external review,
-with accepted and rejected findings and the artifact path; commit hashes; PR
-URL or exact delivery failure; `SESSION_DIR`; and any remaining work or decision
-needed.
+review conclusion; the UI/UX conclusion when applicable; the primary agent's
+conclusion after the external review, with accepted and rejected findings and
+the artifact path; commit hashes; PR URL or exact delivery failure;
+`SESSION_DIR`; and any remaining work or decision needed.
 
 Write `SESSION_DIR/final_summary.md` with the final status, implementation
-attempts, validation results, both review conclusions, accepted and rejected
-findings, commit hashes, PR URL or failure, and remaining work. Record the
-final outcome in `decisions.md`.
+attempts, validation results, applicable review conclusions, accepted and
+rejected findings, commit hashes, PR URL or failure, and remaining work. Record
+the final outcome in `decisions.md`.
 
 Distinguish verified repository state from the implementer's claims. Do not
 claim deployment or external-state success unless independently verified.
