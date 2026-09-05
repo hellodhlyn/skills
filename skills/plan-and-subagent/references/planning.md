@@ -69,8 +69,9 @@ language to user and project instructions; the example labels are not fixed keys
 - 일관성: 인접 화면과 맞춰야 할 사용자 문구, UX 상태, 이름
 
 ## UI/UX 계약
-<UI/UX review가 적용될 때만 사용자 목표, 근거, 상호작용과 상태,
-디자인 시스템, 접근성, 의미 변경, 검증 시나리오, 미결정 사항을 기록>
+<UI/UX specialist review 또는 브리핑 목업이 적용될 때 사용자 목표, 근거,
+상호작용과 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
+근거와 확인된 방향, 검증 시나리오, 미결정 사항을 기록>
 
 ## 담당 범위
 - <구현자가 담당할 파일 또는 module>
@@ -87,6 +88,11 @@ assumption: name the concrete overlapping files. Reference concrete files
 throughout, but leave implementation mechanics to the implementer unless a
 mechanism is part of the approved design. Persist only the final approved
 brief, not drafts.
+
+When a briefing mockup is used, persist its applicability rationale and the
+user-confirmed decisions, not its HTML or presentation mechanics. The mockup is
+not a project deliverable and does not replace a precise UI/UX contract or
+post-implementation visual and interaction evidence.
 
 Keep optional follow-up ideas outside the completion criteria. See
 [validation and review](validation.md) for the evidence ledger and completion gate.

@@ -37,6 +37,9 @@ Identify the smallest checks that prove the requested behavior, following
 project runtime and validation instructions. Apply the configured workspace
 setup and delivery preparation only within the user's authorization. Classify
 any conditional specialist review and record the evidence for its applicability.
+For UI/UX work, also classify whether an in-conversation briefing mockup is
+warranted using [briefing mockups](references/ui-ux-mockups.md). This is a
+workflow judgment made from task evidence, not a user or environment setting.
 
 ## 2. Resolve decisions and prepare the brief
 
@@ -55,6 +58,15 @@ For UI/UX work, send the design preamble from
 [the UI/UX handoff](references/ui-ux-handoff.md) with the relevant context.
 Verify its evidence, surface important decisions to the user, and include only
 resolved decisions in the brief. Retain the specialist for conformance review.
+
+Apply the recorded briefing-mockup decision after verifying the relevant UI/UX
+evidence and before finalizing the brief. When it applies, the primary must read
+the available `visualize` skill in full and show the smallest useful proposed
+interface in the conversation. Use only verified product context already
+gathered during investigation, compare alternatives only for material choices,
+and incorporate the user's feedback into the UI/UX contract. A briefing mockup
+is a proposal for resolving or confirming the contract, not implementation or
+acceptance evidence.
 
 Prepare the [implementation brief](references/planning.md), connecting each
 observable completion condition to the smallest check that proves it. Include

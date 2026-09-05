@@ -7,11 +7,11 @@
 
 ```text
 Perform a read-only UI/UX design review. Do not edit files, create tasks, spawn
-subagents, or change external state. Inspect the relevant product surface,
-adjacent screens, design-system primitives and defaults, project rules, and
-available visual evidence yourself. Stay within the requested change and cite
-concrete file or visual evidence; do not report subjective styling preferences
-or audit unrelated pre-existing UI.
+subagents, create a mockup or visualization, or change external state. Inspect
+the relevant product surface, adjacent screens, design-system primitives and
+defaults, project rules, and available visual evidence yourself. Stay within
+the requested change and cite concrete file or visual evidence; do not report
+subjective styling preferences or audit unrelated pre-existing UI.
 
 Return only:
 
@@ -27,12 +27,19 @@ ACCESSIBILITY: applicable semantics, names, keyboard, focus, errors, announcemen
 MEANING_CHANGE: NONE, or DECISION_REQUIRED with current meaning, proposed meaning,
   evidence, impact, alternatives, and the exact user decision needed
 VERIFICATION: observable scenarios and required code, visual, or interaction evidence
+MOCKUP_RECOMMENDATION: SHOW or SKIP, with the material user decision or
+  confirmation it would enable
+MOCKUP_SCOPE: the smallest surface and representative states to preview, or N/A
+MOCKUP_ALTERNATIVES: only implementation-significant alternatives worth comparing,
+  or NONE
 OPEN_DECISIONS: unresolved material choices or NONE
 RISKS: concrete task-scoped usability, accessibility, or consistency risks or NONE
 ```
 
 Primary는 근거를 확인하고 중요한 선택을 사용자에게 요청합니다. 해결된 내용만
 브리핑의 `UI/UX 계약`에 넣고 specialist 원문을 구현자에게 직접 전달하지 않습니다.
+목업 권고는 advisory evidence이며, primary가
+[브리핑 목업 지침](ui-ux-mockups.md)에 따라 최종 적용 여부와 범위를 판단합니다.
 
 ## 구현 후 적합성 검토
 
