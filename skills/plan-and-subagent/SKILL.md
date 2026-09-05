@@ -73,22 +73,42 @@ observable completion condition to the smallest check that proves it. Include
 ownership, constraints, the intended delivery result, and any issue relation's
 meaning. Keep optional follow-up ideas outside the required completion criteria.
 
-## 3. Confirm the execution contract
+## 3. Present the brief and confirm its approval
 
-Show the complete brief and material decisions. Confirm authorization for the
-proposed actions from the conversation; ask only for decisions or execution
-scope not already authorized. A configured delivery preference does not grant
-permission to commit, publish, or modify external state. Make those actions
-explicit in the brief when they are part of the requested result.
+Present the complete implementation brief in the conversation before delegation:
+the intended behavior, material decisions, ownership, constraints, completion
+conditions, validation, and delivery scope. A file link, a progress update, an
+option comparison, or a mockup alone does not replace this briefing.
 
-Do not start implementation with unresolved material decisions or missing
-authorization. Save the approved brief verbatim and record the authorization
-and scope in the decision ledger. Material contract changes require renewed
-agreement; small clarifications that preserve it do not require another approval.
+Match authorization to what the user actually saw and approved. A reply such as
+"proceed with the recommendation" to a design-choice question approves that
+choice; it does not approve a complete brief written afterward. Never label
+such a later brief approved merely because its direction matches that choice.
+If the complete brief has not been approved, present it and ask whether to
+execute it, then wait for the user's answer. Silence, elapsed time, a saved
+file, and an agent's understanding check are not user approval.
+
+Existing approval of the same complete contract remains valid; do not ask again
+for an unchanged brief or a non-material clarification. Honor an explicit user
+instruction to skip a separate approval step within its stated scope, record
+that instruction, and still present the brief before delegation. A generic
+request to proceed or an environment delivery preference is not such a waiver
+and does not grant permission to commit, publish, or modify external state.
+
+Until this gate passes, continue only planning, read-only investigation and
+specialist advice, and authorized journal or briefing artifacts. Do not start
+the implementer, including its understanding check, or edit project files.
+Workspace mutations require authorization for those specific actions; they are
+not implicitly allowed as implementation preparation.
+
+Save the approved brief verbatim and record the supporting user response and
+the brief it approves in the [decision ledger](references/planning.md).
+Material contract changes require renewed agreement before affected work.
 
 ## 4. Check understanding and delegate implementation
 
-Start one implementer using the configured execution procedure and retain its
+Verify Step 3's briefing and approval evidence before starting one implementer
+using the configured execution procedure and retain its
 session identity. Supply the complete approved brief, relevant environment
 instructions, and the understanding-check preamble from
 [the implementer handoff](references/implementer-handoff.md). Provide context

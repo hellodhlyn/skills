@@ -38,6 +38,17 @@ SESSION_DIR/
   final_summary.md
 ```
 
+## Approval evidence
+
+Create `approved_brief.md` only after the execution-contract gate passes; its
+existence is not proof of approval. In `decisions.md`, record the briefing
+message reference (or a precise description when references are unavailable),
+the user's approving response verbatim, and the behavior and execution scope
+it covers. Record an explicit approval-step waiver with its scope if applicable.
+Keep design-choice answers distinct from approval of the complete brief.
+On resumption, verify this evidence against the current contract before
+delegation; a missing record must not be replaced by an invented approval.
+
 ## Implementation brief
 
 Create a concise brief with these section meanings. Match the presentation

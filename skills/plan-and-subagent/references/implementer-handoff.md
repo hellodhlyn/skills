@@ -1,11 +1,15 @@
 # Implementer Handoff
 
-Append the selected preamble verbatim after the approved brief.
+The primary must verify the briefing and user-approval evidence from Step 3
+before starting this handoff, including the read-only understanding check.
+Supply that evidence with the approved brief, then append the selected preamble
+verbatim. Passing an understanding check does not authorize implementation.
 
 ## Understanding check
 
 ```text
 Perform a read-only understanding check. Do not edit files and do not spawn subagents.
+If the briefing or user-approval evidence is missing, report it as a BLOCKER.
 You are not alone in the codebase: preserve unrelated changes and own only the paths in the brief.
 Read the relevant repository files yourself, then return only:
 
