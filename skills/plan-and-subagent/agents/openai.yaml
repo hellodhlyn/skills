@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan and Subagent"
-  short_description: "Plan with UI/UX review, delegate, review, commit, and create a pull request"
-  default_prompt: "Use $plan-and-subagent to plan this change, include conditional UI/UX review, delegate implementation, validate, externally review, commit, and create a PR."
+  short_description: "Plan, delegate, review, and deliver with your environment"
+  default_prompt: "Use $plan-and-subagent with my configured environment to plan this change, delegate implementation, validate, independently review, and deliver the agreed result."

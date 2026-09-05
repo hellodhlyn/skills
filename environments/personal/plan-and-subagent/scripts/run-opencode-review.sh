@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run the required independent external review and capture its report.
-# Reviewer agent/variant default to the skill's standard configuration and
+# Reviewer agent/variant default to the personal profile's configuration and
 # may be overridden with the optional 5th and 6th arguments.
 set -eu
 

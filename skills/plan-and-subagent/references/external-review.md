@@ -1,72 +1,75 @@
-# External Review
+# Independent Review
 
-Read this file immediately before running the external review.
+Read immediately before independent review, together with the selected
+reviewer's execution document. Keep provider commands and permission syntax in
+that document; this file defines the review contract.
 
-## Read-only operation
+## Execution evidence
 
-The reviewer must not edit files, create tasks, use web tools, or modify external
-state. It may inspect project files, `~/.knowledges`, and the shell read-only.
-Configure the default `reviewer` agent with at least:
+The reviewer works read-only in a context separate from implementation. It may
+inspect task-relevant code, project knowledge, and validation evidence using
+available permitted tools. It must not edit files, spawn other agents, or
+modify external state. Report access failures instead of weakening independence.
 
-```yaml
-permission:
-  read: allow
-  glob: allow
-  grep: allow
-  lsp: allow
-  external_directory: allow
-  edit: deny
-  task: deny
-  webfetch: deny
-  websearch: deny
-  bash:
-    "*": allow
-```
+Create a fresh `reviews/external/round-N/` for each invocation. Preserve the
+submitted prompt, complete report, execution/session identity, terminal outcome,
+and relevant failure artifacts. Wait for actual terminal completion before
+assessing the report. Partial files and wrapper messages do not prove completion;
+successful execution alone does not prove a clean review. Follow the configured
+retry limit without silently skipping or replacing the reviewer.
 
-`--auto` applies only to those allowed permissions. Configure `[auto_review]`
-for task-relevant code, diffs, notes, logs, and `~/.knowledges`, while still
-requiring intervention for secrets, unrelated personal/customer data, destructive
-actions, or commands outside the runner. The approved skill authorizes this
-read-only review; do not ask a generic second question for repository context.
+Assess the report's substance, not its headings or the presence of status fields.
+It is advisory evidence for the primary. If a failed or incomplete execution or
+an ambiguous report prevents a responsible conclusion, record the limitation;
+request clarification within the review limit or report partial/blocked.
+Clarifying an incomplete initial review retains its initial scope and context;
+a fix re-review remains limited to previously accepted findings.
 
-Run the runner with escalated sandbox permissions on the first attempt. A normal
-sandbox failure involving network, authentication, keychain, process, or
-permissions is not a review conclusion; retry once with escalation. If escalation
-is rejected, or the CLI/agent/variant is unavailable or exits unsuccessfully,
-report the exact failure and stop. Do not weaken, skip, or substitute the review.
+## Review context
 
-The report is advisory evidence for the primary agent: do not require fixed
-headings or a machine-readable schema.
+Write `prompt.md` with the matching context and append the contract below:
+
+- Initial review: the approved brief verbatim, including code quality and any
+  specialist contract; workdir, baseline and inspected code identity, task-owned
+  paths and complete task diff, pre-existing changes to exclude, relevant
+  environment/project instructions, and independently checked completion evidence.
+  Primary context informs but never replaces the reviewer's own inspection.
+- Re-review: prior accepted findings and triage reasoning verbatim, the fix
+  request, implementer response, post-fix validation and primary regression
+  review, and changes since the previous round with code-state identifiers.
+
+Record accepted/rejected findings, reasons, the reviewed code state and baseline,
+and the round conclusion in `triage.md`. Evidence freshness follows
+[validation](validation.md). An INCONCLUSIVE result does not resolve a finding.
 
 ## Initial review contract
 
 ```text
-Act as an independent senior engineer reviewing the current task branch. Work read-only.
-Use the available read, glob, grep, LSP, and shell tools as needed; you are authorized to
-inspect the project, its complete task diff, and ~/.knowledges. Before reviewing, locate and
-read applicable AGENTS.md and CLAUDE.md files. If they require project knowledge, read
-~/.knowledges/INDEX.md and the relevant project documents. Inspect the repository and the
-complete task diff against BASE_BRANCH, including task-owned staged, unstaged, and untracked
-changes. Do not judge from the diff alone: read every materially changed file in full, and
+Act as an independent senior engineer reviewing the current task change. Work read-only.
+Use the available inspection tools within the configured read-only permissions.
+Read applicable project instructions and relevant project knowledge supplied by the environment.
+Inspect the repository and complete task diff against the recorded comparison baseline,
+including every task-owned modification and new file. Do not judge from the diff alone: read every materially changed file in full, and
 read the adjacent surfaces needed to judge duplication and consistency. Respect the repository
 instructions and the approved brief.
 
-Review only from these perspectives:
-1. PERFORMANCE_STABILITY: Meaningful performance or stability risks, including unbounded work,
-   inefficient hot paths or queries, resource leaks, concurrency hazards, timeout/retry problems,
-   partial-failure behavior, and state consistency.
-2. BUG: Defects or potential bugs with a concrete, plausible execution path, including incorrect
-   logic, error handling, nullability, state transitions, compatibility, and contract-supported
-   edge cases.
-3. QUALITY_MAINTAINABILITY: New duplication instead of existing abstractions, dead or unreachable
-   code, redundant or proliferating state, inconsistent copy/UX/naming, promised deletions not
-   performed, or significant unnecessary complexity, hidden coupling, ownership, or testability
-   problems.
+Review from exactly these four perspectives:
+1. REQUIREMENTS: Completeness of the requested and approved behavior, including promised
+   deletions; verify each completion condition against observable evidence. Identify missing
+   required evidence explicitly, even when the supplied test commands passed.
+2. QUALITY_MAINTAINABILITY: Duplication, dead code, redundant state, inconsistent copy/UX/naming,
+   unnecessary complexity, hidden coupling, unclear ownership, and poor testability.
+3. BUG: Concrete, plausible execution paths causing incorrect behavior, including error handling,
+   nullability, state transitions, concurrency, compatibility, and demonstrated performance or
+   stability failures.
+4. SECURITY: Authentication, authorization, input handling, trust boundaries, and sensitive-data
+   exposure with a concrete trigger and realistic impact.
 
 Do not flag style preferences, speculative concerns without a concrete trigger, requirements
-outside the approved brief, or unrelated pre-existing code. The sole pre-existing-code exception
-is duplication introduced by this task. Do not edit files or run commands that modify repository
-or external state. Return a concise report with location, evidence, trigger, impact, and a useful
+outside the approved brief, or unrelated pre-existing code. Include existing-code interactions
+only when this task introduces, worsens, or makes them necessary to resolve for the requested
+behavior; the location being pre-existing alone is not a reason to exclude a finding. Do not edit
+files or run commands that modify repository or external state. Return a concise report with location, evidence, trigger, impact, and a useful
 fix direction for each concern. If there is no actionable concern, say so plainly. The report is
 advisory; the primary/orchestrator agent makes the final finding and completion decisions.
 ```
@@ -75,10 +78,11 @@ advisory; the primary/orchestrator agent makes the final finding and completion 
 
 ```text
 Act as an independent senior engineer performing a narrow read-only re-review. This is not a new
-whole-branch review. Review only whether each previously accepted finding included in this prompt
+whole-change review. Review only whether each previously accepted finding included in this prompt
 has been correctly addressed by the changes since the prior review. Read relevant surrounding code,
 the task diff, and validation evidence as needed.
 
+The primary separately checks regressions introduced by fixes; keep this external review narrow.
 For each previously accepted finding, report RESOLVED, NOT_RESOLVED, or INCONCLUSIVE with concise
 location and evidence. A finding is RESOLVED only when its original trigger and impact are gone;
 report NOT_RESOLVED when the fix does not address that finding or violates expected behavior. Do
