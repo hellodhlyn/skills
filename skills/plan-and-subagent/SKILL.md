@@ -7,78 +7,59 @@ description: Plan a code change, delegate implementation, independently validate
 
 Keep requirements, important decisions, authorization, validation, finding
 triage, and delivery in the primary agent. Delegate edits to an implementer.
-Require an independent read-only review by a reviewer who did not implement
-the change, with a separate context. The primary makes the final decisions.
+Require an independent read-only reviewer with a separate context who did not
+implement the change. The primary makes the final finding decisions.
 
-This skill defines the workflow contracts. Agent roles, models, invocation
-mechanics, services, paths, delivery policy, and retry limits belong to the
-environment. Maintaining this skill does not itself invoke this workflow.
+Agent roles, models, execution procedures, integrations, paths, delivery policy,
+and retry limits belong to the environment. Maintaining this skill does not
+itself invoke this workflow. Read references only at the indicated stage.
 
 ## 1. Resolve the environment and establish the task
 
-Read [environment resolution](references/environment.md). Load the profile
-designated by the current request or applicable instructions, reconcile it
-with project rules, and record the effective choices and their sources.
-Confirm the required tools are available; do not silently substitute a role,
-model, runner, or service. Missing configuration blocks only dependent work.
+Read [environment resolution](references/environment.md) and the designated
+profile. Resolve required capabilities before dependent work; missing
+configuration blocks only that work. Use [planning artifacts](references/planning.md)
+to record the request, baseline, pre-existing changes, and effective environment.
+Preserve user-owned changes outside task ownership.
 
-Read [planning artifacts](references/planning.md). Create the session journal
-at the configured location. Save the original request, working directory,
-starting code state, comparison baseline, and pre-existing changes. Keep
-user-owned changes outside implementation, review, and delivery ownership.
-
-Inspect applicable project instructions, knowledge, architecture, dependencies,
-relevant code, and tests directly. When an issue or other requirement source is
-explicitly referenced, resolve its identity and read the relevant context and
-comments using the configured integration before deriving requirements. Do not
-infer one service's identifier or completion semantics from another's.
-
-Identify the smallest checks that prove the requested behavior, following
-project runtime and validation instructions. Apply the configured workspace
-setup and delivery preparation only within the user's authorization. Classify
-any conditional specialist review and record the evidence for its applicability.
-For UI/UX work, also classify whether an in-conversation briefing mockup is
-warranted using [briefing mockups](references/ui-ux-mockups.md). This is a
-workflow judgment made from task evidence, not a user or environment setting.
+Inspect project instructions and the code, knowledge, dependencies, and tests
+needed for the task. Resolve explicitly linked requirements and comments through
+the applicable integration. Derive the smallest checks proving the requested
+behavior; do not infer identifiers or completion semantics across services.
 
 ## 2. Resolve decisions and prepare the brief
 
-Separate observations, assumptions, and proposed decisions. Ask the user to
-choose when multiple reasonable product, architecture, data-model, UX, or
-domain-semantic options exist. Resolve minor implementation details directly.
+Ask the user about unresolved material product, architecture, data-model, UX,
+or domain-semantic choices. Resolve minor implementation details directly.
+Use concrete repository evidence for reuse, deletion, and consistency decisions;
+avoid speculative abstractions, dependencies, and unrelated refactoring.
 
-Prefer the simplest design that satisfies current requirements and fits the
-existing architecture. Ground reuse, deletion, and consistency decisions in
-actual files. Introduce an abstraction or dependency only for a concrete
-requirement; avoid speculative flexibility and unrelated refactoring. Favor
-readability, maintainability, correctness, and testability over fewer lines.
+Classify specialist review using the environment. When UI/UX review applies,
+use [the UI/UX handoff](references/ui-ux-handoff.md) and retain the specialist
+for conformance review. For interface changes, independently classify and apply
+[briefing mockups](references/ui-ux-mockups.md). Verify advice before using it.
 
-When specialist review applies, use the configured role and execution procedure.
-For UI/UX work, send the design preamble from
-[the UI/UX handoff](references/ui-ux-handoff.md) with the relevant context.
-Verify its evidence, surface important decisions to the user, and include only
-resolved decisions in the brief. Retain the specialist for conformance review.
-
-Apply the recorded briefing-mockup decision after verifying the relevant UI/UX
-evidence and before finalizing the brief. When it applies, the primary must read
-the available `visualize` skill in full and show the smallest useful proposed
-interface in the conversation. Use only verified product context already
-gathered during investigation, compare alternatives only for material choices,
-and incorporate the user's feedback into the UI/UX contract. A briefing mockup
-is a proposal for resolving or confirming the contract, not implementation or
-acceptance evidence.
-
-Prepare the [implementation brief](references/planning.md), connecting each
-observable completion condition to the smallest check that proves it. Include
-ownership, constraints, the intended delivery result, and any issue relation's
-meaning. Keep optional follow-up ideas outside the required completion criteria.
+Prepare the complete [implementation brief](references/planning.md), including
+observable completion conditions, ownership, verification, and authorized delivery.
+Read [implementation feedback](references/implementation-feedback.md) to decide
+whether user result confirmation is required and record its scope and rationale
+in the brief. This conditional result check never replaces Step 3 approval.
+Keep optional follow-ups outside required completion conditions.
 
 ## 3. Present the brief and confirm its approval
 
-Present the complete implementation brief in the conversation before delegation:
-the intended behavior, material decisions, ownership, constraints, completion
-conditions, validation, and delivery scope. A file link, a progress update, an
-option comparison, or a mockup alone does not replace this briefing.
+Present the entire implementation briefing document, with every section and
+item, in the final response before delegation. Do not summarize, excerpt,
+collapse, or replace any part with a file link, progress update, option comparison,
+or mockup. The displayed document must be the exact brief later saved and sent
+to the implementer. If it needs multiple messages, show all parts before asking
+for approval; never treat approval of an incomplete presentation as sufficient.
+
+End that response by explicitly asking whether to implement this complete brief,
+state that implementation is awaiting approval, and end the turn. Do not enter
+Step 4 or perform implementation-related tool calls in the briefing turn.
+Only a subsequent user message explicitly authorizing implementation of that
+displayed brief opens the gate. If the response is ambiguous, clarify and wait.
 
 Match authorization to what the user actually saw and approved. A reply such as
 "proceed with the recommendation" to a design-choice question approves that
@@ -88,12 +69,12 @@ If the complete brief has not been approved, present it and ask whether to
 execute it, then wait for the user's answer. Silence, elapsed time, a saved
 file, and an agent's understanding check are not user approval.
 
-Existing approval of the same complete contract remains valid; do not ask again
-for an unchanged brief or a non-material clarification. Honor an explicit user
-instruction to skip a separate approval step within its stated scope, record
-that instruction, and still present the brief before delegation. A generic
-request to proceed or an environment delivery preference is not such a waiver
-and does not grant permission to commit, publish, or modify external state.
+Existing explicit approval given after presentation of the same complete brief
+remains valid; do not ask again for an unchanged approved contract. There is no
+approval-step waiver in this workflow: an initial implementation request, blanket
+autonomy, a request to skip approval, an environment preference, or approval of
+a design choice before the full brief is shown cannot open this gate. Approval
+does not grant permission beyond the displayed and explicitly authorized scope.
 
 Until this gate passes, continue only planning, read-only investigation and
 specialist advice, and authorized journal or briefing artifacts. Do not start
@@ -107,76 +88,38 @@ Material contract changes require renewed agreement before affected work.
 
 ## 4. Check understanding and delegate implementation
 
-Verify Step 3's briefing and approval evidence before starting one implementer
-using the configured execution procedure and retain its
-session identity. Supply the complete approved brief, relevant environment
-instructions, and the understanding-check preamble from
-[the implementer handoff](references/implementer-handoff.md). Provide context
-explicitly rather than relying on inherited conversation.
+Verify Step 3 approval evidence against the current brief, then follow
+[the implementer handoff](references/implementer-handoff.md) and the selected
+execution procedure. Send self-contained context and retain the implementer's
+identity for understanding checks, implementation, and corrections. The primary
+performs read-only work while implementation runs; no overlapping edits.
 
-Inspect every returned field before implementation. Resolve blockers first.
-Clarify non-material gaps and repeat the check in the same session. For changes
-to scope, ownership, approach, or important semantics, revise the brief and
-obtain agreement before repeating the check. Stay within the configured limit.
+## 5. Complete implementation and applicable feedback
 
-Once the check passes, send the implementation preamble and approved brief to
-the same implementer. If its session is unavailable, use the same configured
-role with the complete brief and current state, and repeat the understanding
-check before resuming. A role substitution requires an explicit decision.
+Follow [implementation feedback](references/implementation-feedback.md). When
+result confirmation applies, present the actual result and resolve feedback
+before dependent final validation. Otherwise continue directly through required
+validation, fixes, and reviews; do not stop at the first implementation.
+Material contract changes still require renewed agreement.
 
-While implementation runs, the primary performs only read-only inspection and
-makes no overlapping edits. Preserve execution metadata, wait for actual
-completion, and keep the user informed using the environment's wait procedure.
-Save concise understanding and attempt records in the journal.
+## 6. Validate and review
 
-Send small contract-preserving corrections to the same implementer. For a
-material correction or reported deviation, interrupt active work before it
-diverges, resolve the decision, update the agreement, repeat the understanding
-check, and resume. Do not let the implementer decide unresolved material choices.
+Apply [validation and review](references/validation.md): independently verify
+completion evidence, perform primary and applicable specialist review, and
+refresh affected evidence after fixes. Use its separate review budgets and
+completion gate. Return to Step 5 only when the affected result requires feedback.
 
-## 5. Validate, review, and iterate
+After required validation and internal review pass, apply authorized milestone
+policy and follow [independent review](references/external-review.md). Wait for
+actual terminal completion and the full report. Triage findings against direct
+evidence; a successful execution is not a clean review. Route accepted fixes to
+the implementer, revalidate, and re-review only prior accepted findings. Do not
+skip mandatory review, weaken criteria, or exceed the configured review budgets.
 
-After implementation, inspect the complete task diff and every materially
-changed file. Confirm unrelated and user-owned work was preserved. Independently
-run the acceptance checks when safe and in scope; the implementer's report is
-not proof. Apply [validation and review](references/validation.md) and record
-current evidence for every required completion condition.
+## 7. Deliver and report
 
-Perform the primary engineering review directly. When specialist review applies,
-send the approved contract, current task diff, and available evidence to the same
-specialist. For UI/UX, use the conformance preamble in its handoff. Verify the
-result and route accepted deviations through the existing fix loop. Missing
-required visual or interaction evidence blocks completion.
-
-Send only evidence-backed findings and focused fix requests to the implementer.
-After every fix, check the original failure and concrete regression paths, and
-refresh affected evidence. Stay within the configured implementation limit.
-Proceed to independent review only with passing required evidence and a clean
-primary review. Apply configured milestone policy when authorized; commits are
-not a universal prerequisite for review.
-
-Read [independent review](references/external-review.md) for the initial and
-re-review contracts. Use the configured reviewer with a fresh record for each
-round. Capture the actual terminal execution state and complete report before
-assessing it. An empty partial report, failed run, or ambiguous report is not
-approval. Record the exact reviewed code state and baseline.
-
-Verify every initial finding against the code, brief, and repository behavior.
-Reject unsupported, unrelated, or false-positive findings with reasons; an
-existing-code location alone does not exclude an interaction caused or worsened
-by this task. The report is advisory evidence, not automatic approval.
-
-Send accepted findings to the implementer, revalidate, check regressions in the
-primary, and apply authorized milestone policy. Re-review only the prior
-accepted findings. Do not broaden it into a new whole-change review or revisit
-rejected findings. Request clarification of inconclusive results within the
-configured review limit. If limits are exhausted, report partial or blocked;
-never weaken the criteria, silently skip review, or expand the approved scope.
-
-## 6. Deliver and report
-
-Apply the [completion gate](references/validation.md) to the final code state,
-then follow [delivery](references/delivery.md) and the selected environment
-procedure. Verify the agreed deliverable itself. Distinguish implementation
-completion from delivery completion and report remaining work precisely.
-Never claim unverified deployment or external-state success.
+Apply the completion gate to the final code state, then follow
+[delivery](references/delivery.md) and the selected environment procedure.
+Verify the agreed deliverable itself. Distinguish implementation completion from
+delivery completion and report remaining work precisely; never claim unverified
+external-state success.

@@ -20,9 +20,12 @@ the executing user's home. Resolve document links relative to this profile.
   [OpenCode execution](plan-and-subagent/opencode.md). The OpenCode agent
   definition owns its model. Do not replace external review with primary review.
 - UI/UX specialist: `ui_ux_designer`, read-only, using the Codex procedure.
-  Default applicability is `auto`: apply when changing a user-visible interface,
-  interaction, navigation, copy or meaning, visible state, responsive behavior,
-  or accessibility. Merely working in a frontend repository does not qualify.
+  Default applicability is `auto`: apply to material changes in product meaning,
+  interaction, navigation or information hierarchy, responsive behavior, or
+  accessibility, and when design-system application is uncertain. Skip simple
+  typos, localized spacing, and established token or primitive usage without
+  those changes or uncertainties; primary review still covers correctness.
+  Merely working in a frontend repository does not qualify.
   An explicit `on` forces review; `off` skips this specialist. Record the choice.
 - Architecture advice: use the `advisor` skill when a consequential design
   decision needs an independent opinion. Its OpenCode agent definition owns
@@ -62,10 +65,22 @@ the executing user's home. Resolve document links relative to this profile.
   `mktemp -d "$HOME/.plan-and-subagent/subagent-$TIMESTAMP-XXXXXX"` and retain its
   absolute path as `SESSION_DIR`. Use the skill's planning-artifact layout.
 - Understanding checks: at most 3 across the task, including replacements.
-- Implementation attempts: at most 5 total, including fixes from every review.
-- Independent review: at most 5 executions total, initially one full review,
+- Implementation iterations: no fixed numerical limit. Use the skill's
+  implementation-feedback applicability rule and the approved brief to determine
+  whether result confirmation is required. Otherwise continue through validation
+  and review without an intermediate confirmation pause. Feedback iterations
+  neither consume nor reset review budgets.
+- Internal review: at most 5 rounds total, initially one primary engineering and
+  applicable UI/UX conformance round, then up to 4 focused follow-ups. Bundle both
+  reviewers' findings into the same round; failed/inconclusive rounds count.
+  Focused validation and regression checks for external-review fixes do not alone
+  start a new internal round; new internal findings use the remaining internal budget.
+- External independent review: at most 5 executions total, initially one full review,
   then up to 4 follow-ups; re-reviews verify only accepted findings. Failed
   invocations and clarification retries also consume this budget.
+- Keep internal and external counters independent across the task, including
+  returns to implementation feedback. At the fifth round/execution, proceed only
+  if that review passes; otherwise report partial/blocked without a sixth attempt.
 - Wait at most 60 seconds per blocking call and keep the user informed during
   active work. Follow the selected execution document's completion checks.
 - No silent agent/model/variant/runner substitution. Report failures precisely;

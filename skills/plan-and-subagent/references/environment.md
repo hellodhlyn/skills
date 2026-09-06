@@ -32,7 +32,7 @@ fine; fixed field names are not required.
 | Roles and execution | Implementer, independent reviewer and required separation, invocation/completion procedures; specialist roles and when they apply, or explicitly none |
 | Context and validation | Project knowledge sources and runtime conventions where needed; derive actual validation commands from project evidence |
 | Delivery | Intended result and applicable preparation/milestone/integration procedures; this may be reviewed local changes, commits, or a published review request |
-| Operations | Journal location, finite understanding/implementation/review limits, and wait/progress behavior |
+| Operations | Journal location, understanding-check limit, uncapped implementation feedback iterations, separate finite internal/external review limits, and wait/progress behavior |
 
 Choose agents by role or definition reference. Keep models and reasoning settings
 in the runtime's agent definitions rather than duplicating them in the profile.

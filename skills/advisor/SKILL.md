@@ -1,6 +1,6 @@
 ---
 name: advisor
-description: Use this skill when the task needs broad architectural judgment, tradeoff analysis, design review, refactoring direction, or cross-cutting technical decision support.
+description: Get an independent OpenCode opinion on consequential architecture choices, design trade-offs, or broad refactoring direction. Use when local inspection leaves a material decision needing independent judgment; not for small fixes or code explanations.
 ---
 
 # Advisor

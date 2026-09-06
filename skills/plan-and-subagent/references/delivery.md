@@ -32,11 +32,16 @@ evidence is required. Do not require a service URL for local-only work.
 Write `final_summary.md` and record the outcome in `decisions.md`. Report:
 
 - Approved scope, changed files, and implementation status: complete, partial,
-  or blocked, with remaining work and required decisions.
+  blocked, or awaiting implementation feedback, with remaining work and required
+  decisions. Awaiting feedback means final validation is pending, not completion.
+- Result-confirmation applicability and rationale; where required, confirmation
+  or explicit delegation with its covered result and code state. Keep this
+  separate from mandatory briefing approval and technical validation.
 - The final completion-evidence ledger and inspected code state; passing,
   failing, and unavailable validation, including applicable specialist evidence.
 - Primary and independent review conclusions, accepted/rejected findings and
-  reasons, and implementation/review attempt counts.
+  reasons, and separate implementation-iteration, internal-review, and
+  external-review counts.
 - The selected delivery goal, separately verified delivery status, and output
   location/identifier or the exact failure; linked-work evidence when applicable.
 - The session journal location and any unresolved limitations.

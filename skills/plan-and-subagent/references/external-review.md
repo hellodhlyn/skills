@@ -4,6 +4,12 @@ Read immediately before independent review, together with the selected
 reviewer's execution document. Keep provider commands and permission syntax in
 that document; this file defines the review contract.
 
+Start after the [validation entry gate](validation.md), required final validation,
+and passing internal review. Follow [implementation feedback](implementation-feedback.md)
+when fixes affect a result requiring confirmation. Feedback iterations do not
+consume or reset the external execution budget. New scope needs an explicit
+coverage assessment; narrow re-review does not certify previously unreviewed scope.
+
 ## Execution evidence
 
 The reviewer works read-only in a context separate from implementation. It may

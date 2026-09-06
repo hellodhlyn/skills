@@ -1,8 +1,46 @@
 # Validation and review
 
-Read before primary validation, after fixes, and before delivery.
+Read before final validation, after review fixes, and before delivery.
+
+## Entry gate and review budgets
+
+Apply [implementation feedback](implementation-feedback.md) and the approved
+brief's result-confirmation scope. If confirmation is required, verify its
+evidence or explicit scoped delegation before dependent final validation and
+formal review. Otherwise proceed directly; do not invent a confirmation gate.
+
+Keep three separate counters in the journal:
+
+- Implementation iterations: no fixed cap; continue until requirements are met
+  and any required result confirmation is satisfied. Preview checks and feedback
+  corrections do not consume review rounds.
+- Internal review: the primary engineering review and applicable UI/UX conformance
+  review form one coordinated round, not two. The initial review and each focused
+  follow-up for internal findings consume one round, up to the configured limit.
+  Bundle findings before sending corrections; do not count individual checks or
+  implementer edits as rounds. A failed/inconclusive review attempt still counts.
+- External review: each independent reviewer execution consumes one round,
+  including failed invocations and clarification retries, up to its separate
+  configured limit. The first review covers the whole change; subsequent fix
+  re-reviews cover accepted findings only.
+
+Resolve the two limits independently from the environment. Primary validation
+and regression checks for external-review fixes
+are part of that fix verification, not a new full internal round. If they uncover
+new internal findings needing a review/fix loop, use the remaining internal budget.
+Returning to user feedback does not reset either review counter. At a limit,
+proceed if that review has passed; otherwise report partial/blocked with unresolved
+findings or evidence. Do not exceed a review budget or use unlimited implementation
+iterations to bypass a review limit.
 
 ## Completion evidence
+
+Inspect the complete task diff and every materially changed file. Confirm that
+unrelated and user-owned work was preserved. Independently run the required
+acceptance checks when safe and in scope; an implementer's report is not proof.
+For applicable specialist review, supply the approved contract, current task
+diff, and verified evidence to the retained specialist using its handoff.
+Verify its conclusions and route accepted deviations through the fix loop.
 
 Assign stable IDs to the approved observable completion conditions. All are
 required; optional follow-up ideas belong outside this list. Keep an evidence
@@ -64,9 +102,11 @@ resulting task diff before reusing evidence.
 
 ## Completion gate
 
-Proceed to delivery only when every required condition has current `PASS`
-evidence, primary review is clean, and mandatory independent review has completed
-with no accepted unresolved findings. An `INCONCLUSIVE` re-review does not resolve
+Proceed to delivery only when any required result confirmation or scoped
+delegation is recorded, every required condition has current `PASS` evidence,
+primary review is clean, and mandatory independent review has completed with no
+accepted unresolved findings. Use the applicability rule and approved brief to
+determine confirmation requirements. An `INCONCLUSIVE` re-review does not resolve
 a finding. Missing required visual, interaction, runtime, or other evidence blocks
 completion even if tests pass or the reviewer found no defect. Obtain the missing
 evidence within scope, or report partial/blocked with the specific gap. Never

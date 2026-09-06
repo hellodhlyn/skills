@@ -19,6 +19,8 @@ SESSION_DIR/
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
   decisions.md               # material decisions, approvals, and scope changes
+  feedback/
+    iteration-N.md           # presented result/code state, feedback, affected corrections
   reviews/
     implementer/
       understanding-N.md     # structured understanding-check response
@@ -40,12 +42,16 @@ SESSION_DIR/
 
 ## Approval evidence
 
-Create `approved_brief.md` only after the execution-contract gate passes; its
-existence is not proof of approval. In `decisions.md`, record the briefing
+Step 3 of [the skill](../SKILL.md) defines the mandatory approval gate. Create
+`approved_brief.md` only after it passes; existence is not proof of approval.
+In `decisions.md`, record the briefing
 message reference (or a precise description when references are unavailable),
 the user's approving response verbatim, and the behavior and execution scope
-it covers. Record an explicit approval-step waiver with its scope if applicable.
-Keep design-choice answers distinct from approval of the complete brief.
+it covers. Record their order and preserve the exact displayed document in
+`approved_brief.md`. Keep design-choice answers distinct from implementation approval.
+For conditional result-confirmation records and changes in applicability, follow
+[implementation feedback](implementation-feedback.md); for separate iteration and
+review counters, follow [validation](validation.md).
 On resumption, verify this evidence against the current contract before
 delegation; a missing record must not be replaced by an invented approval.
 
@@ -92,6 +98,12 @@ language to user and project instructions; the example labels are not fixed keys
 
 ## 검증
 - <조건 ID → 확인 방법 → 기대 결과; 각 조건을 증명하는 가장 작은 검증>
+- <결과 확인이 필요하면 미리보기용 동작 확인과 확인 후 최종 검증을 구분>
+
+## 구현 결과 확인
+- <결과 확인 필요 여부와 근거; 필요하면 확인할 기능·화면과 대표 시나리오>
+- <필요 시 확인 후 최종 검증·리뷰로 진행; 명시적 확인 위임이 있으면 그 범위>
+- <불필요하면 구현 후 검증·수정·리뷰까지 계속 진행>
 ```
 
 Build the `코드 품질` section from the Step 1 investigation, not from
