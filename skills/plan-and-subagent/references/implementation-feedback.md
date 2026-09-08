@@ -32,8 +32,9 @@ build or focused logic test is appropriate; the final test suite, lint, typechec
 formal engineering reviews, and UI/UX conformance review belong after confirmation.
 Pre-implementation design advice remains part of planning.
 
-The primary checks obvious omissions against the brief before presenting the
-result. For UI work, show the actual screen and relevant interactions with a usable
+Before presenting the result, the primary checks obvious omissions against
+the brief and uses the [environment and scenario checks](validation.md#environment-and-user-scenarios)
+needed for the preview. This does not start formal review or broad validation. For UI work, show the actual screen and relevant interactions with a usable
 preview or reproduction path. For other features, show representative inputs,
 outputs, or an executable scenario. A static screenshot cannot establish an
 interaction; a briefing mockup cannot establish implemented behavior. Disclose
@@ -47,11 +48,29 @@ is pending. Ask the user to confirm the implementation or provide feedback.
 Wait for their answer; dependent final validation and review must not start while
 confirmation is pending. Continue only independent authorized work meanwhile.
 
+For work with required result confirmation, keep follow-up UI corrections in
+the feedback stage, including corrections to a change with an existing PR.
+Record the pending corrections, already confirmed surfaces, and the condition
+for resuming delivery in the feedback record. An existing PR or earlier delivery
+authorization does not establish acceptance of the corrected result. Resume
+authorized commit/push work only after the required confirmation or explicit
+scoped delegation is satisfied, and affected validation and review are current.
+Do not apply this pause to work for which result confirmation is not required.
+
 A correction request authorizes its in-scope implementation, not acceptance of
 the corrected result. Apply it in the same implementer session, check the affected
 behavior, and show the updated result. Reuse unchanged planning and design work;
 repeat the understanding check only when the contract materially changes or the
 implementer session must be replaced. Resolve new material choices before editing.
+
+When one response both requests a precise correction and confirms the rest
+(for example, "apply this change; the rest of the screen is final"), record the
+confirmed surfaces separately from the requested correction. Apply and verify
+the correction, then reconfirm only its affected result if still required. Do
+not reopen unchanged confirmed surfaces. If the user explicitly authorizes
+continuing to final validation after that correction, record that scoped
+delegation and proceed once the correction is verified; do not add another
+confirmation gate. A correction request alone is not that authorization.
 
 Repeat without a fixed implementation-attempt cap until the agreed requirements
 are satisfied and the result is confirmed. A repeated failure calls for diagnosis,

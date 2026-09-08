@@ -14,6 +14,17 @@ Agent roles, models, execution procedures, integrations, paths, delivery policy,
 and retry limits belong to the environment. Maintaining this skill does not
 itself invoke this workflow. Read references only at the indicated stage.
 
+## Follow the stage contract
+
+Use the [stage checkpoint](references/planning.md#stage-checkpoint) before
+starting each stage and before crossing its exit gate. Following the broad
+sequence is insufficient: satisfy the concrete instructions in the applicable
+reference and execution procedure. Do not replace a required action with an
+apparently equivalent summary, agent assertion, or passing test. Resolve real
+instruction conflicts by priority and record the resolution; do not invent an
+exception for convenience. Skill instructions never override explicit user or
+higher-priority instructions.
+
 ## 1. Resolve the environment and establish the task
 
 Read [environment resolution](references/environment.md) and the designated
@@ -34,6 +45,8 @@ or domain-semantic choices. Resolve minor implementation details directly.
 Use concrete repository evidence for reuse, deletion, and consistency decisions;
 avoid speculative abstractions, dependencies, and unrelated refactoring.
 
+For interface changes, apply [domain knowledge for UI/UX](references/ui-ux-domain.md)
+before proposing the design, independently of specialist or mockup applicability.
 Classify specialist review using the environment. When UI/UX review applies,
 use [the UI/UX handoff](references/ui-ux-handoff.md) and retain the specialist
 for conformance review. For interface changes, independently classify and apply

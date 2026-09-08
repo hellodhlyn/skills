@@ -67,9 +67,32 @@ Run only when PR delivery is authorized and the skill's completion gate passes:
 5. Create or reuse the PR for the exact repository, head, and base using available
    GitHub tools or `gh`. Assign yourself (`--assignee @me` with `gh pr create`).
    For multiline prose through `gh`, write a body file and use `--body-file`.
+   With a structured tool, pass the prose as a data argument. Do not interpolate
+   Markdown into shell command strings, including `--body` or `--raw-field body=`;
+   quoting or JSON serialization is not an equivalent substitute for file input.
+   Preserve literal backticks and newlines, then verify the saved remote body.
 6. Verify the actual PR URL, head/base, title, body, and self-assignment. When
    Linear access is available, also verify its PR attachment. Otherwise report
    verified GitHub metadata and unverified Linear-side linkage separately.
+
+## Verify the published code state
+
+After publishing, compare the local task HEAD, remote branch SHA, and PR head
+SHA. Check the current base and mergeability rather than assuming the initial
+baseline is still current. If the base advanced, inspect the integration impact;
+base movement alone does not authorize a rebase or history rewrite. Refresh
+affected validation when needed and report conflicts explicitly.
+
+Inspect checks for that exact PR head. When CI is configured and running,
+follow it read-only to a terminal result using the profile's bounded waits;
+do not report an earlier commit's green checks as validation of the new head.
+If checks fail, investigate and fix task-caused failures within the approved
+scope, then refresh affected evidence and inspect the new head's checks.
+Do not retry unchanged failing runs or broaden scope to unrelated failures.
+If checks require unavailable access, external action, or remain queued/stalled
+without progress, report the PR as published with CI pending or blocked, including
+the observed state and required next action. An absent check is not a passing
+check. Keep publication success and integration readiness separate in the report.
 
 A push, authentication, or PR failure is failed delivery; preserve the verified
 implementation result and report exact failure details with commit hashes.

@@ -42,6 +42,11 @@ For applicable specialist review, supply the approved contract, current task
 diff, and verified evidence to the retained specialist using its handoff.
 Verify its conclusions and route accepted deviations through the fix loop.
 
+For interface changes, apply [semantic UX verification](ui-ux-domain.md) to the
+approved domain relationships and current rendered/interaction evidence. The
+primary retains this responsibility when specialist review is skipped. Include
+the contract's semantic checks in the same completion evidence ledger.
+
 Assign stable IDs to the approved observable completion conditions. All are
 required; optional follow-up ideas belong outside this list. Keep an evidence
 ledger in `reviews/primary/round-N.md` and carry its final state into
@@ -62,6 +67,32 @@ contract item is also a required completion condition: `CONFORMANT` maps to
 Do not run broad checks after every minor visual adjustment. Gather visual
 feedback first, then perform the required final verification once the direction
 is complete, following repository instructions.
+
+## Environment and user scenarios
+
+Use these checks when preparing a UI preview as well as final UI verification;
+preview checks do not replace the feedback gate or start formal review.
+
+Before diagnosing missing test data or proposing fixtures, confirm the actual
+URL/host and port, selected resource environment, and visible login state and
+account against the project instructions and intended scenario. Do not treat
+another session's empty data as evidence that fixtures are needed. Correct an
+environment/session mismatch within authorization; if required login is missing,
+follow the project's login procedure. Record only the context needed to establish
+the evidence, without copying credentials or unrelated account data.
+
+Check the concrete presentation constraints from the brief in the rendered UI,
+not just source or DOM structure. Where applicable, verify appearance, hover,
+focus, and activation against the existing pattern; a correct tag or passing
+navigation test does not prove the requested visual control was implemented.
+
+Select representative scenarios affected by this change before presenting it.
+For list editing, these may include a long list with reachable save/error feedback,
+empty results, consecutive edits, and preservation of unsaved input on failure.
+Choose relevant scenarios from the contract and actual interaction, not a fixed
+E2E checklist for every UI change. Obtain any necessary authorization for state
+changes. Distinguish rendered, interaction-tested, and unverified behavior;
+component presence and automated tests alone do not establish the whole user flow.
 
 ## Four review perspectives
 

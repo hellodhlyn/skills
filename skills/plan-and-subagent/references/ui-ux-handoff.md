@@ -3,6 +3,10 @@
 선택한 단계의 preamble을 작업 맥락 뒤에 그대로 붙입니다. 전문가는 read-only로
 작업하며 primary에게만 advisory evidence를 제공합니다.
 
+설계 및 적합성 검토 시 [도메인 지침](ui-ux-domain.md)의 경로와 관련 지식 출처를
+함께 전달하고 읽도록 요청합니다. Primary도 같은 지침을 적용하며, 재검토에는
+수용된 finding과 관련된 근거만 전달합니다.
+
 ## 승인 전 설계 검토
 
 ```text
@@ -18,6 +22,9 @@ Return only:
 APPLICABILITY: APPLIES or DOES_NOT_APPLY, with evidence
 USER_GOAL: what the user must understand or accomplish
 EVIDENCE: relevant screens, patterns, primitives, content, and file:line evidence
+DOMAIN_EVIDENCE: consulted knowledge sources and the material domain relationships
+  mapped to interface representation and observable verification, or N/A with reason;
+  distinguish confirmed facts, assumptions, and unresolved conflicts
 RECOMMENDATION: the proposed interaction and why it fits the evidence
 INTERACTION_AND_STATES: applicable default, loading, empty, error, disabled,
   success, responsive, keyboard, and focus behavior; mark irrelevant states N/A
@@ -54,6 +61,8 @@ Perform a read-only UI/UX conformance review of only the task-changed surfaces.
 Compare the implementation and supplied code, visual, and interaction evidence
 with the approved UI/UX contract. Do not redesign the feature, audit unrelated
 pre-existing UI, or treat aesthetic preference as a defect.
+Apply the supplied domain guidance's semantic UX verification to the rendered
+interface, using the contract's domain evidence and relevant knowledge sources.
 
 For every contract item, report CONFORMANT, DEVIATION, or UNVERIFIED with concise
 location and evidence. For each DEVIATION include its trigger, user impact, and

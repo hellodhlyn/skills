@@ -45,6 +45,9 @@ ASSUMPTIONS: concrete assumptions that could affect behavior or scope, or NONE
 RISKS: material correctness, compatibility, or divergence risks, or NONE
 VALIDATION: map each completion condition ID to its focused check and expected result;
   identify any required evidence you cannot obtain
+INTERPRETATION: any concrete instruction you would reinterpret or replace, with
+  the original instruction and the proposed difference, or NONE; functional
+  similarity alone does not establish conformance
 ```
 
 ## Implementation
@@ -86,6 +89,14 @@ EVIDENCE: <what was observed>
 IMPACT: <how the approved brief would be affected>
 DECISION_NEEDED: <the decision required to proceed>
 
-Do not continue until the primary resolves the deviation. Resume only after an explicit continuation from the primary in the same
-implementation session, using the configured execution procedure.
+An uncovered case requiring a material decision about display eligibility,
+permissions, saved meaning, or user-facing copy is also a deviation. Do not
+implement that path with temporary copy or a fallback that silently makes the
+decision. Existing approved rules may already resolve the case; cite them when
+they do. Otherwise report the unresolved choice before implementing it.
+
+Do not continue affected work until the primary resolves the deviation and sends
+an explicit continuation in the same implementation session. Work independent
+of that decision may continue within the approved ownership and contract; do
+not use it to commit to the unresolved approach.
 ```

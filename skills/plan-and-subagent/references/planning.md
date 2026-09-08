@@ -55,6 +55,52 @@ review counters, follow [validation](validation.md).
 On resumption, verify this evidence against the current contract before
 delegation; a missing record must not be replaced by an invented approval.
 
+## Stage checkpoint
+
+Keep a compact current-stage checkpoint in `session.md`. Before the stage's
+first dependent action, read its routed references and the applicable environment
+execution document, then extract the concrete obligations for this task:
+
+| Instruction and source | Required action or evidence | State |
+| --- | --- | --- |
+| Applicable requirement, including its condition | What must happen before the next action | Pending / Satisfied with evidence / Not applicable with reason |
+
+Include required ordering, exact handoff or presentation requirements, role
+ownership, permission boundaries, and completion signals when they apply. Do
+not copy the whole skill or create a checklist for every tool call. Record
+conditional applicability before skipping work, and distinguish optional advice
+from mandatory instructions. If applicability changes, record the new evidence
+and reason instead of silently abandoning a previously applicable step.
+
+Before crossing the stage gate, reconcile every applicable obligation with
+actual evidence. A planned action is pending; an agent's claim or an artifact's
+existence does not prove the action happened. Do not proceed with missing
+prerequisites merely because the overall result looks correct. Complete the
+missing action within authorization, continue independent work if blocked, or
+report the precise unresolved requirement. Never mark it not applicable just
+to advance. Reuse established approval evidence rather than asking again.
+
+When a missed instruction is discovered after advancing, return to the earliest
+affected gate and repair the omission. Preserve valid approvals, unchanged
+evidence, and accumulated review counters; do not restart the whole workflow or
+retroactively describe a skipped action as performed.
+
+## Resume the same task
+
+Before pausing for feedback or handing off a long-running stage, update
+`session.md` with the current stage and next action, implementer/specialist
+identities, any active execution identity, and the accumulated review counters.
+Link the latest approval, feedback, and validation records instead of duplicating
+their contents. Record an active execution as running, not failed or complete.
+
+On resumption, reconcile this checkpoint with the latest user messages, actual
+worktree state, and execution status. Reuse the same active execution and retained
+agents; do not launch a duplicate reviewer because its report is still empty.
+Continue from the first unsatisfied gate, carrying forward unaffected evidence.
+A status question does not cancel the task or reset approvals and review budgets.
+When an identity is unavailable, establish whether the prior execution ended
+before replacing it under the selected execution procedure.
+
 ## Implementation brief
 
 Create a concise brief with these section meanings. Match the presentation
@@ -86,9 +132,11 @@ language to user and project instructions; the example labels are not fixed keys
 - 일관성: 인접 화면과 맞춰야 할 사용자 문구, UX 상태, 이름
 
 ## UI/UX 계약
-<UI/UX specialist review 또는 브리핑 목업이 적용될 때 사용자 목표, 근거,
+<인터페이스 변경 시 사용자 목표, 근거,
 상호작용과 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
 근거와 확인된 방향, 검증 시나리오, 미결정 사항을 기록>
+<도메인 지침에 따라 지식 출처 → 설계에 영향을 준 개념 관계 → 화면 표현 →
+관찰 가능한 검증을 연결하고, 해당하지 않으면 간단한 사유를 기록>
 
 ## 담당 범위
 - <구현자가 담당할 파일 또는 module>
@@ -111,6 +159,16 @@ assumption: name the concrete overlapping files. Reference concrete files
 throughout, but leave implementation mechanics to the implementer unless a
 mechanism is part of the approved design. Persist only the final approved
 brief, not drafts.
+
+For concrete instructions susceptible to reinterpretation, connect the user's
+wording to an existing completion condition: what must be preserved and what
+observable evidence will establish it. Include explicitly specified copy,
+components, placement, and interactions; do not turn every sentence into a new
+checklist. Functional similarity alone does not authorize substituting another
+presentation. For example, a requested button needs the agreed button pattern,
+appearance, and interaction, not merely a working navigation destination or a
+button DOM tag. Name the existing pattern when the user asks to match one.
+Leave mechanics open where the user has not constrained the result.
 
 When a briefing mockup is used, persist its applicability rationale and the
 user-confirmed decisions, not its HTML or presentation mechanics. The mockup is
