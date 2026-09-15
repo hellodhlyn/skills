@@ -56,6 +56,11 @@ Primary는 근거를 확인하고 중요한 선택을 사용자에게 요청합�
 primary engineering review와 함께 하나의 내부 리뷰 라운드로 집계하며,
 전문가의 적합성 판단은 사용자 확인을 대신하지 않습니다.
 
+[UI 실행 위임](ui-execution.md)에 따라 별도 검증자가 수집하고 primary가 검토한
+근거를 전달합니다. 전문가는 해당 근거로 설계·의미 적합성을 판단하며, 브라우저
+조작을 일괄 반복하지 않습니다. 근거가 부족하거나 충돌하면 필요한 항목만 지정해
+추가 검증을 요청합니다. 목업 제작은 별도 역할이 담당하며 전문가는 read-only를 유지합니다.
+
 ```text
 Perform a read-only UI/UX conformance review of only the task-changed surfaces.
 Compare the implementation and supplied code, visual, and interaction evidence

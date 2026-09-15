@@ -32,8 +32,9 @@ choices that the mockup exposes, then include the confirmed result in the brief.
 
 When the mockup applies:
 
-1. Confirm the `visualize` skill is available, then read it in full before
-   creating the visual. Missing visualization capability blocks only this
+1. Follow [delegated UI execution](ui-execution.md) and the environment procedure.
+   Confirm the `visualize` skill is available; the mockup executor reads it in full
+   before creating the visual. Missing visualization capability blocks only this
    preview; report it rather than silently substituting project code or another
    artifact.
 2. Use the verified product structure, design-system evidence, realistic

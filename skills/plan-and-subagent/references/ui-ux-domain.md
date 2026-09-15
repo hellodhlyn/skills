@@ -6,6 +6,11 @@ briefing mockup is skipped. Keep investigation limited to concepts affected by
 the task; a purely visual adjustment that preserves meaning and relationships
 does not require a new domain investigation.
 
+Delegate implemented UI browser checks through [delegated UI execution](ui-execution.md).
+The primary and applicable specialist retain semantic judgment from that evidence;
+ownership does not require repeating the verifier's browser operations.
+Existing-product investigation for design evidence remains part of planning.
+
 ## Design evidence
 
 Determine whether domain-specific meanings, relationships, grouping, or hierarchy

@@ -5,8 +5,10 @@ description: Plan a code change, delegate implementation, independently validate
 
 # Plan And Subagent
 
-Keep requirements, important decisions, authorization, validation, finding
-triage, and delivery in the primary agent. Delegate edits to an implementer.
+Keep requirements, important decisions, authorization, validation oversight,
+finding triage, and delivery in the primary agent. Delegate product edits to an
+implementer and mockup/browser execution to the environment's separate UI executors
+using [delegated UI execution](references/ui-execution.md) when applicable.
 Require an independent read-only reviewer with a separate context who did not
 implement the change. The primary makes the final finding decisions.
 
@@ -50,7 +52,8 @@ before proposing the design, independently of specialist or mockup applicability
 Classify specialist review using the environment. When UI/UX review applies,
 use [the UI/UX handoff](references/ui-ux-handoff.md) and retain the specialist
 for conformance review. For interface changes, independently classify and apply
-[briefing mockups](references/ui-ux-mockups.md). Verify advice before using it.
+[briefing mockups](references/ui-ux-mockups.md). Delegate applicable mockup production
+through the UI execution procedure. Verify advice before using it.
 
 Prepare the complete [implementation brief](references/planning.md), including
 observable completion conditions, ownership, verification, and authorized delivery.
@@ -90,8 +93,9 @@ a design choice before the full brief is shown cannot open this gate. Approval
 does not grant permission beyond the displayed and explicitly authorized scope.
 
 Until this gate passes, continue only planning, read-only investigation and
-specialist advice, and authorized journal or briefing artifacts. Do not start
-the implementer, including its understanding check, or edit project files.
+specialist advice, and authorized journal, briefing, or delegated mockup artifacts.
+Do not start the implementer, including its understanding check, or edit product
+code or other project files outside those assigned planning artifacts.
 Workspace mutations require authorization for those specific actions; they are
 not implicitly allowed as implementation preparation.
 

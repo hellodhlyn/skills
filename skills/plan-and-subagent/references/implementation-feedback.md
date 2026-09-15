@@ -32,9 +32,12 @@ build or focused logic test is appropriate; the final test suite, lint, typechec
 formal engineering reviews, and UI/UX conformance review belong after confirmation.
 Pre-implementation design advice remains part of planning.
 
-Before presenting the result, the primary checks obvious omissions against
-the brief and uses the [environment and scenario checks](validation.md#environment-and-user-scenarios)
-needed for the preview. This does not start formal review or broad validation. For UI work, show the actual screen and relevant interactions with a usable
+Before presenting a non-UI result, the primary checks obvious omissions against
+the brief. For a UI result, delegate the preview's omission, environment, and
+scenario checks through [delegated UI execution](ui-execution.md). The primary
+checks the resulting evidence against the brief without routinely repeating
+browser execution. This does not start formal review or broad validation. For UI
+work, show the actual screen and relevant interactions with a usable
 preview or reproduction path. For other features, show representative inputs,
 outputs, or an executable scenario. A static screenshot cannot establish an
 interaction; a briefing mockup cannot establish implemented behavior. Disclose

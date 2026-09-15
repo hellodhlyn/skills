@@ -31,6 +31,7 @@ SESSION_DIR/
     uiux/
       design-N.md            # pre-approval UI/UX contract proposal
       conformance-N.md       # post-implementation conformance review
+      execution-N.md         # mockup/preview/final phase, executor identity, condition evidence and artifact paths
     external/
       round-N/
         prompt.md
@@ -89,7 +90,8 @@ retroactively describe a skipped action as performed.
 
 Before pausing for feedback or handing off a long-running stage, update
 `session.md` with the current stage and next action, implementer/specialist
-identities, any active execution identity, and the accumulated review counters.
+identities, mockup/verifier identities and owned browser session, any active
+execution identity, and the accumulated review counters.
 Link the latest approval, feedback, and validation records instead of duplicating
 their contents. Record an active execution as running, not failed or complete.
 

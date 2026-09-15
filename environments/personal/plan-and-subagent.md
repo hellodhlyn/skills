@@ -9,7 +9,10 @@ the executing user's home. Resolve document links relative to this profile.
 
 - Orchestration: the primary Codex agent, using `gpt-5.6-sol` with reasoning
   effort `high`. It owns planning, task decomposition, implementer supervision,
-  review triage, and final validation. Select this model and effort in Codex;
+  review triage, and final validation judgment. Delegate mockup production and
+  browser verification to the roles below; accept traceable evidence under the
+  skill's UI execution procedure without routinely repeating their work.
+  Select this model and effort in Codex;
   this Markdown preference does not switch an active task's model or change
   the global Codex default. Explicit task choices still take precedence.
 - Implementation: the Codex `luna_implementer` role. Follow
@@ -19,6 +22,17 @@ the executing user's home. Resolve document links relative to this profile.
   `max`, in a separate execution context. Follow
   [OpenCode execution](plan-and-subagent/opencode.md). The OpenCode agent
   definition owns its model. Do not replace external review with primary review.
+- Mockup production: `luna_mockup` when briefing mockups apply. It owns only
+  assigned visualization artifacts and their rendering/local interaction checks,
+  including during planning before product implementation approval.
+- UI browser verification: the repository-managed Pi `ui-verifier`, using
+  `opencode-go/glm-5.3-flash` by default, for applicable implemented preview and
+  final browser checks. Follow [Pi UI verification](plan-and-subagent/pi.md).
+  The Pi runtime owns a separate model context and isolated Playwright browser;
+  product code stays read-only and only assigned evidence artifacts may be written.
+  Do not replace a failed Pi run with a Codex verifier or the OpenCode code reviewer.
+  Keep material design and semantic judgment with the primary and applicable UI/UX
+  specialist.
 - UI/UX specialist: `ui_ux_designer`, read-only, using the Codex procedure.
   Default applicability is `auto`: apply to material changes in product meaning,
   interaction, navigation or information hierarchy, responsive behavior, or

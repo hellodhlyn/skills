@@ -29,14 +29,16 @@ fine; fixed field names are not required.
 
 | Section | Required decisions |
 | --- | --- |
-| Roles and execution | Implementer, independent reviewer and required separation, invocation/completion procedures; specialist roles and when they apply, or explicitly none |
+| Roles and execution | Implementer, independent reviewer and required separation, invocation/completion procedures; specialist roles and when they apply, or explicitly none; separate mockup and browser-verification executors for applicable UI work, including model/harness diversity and deterministic evidence capabilities when required |
 | Context and validation | Project knowledge sources and runtime conventions where needed; derive actual validation commands from project evidence |
 | Delivery | Intended result and applicable preparation/milestone/integration procedures; this may be reviewed local changes, commits, or a published review request |
 | Operations | Journal location, understanding-check limit, uncapped implementation feedback iterations, separate finite internal/external review limits, and wait/progress behavior |
 
 Choose agents by role or definition reference. Keep models and reasoning settings
 in the runtime's agent definitions rather than duplicating them in the profile.
-Tool-specific permission settings and process APIs belong to execution documents.
+Tool-specific permission settings, process APIs, provider/model choices, and runtime
+installation belong to execution documents and environment resources. Do not turn an
+environment-specific executor into a mandatory dependency of the portable skill.
 
 Before dependent work, confirm the required role/tool is actually available and
 its execution procedure is readable. Defer service access checks until the

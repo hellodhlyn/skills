@@ -38,6 +38,10 @@ iterations to bypass a review limit.
 Inspect the complete task diff and every materially changed file. Confirm that
 unrelated and user-owned work was preserved. Independently run the required
 acceptance checks when safe and in scope; an implementer's report is not proof.
+For UI browser checks, use the separate verifier and evidence acceptance procedure
+in [delegated UI execution](ui-execution.md) instead of repeating execution in the
+primary. This exception delegates execution, not final validation judgment or
+the primary's engineering review.
 For applicable specialist review, supply the approved contract, current task
 diff, and verified evidence to the retained specialist using its handoff.
 Verify its conclusions and route accepted deviations through the fix loop.
@@ -59,8 +63,9 @@ ledger in `reviews/primary/round-N.md` and carry its final state into
 A command's exit status proves only what the command actually exercises. Use
 code inspection, a focused test, visual evidence, or a real interaction as the
 condition needs; do not require E2E for every task. Independently verify evidence
-in the primary, rather than copying the implementer's claims. Record unavailable
-inputs and blocked checks as `UNVERIFIED`, not as success. An applicable UI/UX
+in the primary, including acceptance of traceable independent UI verification
+evidence under the delegated procedure, rather than copying implementer claims.
+Record unavailable inputs and blocked checks as `UNVERIFIED`, not as success. An applicable UI/UX
 contract item is also a required completion condition: `CONFORMANT` maps to
 `PASS`, `DEVIATION` to `FAIL`, and `UNVERIFIED` remains unverified.
 
@@ -116,8 +121,9 @@ for the requested behavior; preserve user-owned edits.
 ## Fix regressions and evidence freshness
 
 After each fix, the primary inspects the fix diff, affected callers and adjacent
-behavior, and reruns the smallest checks covering the original failure and any
-concrete regression path introduced by the fix. Send accepted new regressions
+behavior, and reruns the smallest checks (delegating affected UI browser checks)
+covering the original failure and any concrete regression path introduced by the
+fix. Send accepted new regressions
 through the existing implementation loop; material contract changes still need
 user approval. Independent and UI/UX re-review remain limited to accepted findings.
 
