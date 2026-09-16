@@ -105,6 +105,63 @@ function digest(file) {
   return createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
+function wildcardMatches(pattern, value) {
+  const expression = String(pattern ?? "*")
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".");
+  return new RegExp(`^${expression}$`).test(String(value));
+}
+
+export function effectivePermission(policies, permission, resource = "*") {
+  let action;
+  for (const policy of policies || []) {
+    if (policy.permission !== permission && policy.permission !== "*") continue;
+    if (!wildcardMatches(policy.pattern, resource)) continue;
+    action = policy.action;
+  }
+  return action;
+}
+
+export function validateResolvedGlmAgent(agent, expectation, roots) {
+  const problems = [];
+  if (!agent || agent.name !== expectation.name) problems.push(`name=${agent?.name || "missing"}`);
+  if (agent?.mode !== expectation.mode) problems.push(`mode=${agent?.mode || "missing"}`);
+  if (agent?.model?.providerID !== "opencode-go" || agent?.model?.modelID !== expectation.model) {
+    problems.push(`model=${agent?.model?.providerID || "missing"}/${agent?.model?.modelID || "missing"}`);
+  }
+  const policies = agent?.permission;
+  if (!Array.isArray(policies)) {
+    problems.push("permission=missing");
+    return problems;
+  }
+  for (const permission of expectation.allowed || []) {
+    const resource = permission === "skill" ? "plan-and-subagent" : "*";
+    if (effectivePermission(policies, permission, resource) !== "allow") problems.push(`${permission}=not-allowed`);
+  }
+  for (const permission of expectation.denied || []) {
+    if (effectivePermission(policies, permission, "*") !== "deny") problems.push(`${permission}=not-denied`);
+  }
+  for (const skill of expectation.skills || []) {
+    if (effectivePermission(policies, "skill", skill) !== "allow") problems.push(`skill:${skill}=not-allowed`);
+  }
+  if (expectation.skills) {
+    if (effectivePermission(policies, "skill", "unapproved-skill") !== "deny") problems.push("skill:unapproved-skill=not-denied");
+  }
+  if (expectation.readOnly) {
+    for (const file of [
+      path.join(roots.opencode, "skills/plan-and-subagent/references/validation.md"),
+      path.join(roots.environment, "profiles/glm/PROFILE.md"),
+    ]) {
+      if (effectivePermission(policies, "external_directory", file) !== "allow") problems.push(`external:${file}=not-allowed`);
+    }
+    const untrusted = path.join(path.dirname(roots.opencode), "plan-and-subagent-untrusted", "secret.txt");
+    if (effectivePermission(policies, "external_directory", untrusted) !== "deny") problems.push(`external:${untrusted}=not-denied`);
+    if (effectivePermission(policies, "mcp_test_write", "*") !== "deny") problems.push("mcp_test_write=not-denied");
+  }
+  return problems;
+}
+
 export function loadReceipt(file) {
   assertSafeDestination(file);
   if (!stat(file)) return { version: 1, files: {} };
@@ -271,7 +328,38 @@ async function runtimeChecks(roots, profiles, selected, report) {
   }
   if (profiles.includes("glm") && selected.includes("opencode")) {
     const config = path.join(roots.opencode, "profiles/glm/opencode.jsonc");
-    report("GLM native profile", stat(config) ? "PASS" : "FAIL", stat(config) ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
+    const installed = stat(config);
+    report("GLM native profile", installed ? "PASS" : "FAIL", installed ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
+    if (installed) {
+      const env = {
+        ...process.env,
+        OPENCODE_CONFIG: config,
+        OPENCODE_CONFIG_DIR: roots.opencode,
+        AGENT_ENVIRONMENT_DIR: roots.environment,
+      };
+      const resolvedConfig = await command("mise", ["exec", "--", "opencode", "debug", "config"], { env });
+      let configJson;
+      try { configJson = JSON.parse(resolvedConfig.stdout); } catch { /* Report the raw command failure below. */ }
+      report("GLM merged default agent", resolvedConfig.code === 0 && configJson?.default_agent === "glm-orchestrator" ? "PASS" : "FAIL",
+        resolvedConfig.code === 0 && configJson?.default_agent === "glm-orchestrator"
+          ? "default_agent=glm-orchestrator; model invocation not tested"
+          : resolvedConfig.stderr || resolvedConfig.stdout || "Resolved config was not valid JSON or selected another default agent.");
+
+      const expectations = [
+        { name: "glm-orchestrator", mode: "primary", model: "glm-5.3" },
+        { name: "glm-implementer", mode: "subagent", model: "glm-5.3-flash" },
+        { name: "glm-reviewer", mode: "subagent", model: "deepseek-v4.1-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "glm-ui-ux", mode: "subagent", model: "glm-5.3", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "glm-mockup", mode: "subagent", model: "glm-5.3" },
+      ];
+      for (const expectation of expectations) {
+        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });
+        let agent;
+        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
+        const problems = result.code === 0 ? validateResolvedGlmAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
+        report(`GLM merged agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "model and effective permissions match profile; model invocation not tested");
+      }
+    }
   }
   if (selected.includes("pi")) {
     const check = await command("mise", ["exec", "--", "pnpm", "--dir", roots.pi, "run", "check"]);

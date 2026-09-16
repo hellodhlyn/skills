@@ -10,13 +10,34 @@ Install the common skill and this profile with the repository installer, then
 start a new OpenCode session with the profile configuration selected explicitly:
 
 ```bash
-OPENCODE_CONFIG="$HOME/.config/opencode/profiles/glm/opencode.jsonc" \
-  opencode "$PROJECT_DIR"
+export OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+export AGENT_ENVIRONMENT_DIR="${AGENT_ENVIRONMENT_DIR:-$HOME/.config/agents}"
+export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/profiles/glm/opencode.jsonc"
+opencode --agent glm-orchestrator "$PROJECT_DIR"
 ```
 
 Selecting a profile does not change an already-running session. The OpenCode
-configuration is merged with the user's normal configuration; the explicit
-`default_agent` and named agents in this profile select the GLM workflow.
+configuration is merged with the user's normal configuration. `--agent
+glm-orchestrator` fixes the starting role; it does not prevent a later project
+configuration from overriding the same agent's model or permissions.
+
+Before implementation, inspect the final project-merged settings from the
+project directory and treat any mismatch as unverified:
+
+```bash
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug config
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-orchestrator
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-implementer
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-reviewer
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-ui-ux
+OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-mockup
+```
+
+Confirm the primary role, each model, the reviewer/UI/UX deny-by-default
+permissions, the narrow installed-skill/profile external-directory exceptions,
+and the reviewer model family before accepting the environment as ready. A
+project or managed configuration that changes these values is a failed check,
+not an automatic model substitution.
 
 ## Native bindings
 

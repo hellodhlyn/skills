@@ -56,15 +56,26 @@
       "reasoningEffort": "max",
       "prompt": "Load the plan-and-subagent independent review contract. Review the supplied code, diff, requirements, and validation evidence independently. Report only concrete actionable findings with evidence; never edit, delegate, or substitute a model.",
       "permission": {
+        "*": "deny",
         "read": "allow",
         "glob": "allow",
         "grep": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "deny",
+          "plan-and-subagent": "allow"
+        },
         "edit": "deny",
         "task": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "external_directory": "deny",
+        "external_directory": {
+          "*": "deny",
+          "$HOME/.config/opencode/skills/plan-and-subagent/**": "allow",
+          "$HOME/.config/agents/profiles/glm/**": "allow",
+          "{env:OPENCODE_CONFIG_DIR}/skills/plan-and-subagent/**": "allow",
+          "{env:AGENT_ENVIRONMENT_DIR}/profiles/glm/**": "allow"
+        },
         "bash": "deny"
       }
     },
@@ -75,15 +86,26 @@
       "reasoningEffort": "high",
       "prompt": "Load the plan-and-subagent UI/UX contract. Work read-only, assess only the assigned surface, and return advisory evidence without choosing unresolved product meaning.",
       "permission": {
+        "*": "deny",
         "read": "allow",
         "glob": "allow",
         "grep": "allow",
         "lsp": "allow",
+        "skill": {
+          "*": "deny",
+          "plan-and-subagent": "allow"
+        },
         "edit": "deny",
         "task": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "external_directory": "deny",
+        "external_directory": {
+          "*": "deny",
+          "$HOME/.config/opencode/skills/plan-and-subagent/**": "allow",
+          "$HOME/.config/agents/profiles/glm/**": "allow",
+          "{env:OPENCODE_CONFIG_DIR}/skills/plan-and-subagent/**": "allow",
+          "{env:AGENT_ENVIRONMENT_DIR}/profiles/glm/**": "allow"
+        },
         "bash": "deny"
       }
     },

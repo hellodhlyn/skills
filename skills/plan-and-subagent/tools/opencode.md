@@ -26,6 +26,16 @@ web access, and every other write-capable path. A prompt claim or automatic
 approval flag is not read-only enforcement; apply the host's real permission
 mechanism to shell, MCP, and filesystem access as well.
 
+For OpenCode native profiles, read-only agents must begin with a catch-all
+`"*": "deny"` policy and then allow only the required read tools and the
+`plan-and-subagent` skill. Their `external_directory` policy must also begin
+with `"*": "deny"` and allow only the installed common-skill and profile
+document paths. A synthetic or newly configured MCP/custom tool must resolve to
+`deny`; listing `edit` and `bash` as denied is not sufficient. Because project
+and managed configuration can be merged after a custom profile, inspect the
+final project-merged result with `opencode debug agent <name>` and treat any
+model, permission, or path mismatch as failed or unverified evidence.
+
 ## External runner
 
 For the external path, create a fresh `REVIEW_DIR` for every round. Write the

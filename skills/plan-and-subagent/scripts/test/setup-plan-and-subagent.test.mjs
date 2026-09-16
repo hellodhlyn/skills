@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { applyPlan, assertSafeDestination, buildPlan, command, loadReceipt, missingLinks, parseArguments, resolveRoots } from "../lib/setup-plan-and-subagent.mjs";
+import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermission, loadReceipt, missingLinks, parseArguments, resolveRoots, validateResolvedGlmAgent } from "../lib/setup-plan-and-subagent.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cli = path.join(repository, "skills/plan-and-subagent/scripts/lib/setup-plan-and-subagent.mjs");
@@ -67,10 +67,52 @@ test("GLM native config pins roles, models, and reviewer write boundaries", () =
   assert.equal(config.agent["glm-implementer"].model, "opencode-go/glm-5.3-flash");
   assert.equal(config.agent["glm-reviewer"].model, "opencode-go/deepseek-v4.1-flash");
   assert.equal(config.agent["glm-reviewer"].mode, "subagent");
+  assert.equal(config.agent["glm-reviewer"].permission["*"], "deny");
   assert.equal(config.agent["glm-reviewer"].permission.edit, "deny");
   assert.equal(config.agent["glm-reviewer"].permission.task, "deny");
   assert.equal(config.agent["glm-reviewer"].permission.bash, "deny");
+  assert.equal(config.agent["glm-reviewer"].permission.external_directory["*"], "deny");
+  assert.equal(config.agent["glm-reviewer"].permission.external_directory["$HOME/.config/opencode/skills/plan-and-subagent/**"], "allow");
+  assert.equal(config.agent["glm-ui-ux"].permission["*"], "deny");
+  assert.equal(config.agent["glm-ui-ux"].permission.external_directory["*"], "deny");
+  assert.match(fs.readFileSync(path.join(repository, "profiles/glm/PROFILE.md"), "utf8"), /opencode --agent glm-orchestrator/);
+  assert.match(fs.readFileSync(path.join(repository, "README.md"), "utf8"), /opencode --agent glm-orchestrator/);
   assert.ok(config.agent["glm-orchestrator"].permission.task["glm-implementer"] === "allow");
+});
+
+test("read-only permission evaluation denies unknown tools while allowing installed contracts", (t) => {
+  const f = fixture(t);
+  const policies = [
+    { permission: "*", action: "allow", pattern: "*" },
+    { permission: "*", action: "deny", pattern: "*" },
+    { permission: "read", action: "allow", pattern: "*" },
+    { permission: "glob", action: "allow", pattern: "*" },
+    { permission: "grep", action: "allow", pattern: "*" },
+    { permission: "lsp", action: "allow", pattern: "*" },
+    { permission: "skill", action: "deny", pattern: "*" },
+    { permission: "skill", action: "allow", pattern: "plan-and-subagent" },
+    { permission: "external_directory", action: "deny", pattern: "*" },
+    { permission: "external_directory", action: "allow", pattern: `${f.roots.opencode}/skills/plan-and-subagent/**` },
+    { permission: "external_directory", action: "allow", pattern: `${f.roots.environment}/profiles/glm/**` },
+  ];
+  const agent = {
+    name: "glm-reviewer",
+    mode: "subagent",
+    model: { providerID: "opencode-go", modelID: "deepseek-v4.1-flash" },
+    permission: policies,
+  };
+  assert.equal(effectivePermission(policies, "mcp_test_write", "*"), "deny");
+  assert.equal(effectivePermission(policies, "skill", "plan-and-subagent"), "allow");
+  assert.equal(effectivePermission(policies, "skill", "unapproved-skill"), "deny");
+  assert.deepEqual(validateResolvedGlmAgent(agent, {
+    name: "glm-reviewer",
+    mode: "subagent",
+    model: "deepseek-v4.1-flash",
+    allowed: ["read", "glob", "grep", "lsp", "skill"],
+    denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"],
+    skills: ["plan-and-subagent"],
+    readOnly: true,
+  }, f.roots), []);
 });
 
 test("the source inventory is self-contained under skill and profile roots", (t) => {
@@ -210,6 +252,27 @@ fs.appendFileSync(process.env.SETUP_TEST_LOG, JSON.stringify([path.basename(proc
 if(path.basename(process.argv[1])==='gh') {
   fs.cpSync(path.join(args[2],'skills',args[3]),path.join(args[args.indexOf('--dir')+1],args[3]),{recursive:true});
 } else if(args.includes('--version')) {console.log('test-version');}
+else if(args.includes('debug') && args.includes('config')) {console.log(JSON.stringify({default_agent:process.env.SETUP_TEST_CONFIG_MISMATCH?'other-agent':'glm-orchestrator'}));}
+else if(args.includes('debug') && args.includes('agent')) {
+  const name=args[args.indexOf('agent')+1];
+  const models={'glm-orchestrator':'glm-5.3','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-v4.1-flash','glm-ui-ux':'glm-5.3','glm-mockup':'glm-5.3'};
+  if(process.env.SETUP_TEST_CONFIG_MISMATCH) models[name]='test/override';
+  const readOnly=name==='glm-reviewer'||name==='glm-ui-ux';
+  const permission=readOnly ? [
+    {permission:'*',action:'allow',pattern:'*'}, {permission:'*',action:'deny',pattern:'*'},
+    {permission:'read',action:'allow',pattern:'*'}, {permission:'glob',action:'allow',pattern:'*'},
+    {permission:'grep',action:'allow',pattern:'*'}, {permission:'lsp',action:'allow',pattern:'*'},
+    {permission:'skill',action:'deny',pattern:'*'}, {permission:'skill',action:'allow',pattern:'plan-and-subagent'},
+    {permission:'edit',action:'deny',pattern:'*'}, {permission:'write',action:'deny',pattern:'*'},
+    {permission:'task',action:'deny',pattern:'*'}, {permission:'webfetch',action:'deny',pattern:'*'},
+    {permission:'websearch',action:'deny',pattern:'*'}, {permission:'question',action:'deny',pattern:'*'},
+    {permission:'external_directory',action:'deny',pattern:'*'},
+    {permission:'external_directory',action:'allow',pattern:process.env.OPENCODE_CONFIG_DIR+'/skills/plan-and-subagent/**'},
+    {permission:'external_directory',action:'allow',pattern:process.env.AGENT_ENVIRONMENT_DIR+'/profiles/glm/**'},
+    {permission:'bash',action:'deny',pattern:'*'},
+  ] : [{permission:'*',action:'allow',pattern:'*'}];
+  console.log(JSON.stringify({name,mode:name==='glm-orchestrator'?'primary':'subagent',model:{providerID:'opencode-go',modelID:models[name]},permission}));
+}
 else if(args.includes('agent')) {console.log(process.env.OPENCODE_CONFIG?.includes('/profiles/glm/') ? 'glm-orchestrator (primary)' : 'reviewer (primary)');}
 else if(args.includes('auth')) {
   if(process.env.SETUP_TEST_BAD_AUTH) {console.log('private-auth-output');process.exitCode=1;}
@@ -271,6 +334,10 @@ test("GLM-only setup does not require Codex skill staging or write Codex targets
   assert.equal(fs.existsSync(path.join(f.roots.codex, "skills/plan-and-subagent")), false);
   assert.ok(fs.existsSync(path.join(f.roots.opencode, "profiles/glm/opencode.jsonc")));
   assert.ok(calls().every((call) => call[0] !== "gh"));
+  const mismatch = run(["--check", "--profile", "glm"], { SETUP_TEST_CONFIG_MISMATCH: "1" });
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stdout, /\[FAIL\] GLM merged default agent/);
+  assert.match(mismatch.stdout, /\[FAIL\] GLM merged agent glm-reviewer/);
 });
 
 test("dependency failure retains progress and the same installation can resume", (t) => {

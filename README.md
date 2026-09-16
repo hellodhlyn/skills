@@ -57,13 +57,18 @@ The GLM profile uses OpenCode native agents:
 Start it by selecting the installed config explicitly:
 
 ```bash
-OPENCODE_CONFIG="$HOME/.config/opencode/profiles/glm/opencode.jsonc" \
-  opencode "$PROJECT_DIR"
+export OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+export AGENT_ENVIRONMENT_DIR="${AGENT_ENVIRONMENT_DIR:-$HOME/.config/agents}"
+export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/profiles/glm/opencode.jsonc"
+opencode --agent glm-orchestrator "$PROJECT_DIR"
 ```
 
 Profile selection does not change an existing OpenCode session. Native GLM
 implementation corrections continue in the same child session; independent
 review uses a separate child context. GLM roles never nest `opencode run`.
+The explicit `--agent` fixes the starting role, while project and managed
+configuration can still override an agent with the same name; inspect the
+project-merged agent configuration before accepting readiness.
 
 ## OpenCode agents
 
@@ -185,8 +190,16 @@ Check each profile explicitly:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
-OPENCODE_CONFIG="$HOME/.config/opencode/profiles/glm/opencode.jsonc" \
-  mise exec -- opencode agent list
+export OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+export AGENT_ENVIRONMENT_DIR="${AGENT_ENVIRONMENT_DIR:-$HOME/.config/agents}"
+export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/profiles/glm/opencode.jsonc"
+mise exec -- opencode agent list
+mise exec -- opencode debug config
+mise exec -- opencode debug agent glm-orchestrator
+mise exec -- opencode debug agent glm-implementer
+mise exec -- opencode debug agent glm-reviewer
+mise exec -- opencode debug agent glm-ui-ux
+mise exec -- opencode debug agent glm-mockup
 ```
 
 To migrate an existing Codex installation, run the Codex dry-run, inspect any
