@@ -5,28 +5,32 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const usage = `Usage: bash scripts/setup-plan-and-subagent.sh --check | --dry-run | --apply [--force]
+const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+const manifestPath = path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json");
+const usage = `Usage: bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --check | --dry-run | --apply [options]
+  --profile codex|glm|both  Select the native profile (default: codex).
+  --component environment|opencode|pi  Compatibility component-only selection.
   --check     Inspect installed files and local runtime readiness (no configuration writes).
   --dry-run   Show the entire file plan and required operations without applying them.
-  --apply     Synchronize the personal environment, then check readiness.
+  --apply     Synchronize the selected profile, then check readiness.
   --force     Replace conflicting files after inspecting the dry-run; only with --apply.
-  --component environment|opencode|pi  Compatibility entry points; not a full setup.
-  --with-browser  Install Chromium for the Pi-only entry point (full setup includes it).
+  --with-browser  Install Chromium for the Pi-only compatibility entry point.
 
-Destinations: PLAN_AND_SUBAGENT_CODEX_DIR (defaults to CODEX_HOME), AGENT_ENVIRONMENT_DIR, OPENCODE_CONFIG_DIR,
+Destinations: PLAN_AND_SUBAGENT_CODEX_DIR, AGENT_ENVIRONMENT_DIR, OPENCODE_CONFIG_DIR,
 PI_UI_VERIFIER_DIR, PLAN_AND_SUBAGENT_SETUP_DIR. All must be absolute paths.
 Exit codes: 0 = passed; 1 = conflict/install/check failure; 2 = setup needs user action.
-Checks may create temporary browser evidence and CLI logs, but never alter credentials.
-No command invokes a paid model or changes global AGENTS.md.`;
+No command invokes a paid model, changes credentials, or edits global AGENTS.md.`;
 
 export function parseArguments(args) {
-  const options = { mode: undefined, component: undefined, force: false, withBrowser: false };
+  const options = { mode: undefined, profile: "codex", component: undefined, force: false, withBrowser: false };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (["--check", "--dry-run", "--apply"].includes(arg)) {
       if (options.mode) throw new Error("Choose exactly one mode.");
       options.mode = arg.slice(2);
+    } else if (arg === "--profile") {
+      options.profile = args[++index];
+      if (!["codex", "glm", "both"].includes(options.profile)) throw new Error("Unknown profile.");
     } else if (arg === "--force") options.force = true;
     else if (arg === "--with-browser") options.withBrowser = true;
     else if (arg === "--component") {
@@ -45,7 +49,8 @@ export function resolveRoots(env = process.env, home = os.homedir()) {
   const roots = {
     codex: env.PLAN_AND_SUBAGENT_CODEX_DIR || env.CODEX_HOME || path.join(home, ".codex"),
     environment: env.AGENT_ENVIRONMENT_DIR || path.join(home, ".config/agents"),
-    opencode: env.OPENCODE_CONFIG_DIR || path.join(home, ".opencode"),
+    opencode: env.OPENCODE_CONFIG_DIR || path.join(home, ".config/opencode"),
+    legacyOpencode: env.OPENCODE_LEGACY_CONFIG_DIR || path.join(home, ".opencode"),
     pi: env.PI_UI_VERIFIER_DIR || path.join(home, ".local/share/plan-and-subagent/pi-ui-verifier"),
     state: env.PLAN_AND_SUBAGENT_SETUP_DIR || path.join(home, ".local/share/plan-and-subagent/setup"),
   };
@@ -92,7 +97,8 @@ function filesUnder(source) {
   if (!info) throw new Error(`Missing source: ${source}`);
   if (info.isFile()) return [source];
   if (!info.isDirectory()) throw new Error(`Refusing non-regular source: ${source}`);
-  return fs.readdirSync(source).sort().flatMap((name) => filesUnder(path.join(source, name)));
+  return fs.readdirSync(source).filter((name) => ![".git", "node_modules"].includes(name)).sort()
+    .flatMap((name) => filesUnder(path.join(source, name)));
 }
 
 function digest(file) {
@@ -114,15 +120,21 @@ export function loadReceipt(file) {
   return receipt;
 }
 
-export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills = new Map()) {
+function entryMatches(entry, selected, profiles) {
+  if (!selected.includes(entry.component)) return false;
+  if (entry.profile) return profiles.includes(entry.profile);
+  if (Array.isArray(entry.profiles)) return entry.profiles.some((profile) => profiles.includes(profile));
+  return true;
+}
+
+export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills = new Map(), profiles = ["codex"]) {
   const plan = [];
   const targets = new Set();
-  for (const entry of manifest.entries.filter((entry) => selected.includes(entry.component))) {
+  for (const entry of manifest.entries.filter((candidate) => entryMatches(candidate, selected, profiles))) {
     const original = joined(repo, entry.source);
     const originalFiles = filesUnder(original);
     const source = stagedSkills.get(entry.skill) || original;
     const target = joined(roots[entry.root], entry.target);
-    // gh stages just this skill; actual destination writes stay under our conflict checks.
     for (const originalFile of originalFiles) {
       const relative = path.relative(original, originalFile);
       const sourceFile = relative ? path.join(source, relative) : source;
@@ -136,7 +148,7 @@ export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills
       const previous = receipt.files[targetFile];
       const action = current === hash ? "unchanged" : !current ? "add"
         : previous?.component === entry.component && current === previous.hash ? "update" : "conflict";
-      plan.push({ component: entry.component, source: sourceFile, target: targetFile, hash, current, action });
+      plan.push({ component: entry.component, profile: entry.profile, source: sourceFile, target: targetFile, hash, current, action });
     }
   }
   const stale = new Set();
@@ -144,8 +156,10 @@ export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills
     if (selected.includes(entry.component) && !targets.has(target) && stat(target)) stale.add(target);
   }
   for (const entry of manifest.retired || []) {
-    const target = joined(roots[entry.root], entry.target);
-    if (selected.includes(entry.component) && stat(target)) stale.add(target);
+    if (entryMatches(entry, selected, profiles)) {
+      const target = joined(roots[entry.root], entry.target);
+      if (stat(target)) stale.add(target);
+    }
   }
   return { files: plan, stale: [...stale] };
 }
@@ -165,23 +179,18 @@ function writeAtomic(file, contents, mode) {
 export function applyPlan(plan, receipt, receiptPath, force = false) {
   assertSafeDestination(receiptPath);
   if (!force && plan.files.some((entry) => entry.action === "conflict")) throw new Error("Conflicts remain; inspect --dry-run before --apply --force.");
-  // Check every file again before the first write; protect edits made during planning.
   for (const entry of plan.files) {
     assertSafeDestination(entry.target);
     const current = stat(entry.target) ? digest(entry.target) : undefined;
     if (current !== entry.current || digest(entry.source) !== entry.hash) throw new Error(`File changed during setup: ${entry.target}`);
   }
-  // Establish that the progress journal is writable before changing installed files.
   saveReceipt(receiptPath, receipt);
   for (const entry of plan.files) {
     assertSafeDestination(entry.target);
     const current = stat(entry.target) ? digest(entry.target) : undefined;
     if (current !== entry.current) throw new Error(`File changed during setup: ${entry.target}`);
-    if (entry.action !== "unchanged") {
-      writeAtomic(entry.target, fs.readFileSync(entry.source), 0o644);
-    }
-    receipt.files[entry.target] = { component: entry.component, hash: entry.hash };
-    // Record each completed file so a later package failure can be resumed safely.
+    if (entry.action !== "unchanged") writeAtomic(entry.target, fs.readFileSync(entry.source), 0o644);
+    receipt.files[entry.target] = { component: entry.component, ...(entry.profile ? { profile: entry.profile } : {}), hash: entry.hash };
     saveReceipt(receiptPath, receipt);
   }
 }
@@ -226,10 +235,7 @@ export async function command(binary, args, { cwd = repository, env = process.en
     child.on("close", (code) => {
       clearTimeout(timer);
       clearTimeout(killTimer);
-      if (timedOut) {
-        terminate("SIGKILL");
-        stderr += `\nCommand timed out after ${timeout}ms.`;
-      }
+      if (timedOut) { terminate("SIGKILL"); stderr += `\nCommand timed out after ${timeout}ms.`; }
       resolve({ code: timedOut ? 1 : code ?? 1, stdout, stderr, timedOut });
     });
   });
@@ -243,11 +249,29 @@ async function requireCommand(binary, args, options) {
   return result;
 }
 
-async function runtimeChecks(roots, selected, report) {
+async function runtimeChecks(roots, profiles, selected, report) {
   if (selected.includes("opencode")) {
-    const result = await command("mise", ["exec", "--", "opencode", "agent", "list"]);
-    const found = result.code === 0 && /^reviewer(?:\s|$)/m.test(result.stdout.replace(/\x1b\[[0-9;]*m/g, ""));
-    report("OpenCode reviewer discovery", found ? "PASS" : "FAIL", found ? "reviewer found; model invocation not tested" : result.stderr || result.stdout);
+    const checks = [];
+    if (profiles.includes("codex")) checks.push({
+      name: "OpenCode agent discovery (Codex)",
+      env: process.env,
+      pattern: /^reviewer(?:\s|$)/m,
+    });
+    if (profiles.includes("glm")) checks.push({
+      name: "OpenCode agent discovery (GLM)",
+      env: { ...process.env, OPENCODE_CONFIG: path.join(roots.opencode, "profiles/glm/opencode.jsonc") },
+      pattern: /^glm-orchestrator(?:\s|$)/m,
+    });
+    for (const check of checks) {
+      const result = await command("mise", ["exec", "--", "opencode", "agent", "list"], { env: check.env });
+      const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
+      const found = result.code === 0 && check.pattern.test(clean);
+      report(check.name, found ? "PASS" : "FAIL", found ? "configured agent found; model invocation not tested" : result.stderr || result.stdout);
+    }
+  }
+  if (profiles.includes("glm") && selected.includes("opencode")) {
+    const config = path.join(roots.opencode, "profiles/glm/opencode.jsonc");
+    report("GLM native profile", stat(config) ? "PASS" : "FAIL", stat(config) ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
   }
   if (selected.includes("pi")) {
     const check = await command("mise", ["exec", "--", "pnpm", "--dir", roots.pi, "run", "check"]);
@@ -263,18 +287,18 @@ async function runtimeChecks(roots, selected, report) {
     const missing = status?.provider === "opencode-go" && status?.status === "not_ready" && status?.reason === "credentials_not_configured";
     report("Pi authentication", ready ? "PASS" : missing ? "ACTION_REQUIRED" : "FAIL", ready
       ? "credential check passed; model invocation not tested"
-      : missing ? `Credentials are not configured. Start ${path.join(roots.pi, "node_modules/.bin/pi")} and use /login for OpenCode Go. Credentials were not changed.`
-      : "Authentication/model check failed or returned an invalid result; readiness is unverified. Credential output was suppressed.");
+      : missing ? "Credentials are not configured. Credentials were not changed."
+      : "Authentication/model check failed or returned an invalid result; credential output was suppressed.");
   }
-  if (selected.includes("codex")) {
+  if (profiles.includes("codex") && selected.includes("profile")) {
     const instructions = ["AGENTS.override.md", "AGENTS.md"].map((name) => path.join(roots.codex, name));
     const active = instructions.find((file) => fs.existsSync(file) && fs.readFileSync(file, "utf8").trim());
-    const expected = path.join(roots.environment, "plan-and-subagent.md");
+    const expected = path.join(roots.environment, "profiles/codex/PROFILE.md");
     const contents = active ? fs.readFileSync(active, "utf8").replaceAll("`", "").replaceAll("~/", `${os.homedir()}/`) : "";
     report("Global profile designation", contents.includes(expected) ? "PASS" : "ACTION_REQUIRED", contents.includes(expected)
       ? `Profile path found in ${active}; effective project/task overrides require session inspection.`
       : `Designate ${expected} in the active global AGENTS.md. It was not edited.`);
-    report("Codex session", "NOTICE", "Start a new Codex session after role/skill updates. Current-session discovery and model selection cannot be verified by this installer.");
+    report("Codex session", "NOTICE", "Start a new Codex session after role updates; current-session discovery cannot be verified by this installer.");
   }
 }
 
@@ -283,9 +307,12 @@ export async function main(args) {
   const [major, minor] = process.versions.node.split(".").map(Number);
   if (major < 22 || (major === 22 && minor < 19)) throw new Error("Setup requires Node.js 22.19 or later through mise.");
   const options = parseArguments(args);
-  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "scripts/plan-and-subagent-install.json"), "utf8"));
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const roots = resolveRoots();
-  const selected = options.component ? [options.component] : manifest.components;
+  const profiles = options.profile === "both" ? ["codex", "glm"] : [options.profile];
+  const selected = options.component
+    ? options.component === "environment" ? ["profile", "environment"] : [options.component]
+    : ["skill", "skill-opencode", "profile", "environment", "codex", "opencode", "pi"];
   const receiptPath = path.join(roots.state, "receipt.json");
   if (within(repository, receiptPath)) throw new Error("Installation receipt must be outside the repository.");
   const receipt = loadReceipt(receiptPath);
@@ -299,14 +326,14 @@ export async function main(args) {
   try {
     const stagedSkills = new Map();
     if (selected.includes("skill")) {
-      // A disposable gh install supplies canonical metadata without parsing YAML.
       staging = fs.mkdtempSync(path.join(os.tmpdir(), "plan-and-subagent-setup-"));
-      for (const entry of manifest.entries.filter((entry) => entry.skill)) {
+      for (const entry of manifest.entries.filter((candidate) => candidate.skill && entryMatches(candidate, selected, profiles))) {
+        if (stagedSkills.has(entry.skill)) continue;
         await requireCommand("gh", ["skill", "install", repository, entry.skill, "--from-local", "--agent", "codex", "--scope", "user", "--dir", staging, "--force"]);
         stagedSkills.set(entry.skill, path.join(staging, entry.skill));
       }
     }
-    const plan = buildPlan(manifest, repository, roots, receipt, selected, stagedSkills);
+    const plan = buildPlan(manifest, repository, roots, receipt, selected, stagedSkills, profiles);
     const sourceLinks = missingLinks(plan.files, true);
     if (sourceLinks.length) throw new Error(`Missing source links:\n${sourceLinks.join("\n")}`);
     const plannedLinks = missingLinks(plan.files, true, true);
@@ -316,11 +343,10 @@ export async function main(args) {
     for (const file of plan.stale) report("Obsolete managed file (preserved)", "NOTICE", file);
     if (options.mode === "dry-run") {
       if (selected.includes("pi")) console.log(`Apply: install locked Pi dependencies${!options.component || options.withBrowser ? " and Chromium" : " (Chromium requires --with-browser for Pi-only install)"}, then package/browser/auth checks.`);
-      if (!options.component) console.log("Apply checks global profile designation and role discovery; never edits credentials or global instructions.");
+      console.log(`Selected profile(s): ${profiles.join(", ")}. No configuration or receipt was written.`);
       return plan.files.some((entry) => entry.action === "conflict") ? 1 : 0;
     }
     if (options.mode === "apply") {
-      // Inspect all prerequisites before modifying any managed destination.
       if (selected.includes("pi")) await requireCommand("mise", ["exec", "--", "pnpm", "--version"]);
       if (selected.includes("opencode")) await requireCommand("mise", ["exec", "--", "opencode", "--version"]);
       applyPlan(plan, receipt, receiptPath, options.force);
@@ -338,7 +364,7 @@ export async function main(args) {
     report("File synchronization", mismatches.length ? "FAIL" : "PASS", mismatches.length ? `${mismatches.length} file(s) missing or different; run --dry-run.` : `${plan.files.length} managed files match the source.`);
     const links = missingLinks(plan.files);
     report("Linked documents", links.length ? "FAIL" : "PASS", links.join("\n"));
-    await runtimeChecks(roots, selected, report);
+    await runtimeChecks(roots, profiles, selected, report);
     console.log(options.component ? `Component-only result: ${options.component}; full environment readiness was not checked.` : "Local checks complete; no paid model invocation was performed.");
     return exitCode;
   } catch (error) {

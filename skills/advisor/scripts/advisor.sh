@@ -20,7 +20,7 @@ if [[ ! "$PROMPT" =~ [^[:space:]] ]]; then
   exit 2
 fi
 
-MODEL="${ADVISOR_MODEL:-opencode-go/glm-5.3}"
+MODEL="${ADVISOR_MODEL:-}"
 
 SKILL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SYSTEM_APPEND="$(cat "$SKILL_ROOT/references/advice-contract.md")"
@@ -42,10 +42,14 @@ fi
 
 printf 'Advisor run directory: %s\n' "$RUN_DIR" >&2
 printf '%s\n' "$FULL_PROMPT" > "$RUN_DIR/prompt.md"
-printf 'Workdir: %s\nModel: %s\n' "$PWD" "$MODEL" > "$RUN_DIR/run.md"
+printf 'Workdir: %s\nModel override: %s\n' "$PWD" "${MODEL:-profile-configured}" > "$RUN_DIR/run.md"
 
 set +e
-opencode run --agent advisor --model "$MODEL" "$FULL_PROMPT" \
+MODEL_ARGS=()
+if [ -n "$MODEL" ]; then
+  MODEL_ARGS=(--model "$MODEL")
+fi
+opencode run --agent advisor "${MODEL_ARGS[@]}" "$FULL_PROMPT" \
   > "$RUN_DIR/result.md" 2> "$RUN_DIR/stderr.log"
 ADVISOR_EXIT_CODE=$?
 set -e

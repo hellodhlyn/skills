@@ -33,8 +33,11 @@ async function main() {
   await access(piBinary, constants.X_OK);
   await access(extensionPath, constants.R_OK);
 
-  const provider = process.env.PI_UI_VERIFIER_PROVIDER || "opencode-go";
-  const model = process.env.PI_UI_VERIFIER_MODEL || "glm-5.3-flash";
+  const provider = process.env.PI_UI_VERIFIER_PROVIDER;
+  const model = process.env.PI_UI_VERIFIER_MODEL;
+  if (!provider || !model) {
+    throw new Error("PI_UI_VERIFIER_PROVIDER and PI_UI_VERIFIER_MODEL must be supplied by the selected profile");
+  }
   const timeoutMs = Number(process.env.PI_UI_VERIFIER_TIMEOUT_MS || 900_000);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1_000) {
     throw new Error("PI_UI_VERIFIER_TIMEOUT_MS must be an integer of at least 1000");

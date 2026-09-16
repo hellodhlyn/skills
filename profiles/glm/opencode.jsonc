@@ -1,0 +1,110 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "glm-orchestrator",
+  "permission": {
+    "skill": "allow"
+  },
+  "agent": {
+    "glm-orchestrator": {
+      "description": "Plans and coordinates the plan-and-subagent workflow using OpenCode native agents.",
+      "mode": "primary",
+      "model": "opencode-go/glm-5.3",
+      "reasoningEffort": "high",
+      "prompt": "Load the plan-and-subagent skill. Own requirements, decisions, delegation, review triage, validation oversight, and completion judgment. Delegate product edits to glm-implementer.",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "edit": "deny",
+        "task": {
+          "*": "deny",
+          "glm-implementer": "allow",
+          "glm-reviewer": "allow",
+          "glm-ui-ux": "allow",
+          "glm-mockup": "allow"
+        },
+        "webfetch": "deny",
+        "websearch": "deny",
+        "external_directory": "allow",
+        "bash": "ask"
+      }
+    },
+    "glm-implementer": {
+      "description": "Implements only the approved brief in the assigned paths.",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3-flash",
+      "reasoningEffort": "max",
+      "prompt": "Load the plan-and-subagent skill and implement only the approved brief. Preserve unrelated changes, do not spawn agents, and report deviations instead of inventing decisions.",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "edit": "allow",
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "external_directory": "allow",
+        "bash": "allow"
+      }
+    },
+    "glm-reviewer": {
+      "description": "Independently reviews the approved change without editing it.",
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "reasoningEffort": "max",
+      "prompt": "Load the plan-and-subagent independent review contract. Review the supplied code, diff, requirements, and validation evidence independently. Report only concrete actionable findings with evidence; never edit, delegate, or substitute a model.",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "edit": "deny",
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "external_directory": "deny",
+        "bash": "deny"
+      }
+    },
+    "glm-ui-ux": {
+      "description": "Provides read-only UI/UX evidence for applicable product changes.",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3",
+      "reasoningEffort": "high",
+      "prompt": "Load the plan-and-subagent UI/UX contract. Work read-only, assess only the assigned surface, and return advisory evidence without choosing unresolved product meaning.",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "edit": "deny",
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "external_directory": "deny",
+        "bash": "deny"
+      }
+    },
+    "glm-mockup": {
+      "description": "Creates only assigned UI/UX briefing mockup artifacts.",
+      "mode": "subagent",
+      "model": "opencode-go/glm-5.3",
+      "reasoningEffort": "high",
+      "prompt": "Load the plan-and-subagent mockup contract. Create only the explicitly assigned mockup artifacts, preserve product code, and report material design choices as decision-required.",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "edit": "ask",
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "external_directory": "ask",
+        "bash": "deny"
+      }
+    }
+  }
+}

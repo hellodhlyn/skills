@@ -13,8 +13,10 @@ Require an independent read-only reviewer with a separate context who did not
 implement the change. The primary makes the final finding decisions.
 
 Agent roles, models, execution procedures, integrations, paths, delivery policy,
-and retry limits belong to the environment. Maintaining this skill does not
-itself invoke this workflow. Read references only at the indicated stage.
+and retry limits belong to the selected profile and its native configuration.
+The common skill owns the contracts and pipeline, but does not hard-code a
+personal model or provider. Maintaining this skill does not itself invoke this
+workflow. Read references and tool procedures only at the indicated stage.
 
 ## Follow the stage contract
 
@@ -30,9 +32,11 @@ higher-priority instructions.
 ## 1. Resolve the environment and establish the task
 
 Read [environment resolution](references/environment.md) and the designated
-profile. Resolve required capabilities before dependent work; missing
-configuration blocks only that work. Use [planning artifacts](references/planning.md)
-to record the request, baseline, pre-existing changes, and effective environment.
+profile. The profile connects each stage to native Codex, OpenCode, Pi, GitHub,
+and Linear capabilities; it does not replace this skill's contracts. Resolve
+required capabilities before dependent work; missing configuration blocks only
+that work. Use [planning artifacts](references/planning.md) to record the
+request, baseline, pre-existing changes, and effective environment.
 Preserve user-owned changes outside task ownership.
 
 Inspect project instructions and the code, knowledge, dependencies, and tests

@@ -11,8 +11,8 @@ for await (const line of lines) {
       success: true,
       data: {
         model: {
-          provider: "opencode-go",
-          id: "glm-5.3-flash",
+          provider: process.env.PI_UI_VERIFIER_PROVIDER || "opencode-go",
+          id: process.env.PI_UI_VERIFIER_MODEL || "glm-5.3-flash",
           input: ["text", "image"],
         },
       },

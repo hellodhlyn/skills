@@ -1,0 +1,29 @@
+{
+  "profiles": ["codex", "glm"],
+  "entries": [
+    {"component": "skill", "profile": "codex", "root": "codex", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent"},
+    {"component": "skill-opencode", "profiles": ["codex", "glm"], "root": "opencode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
+    {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/codex/PROFILE.md", "target": "profiles/codex/PROFILE.md"},
+    {"component": "codex", "profile": "codex", "root": "codex", "source": "profiles/codex/codex/agents", "target": "agents"},
+    {"component": "opencode", "profile": "codex", "root": "opencode", "source": "profiles/codex/opencode/agents", "target": "agents"},
+    {"component": "profile", "profile": "glm", "root": "environment", "source": "profiles/glm/PROFILE.md", "target": "profiles/glm/PROFILE.md"},
+    {"component": "opencode", "profile": "glm", "root": "opencode", "source": "profiles/glm/opencode.jsonc", "target": "profiles/glm/opencode.jsonc"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/package.json", "target": "package.json"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/pnpm-lock.yaml", "target": "pnpm-lock.yaml"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/pnpm-workspace.yaml", "target": "pnpm-workspace.yaml"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/examples", "target": "examples"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/extensions", "target": "extensions"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/fixtures", "target": "fixtures"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/prompts", "target": "prompts"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/src", "target": "src"},
+    {"component": "pi", "profiles": ["codex", "glm"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/test", "target": "test"}
+  ],
+  "retired": [
+    {"component": "environment", "root": "environment", "target": "plan-and-subagent.md"},
+    {"component": "environment", "root": "environment", "target": "plan-and-subagent"},
+    {"component": "environment", "root": "environment", "target": "plan-and-subagent/agents/luna_ui_verifier.toml"},
+    {"component": "codex", "root": "codex", "target": "agents/luna_ui_verifier.toml"},
+    {"component": "opencode", "root": "legacyOpencode", "target": "agents/advisor.md"},
+    {"component": "opencode", "root": "legacyOpencode", "target": "agents/reviewer.md"}
+  ]
+}

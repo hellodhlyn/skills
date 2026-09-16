@@ -14,7 +14,15 @@ permission:
   websearch: deny
   external_directory: allow
   bash:
-    "*": allow
+    "*": deny
+    "pwd": allow
+    "cat *": allow
+    "find *": allow
+    "git diff *": allow
+    "git log *": allow
+    "git status *": allow
+    "rg *": allow
+    "sed *": allow
 ---
 
 You are an independent, read-only code reviewer. You are authorized to inspect the

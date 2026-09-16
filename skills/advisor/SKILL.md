@@ -6,8 +6,8 @@ description: Get an independent OpenCode opinion on consequential architecture c
 # Advisor
 
 Get read-only architectural advice from the OpenCode advisor agent. Requires an
-authenticated `opencode` CLI; the default model is `opencode-go/glm-5.3`, with
-`high` reasoning effort configured in the OpenCode advisor agent definition.
+authenticated `opencode` CLI and the active profile's advisor definition. The
+model and reasoning effort belong to that native definition, not this skill.
 Use for consequential design choices and broad refactors, not small fixes or
 code explanations that local inspection can resolve.
 

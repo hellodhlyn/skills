@@ -22,22 +22,23 @@ working directory. Read execution/integration documents only when their stage
 or condition applies. If a profile is absent, ask for its path or the missing
 choices needed for the task; continue independent investigation meanwhile.
 
-## Choices to resolve
+## Profile boundary
 
-Use these four sections when authoring a profile. Equivalent clear prose is
-fine; fixed field names are not required.
+The profile is a connection document, not a second workflow definition. Keep
+the pipeline, approval, validation, review budgets, and delivery contracts in
+this skill and its tools/references. Keep native models, providers, permissions,
+role definitions, and explicit start commands in the profile's native settings.
 
 | Section | Required decisions |
 | --- | --- |
-| Roles and execution | Implementer, independent reviewer and required separation, invocation/completion procedures; specialist roles and when they apply, or explicitly none; separate mockup and browser-verification executors for applicable UI work, including model/harness diversity and deterministic evidence capabilities when required |
-| Context and validation | Project knowledge sources and runtime conventions where needed; derive actual validation commands from project evidence |
-| Delivery | Intended result and applicable preparation/milestone/integration procedures; this may be reviewed local changes, commits, or a published review request |
-| Operations | Journal location, understanding-check limit, uncapped implementation feedback iterations, separate finite internal/external review limits, and wait/progress behavior |
+| Native bindings | Each stage's role, model/provider, permission boundary, and actual harness configuration |
+| Start and status | Explicit profile selection, session start/continuation, and observable completion/status commands |
+| Runtime resources | Installation destinations and profile-specific values passed to shared executors |
 
-Choose agents by role or definition reference. Keep models and reasoning settings
-in the runtime's agent definitions rather than duplicating them in the profile.
-Tool-specific permission settings, process APIs, provider/model choices, and runtime
-installation belong to execution documents and environment resources. Do not turn an
+Choose agents by role or definition reference. Keep model and reasoning values in
+native runtime settings rather than duplicating them in prose. Tool-specific
+process APIs belong to the common `tools/` documents; provider/model values and
+permissions belong to the selected native profile. Do not turn an
 environment-specific executor into a mandatory dependency of the portable skill.
 
 Before dependent work, confirm the required role/tool is actually available and
