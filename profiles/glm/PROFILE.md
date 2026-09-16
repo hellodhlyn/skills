@@ -2,35 +2,41 @@
 
 This profile connects the common plan-and-subagent skill to OpenCode native
 primary and subagent execution. The common skill owns the pipeline and
-contracts; `opencode.jsonc` owns the native agents, models, and permissions.
+contracts; the profile's global OpenCode agent files own the native agents,
+models, and permissions.
 
 ## Start
 
 Install the common skill and this profile with the repository installer, then
-start a new OpenCode session with the profile configuration selected explicitly:
+start a new OpenCode session by selecting the globally installed primary agent:
 
 ```bash
-export OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
-export AGENT_ENVIRONMENT_DIR="${AGENT_ENVIRONMENT_DIR:-$HOME/.config/agents}"
-export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/profiles/glm/opencode.jsonc"
 opencode --agent glm-orchestrator "$PROJECT_DIR"
 ```
 
-Selecting a profile does not change an already-running session. The OpenCode
-configuration is merged with the user's normal configuration. `--agent
-glm-orchestrator` fixes the starting role; it does not prevent a later project
-configuration from overriding the same agent's model or permissions.
+The installer places the `glm-*` agents in `~/.config/opencode/agents/`, so the
+command does not need `OPENCODE_CONFIG`. `--agent glm-orchestrator` selects the
+GLM primary; it does not prevent a later project or managed configuration from
+overriding the same agent's model or permissions.
+
+The profile JSONC remains available when an explicit profile default is needed:
+
+```bash
+export OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/profiles/glm/opencode.jsonc"
+opencode --agent glm-orchestrator "$PROJECT_DIR"
+```
 
 Before implementation, inspect the final project-merged settings from the
 project directory and treat any mismatch as unverified:
 
 ```bash
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug config
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-orchestrator
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-implementer
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-reviewer
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-ui-ux
-OPENCODE_CONFIG="$OPENCODE_CONFIG" opencode debug agent glm-mockup
+opencode debug config
+opencode debug agent glm-orchestrator
+opencode debug agent glm-implementer
+opencode debug agent glm-reviewer
+opencode debug agent glm-ui-ux
+opencode debug agent glm-mockup
 ```
 
 Confirm the primary role, each model, the reviewer/UI/UX deny-by-default
@@ -52,13 +58,22 @@ The Pi native invocation uses provider `opencode-go` and model
 `glm-5.3-flash`. It is independent of the OpenCode implementation and review
 agents.
 
+The profile supplies those values directly to the shared runner; no provider or
+model environment variables are required:
+
+```bash
+mise exec -- node "${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}/src/run.mjs" \
+  --provider opencode-go --model glm-5.3-flash "$REQUEST"
+```
+
 The implementation child session is retained for understanding checks and
 corrections. The independent reviewer always starts in a different child
 context. No GLM role invokes `opencode run` recursively.
 
 ## Installation targets
 
-- Native profile configuration: `~/.config/opencode/profiles/glm/opencode.jsonc`
+- Native global agent definitions: `~/.config/opencode/agents/glm-*.md`
+- Optional profile configuration: `~/.config/opencode/profiles/glm/opencode.jsonc`
 - Shared OpenCode skill: `~/.config/opencode/skills/plan-and-subagent/`
 - Shared Pi runtime: `~/.local/share/plan-and-subagent/pi-ui-verifier/`
 

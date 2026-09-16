@@ -8,15 +8,15 @@ OpenCode code reviewer.
 
 Use `${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}`
 as `PI_UI_VERIFIER_HOME`. Resolve its runner, package, prompt, extension, and
-dependencies before dependent work. The selected profile must provide
-`PI_UI_VERIFIER_PROVIDER` and `PI_UI_VERIFIER_MODEL` explicitly. Missing values
-are an error; there is no model or provider fallback.
+dependencies before dependent work. The selected profile must provide an
+explicit provider and model to the runner through its `--provider` and `--model`
+arguments. Missing values are an error; there is no model or provider fallback.
 
 Check provider readiness without printing credentials:
 
 ```bash
 mise exec -- "$PI_UI_VERIFIER_HOME/node_modules/.bin/pi" auth check \
-  --provider "$PI_UI_VERIFIER_PROVIDER" --model "$PI_UI_VERIFIER_MODEL" \
+  --provider <profile-provider> --model <profile-model> \
   --json --no-refresh
 ```
 
@@ -37,7 +37,8 @@ unrelated account data in the request.
 Invoke the runner as one process from the target workdir:
 
 ```bash
-mise exec -- node "$PI_UI_VERIFIER_HOME/src/run.mjs" "$REQUEST"
+mise exec -- node "$PI_UI_VERIFIER_HOME/src/run.mjs" \
+  --provider <profile-provider> --model <profile-model> "$REQUEST"
 ```
 
 Preserve the execution output, process identity, and numeric exit status. Poll

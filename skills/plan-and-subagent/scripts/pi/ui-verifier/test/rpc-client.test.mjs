@@ -15,7 +15,7 @@ test("correlates prompt responses and waits for agent_settled", async () => {
   const stderrPath = path.join(directory, "stderr.log");
   const client = new PiRpcClient({
     command: process.execPath,
-    args: [fixture],
+    args: [fixture, "--provider", "opencode-go", "--model", "glm-5.3-flash"],
     cwd: process.cwd(),
     env: process.env,
     eventsPath,

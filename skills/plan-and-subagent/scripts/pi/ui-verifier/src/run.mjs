@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { validateReport, validateRequest, realWorkdir } from "./request.mjs";
 import { PiRpcClient } from "./rpc-client.mjs";
@@ -11,8 +11,25 @@ import { PiRpcClient } from "./rpc-client.mjs";
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function usage() {
-  console.error("Usage: node src/run.mjs <request.json>");
+  console.error("Usage: node src/run.mjs --provider <provider> --model <model> <request.json>");
   process.exit(2);
+}
+
+export function parseArguments(args) {
+  let provider;
+  let model;
+  let requestPath;
+  for (let index = 0; index < args.length; index++) {
+    const argument = args[index];
+    if (argument === "--provider") provider = args[++index];
+    else if (argument === "--model") model = args[++index];
+    else if (!requestPath) requestPath = argument;
+    else throw new Error(`Unexpected argument: ${argument}`);
+  }
+  if (!provider || !model || !requestPath) {
+    throw new Error("--provider, --model, and <request.json> must be supplied by the selected profile");
+  }
+  return { provider, model, requestPath };
 }
 
 async function readJson(filePath) {
@@ -20,8 +37,9 @@ async function readJson(filePath) {
 }
 
 async function main() {
-  if (process.argv.length !== 3) usage();
-  const requestPath = path.resolve(process.argv[2]);
+  if (process.argv.length < 3) usage();
+  const { provider, model, requestPath: suppliedRequestPath } = parseArguments(process.argv.slice(2));
+  const requestPath = path.resolve(suppliedRequestPath);
   const request = validateRequest(await readJson(requestPath));
   const workdir = realWorkdir(request.workdir);
   await mkdir(request.artifactDir, { recursive: true, mode: 0o700 });
@@ -33,11 +51,6 @@ async function main() {
   await access(piBinary, constants.X_OK);
   await access(extensionPath, constants.R_OK);
 
-  const provider = process.env.PI_UI_VERIFIER_PROVIDER;
-  const model = process.env.PI_UI_VERIFIER_MODEL;
-  if (!provider || !model) {
-    throw new Error("PI_UI_VERIFIER_PROVIDER and PI_UI_VERIFIER_MODEL must be supplied by the selected profile");
-  }
   const timeoutMs = Number(process.env.PI_UI_VERIFIER_TIMEOUT_MS || 900_000);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1_000) {
     throw new Error("PI_UI_VERIFIER_TIMEOUT_MS must be an integer of at least 1000");
@@ -143,7 +156,9 @@ async function main() {
   if (failure) throw failure;
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}

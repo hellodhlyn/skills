@@ -1,5 +1,11 @@
 import readline from "node:readline";
 
+const args = process.argv.slice(2);
+const valueFor = (name) => args[args.indexOf(name) + 1];
+const provider = valueFor("--provider");
+const model = valueFor("--model");
+if (!provider || !model) process.exit(1);
+
 const lines = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 for await (const line of lines) {
   const request = JSON.parse(line);
@@ -11,8 +17,8 @@ for await (const line of lines) {
       success: true,
       data: {
         model: {
-          provider: process.env.PI_UI_VERIFIER_PROVIDER || "opencode-go",
-          id: process.env.PI_UI_VERIFIER_MODEL || "glm-5.3-flash",
+          provider,
+          id: model,
           input: ["text", "image"],
         },
       },

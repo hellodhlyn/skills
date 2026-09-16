@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const manifestPath = path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json");
 const usage = `Usage: bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --check | --dry-run | --apply [options]
-  --profile codex|glm|both  Select the native profile (default: codex).
+  --profile codex|glm|union|both  Select the native profile (default: codex).
   --component environment|opencode|pi  Compatibility component-only selection.
   --check     Inspect installed files and local runtime readiness (no configuration writes).
   --dry-run   Show the entire file plan and required operations without applying them.
@@ -30,7 +30,7 @@ export function parseArguments(args) {
       options.mode = arg.slice(2);
     } else if (arg === "--profile") {
       options.profile = args[++index];
-      if (!["codex", "glm", "both"].includes(options.profile)) throw new Error("Unknown profile.");
+      if (!["codex", "glm", "union", "both"].includes(options.profile)) throw new Error("Unknown profile.");
     } else if (arg === "--force") options.force = true;
     else if (arg === "--with-browser") options.withBrowser = true;
     else if (arg === "--component") {
@@ -123,7 +123,7 @@ export function effectivePermission(policies, permission, resource = "*") {
   return action;
 }
 
-export function validateResolvedGlmAgent(agent, expectation, roots) {
+export function validateResolvedAgent(agent, expectation, roots) {
   const problems = [];
   if (!agent || agent.name !== expectation.name) problems.push(`name=${agent?.name || "missing"}`);
   if (agent?.mode !== expectation.mode) problems.push(`mode=${agent?.mode || "missing"}`);
@@ -151,7 +151,7 @@ export function validateResolvedGlmAgent(agent, expectation, roots) {
   if (expectation.readOnly) {
     for (const file of [
       path.join(roots.opencode, "skills/plan-and-subagent/references/validation.md"),
-      path.join(roots.environment, "profiles/glm/PROFILE.md"),
+      path.join(roots.environment, `profiles/${expectation.profile || "glm"}/PROFILE.md`),
     ]) {
       if (effectivePermission(policies, "external_directory", file) !== "allow") problems.push(`external:${file}=not-allowed`);
     }
@@ -161,6 +161,8 @@ export function validateResolvedGlmAgent(agent, expectation, roots) {
   }
   return problems;
 }
+
+export const validateResolvedGlmAgent = validateResolvedAgent;
 
 export function loadReceipt(file) {
   assertSafeDestination(file);
@@ -307,17 +309,25 @@ async function requireCommand(binary, args, options) {
 }
 
 async function runtimeChecks(roots, profiles, selected, report) {
+  const globalAgentEnv = { ...process.env, OPENCODE_CONFIG_DIR: roots.opencode };
+  delete globalAgentEnv.OPENCODE_CONFIG;
+  delete globalAgentEnv.OPENCODE_CONFIG_CONTENT;
   if (selected.includes("opencode")) {
     const checks = [];
     if (profiles.includes("codex")) checks.push({
       name: "OpenCode agent discovery (Codex)",
-      env: process.env,
+      env: globalAgentEnv,
       pattern: /^reviewer(?:\s|$)/m,
     });
     if (profiles.includes("glm")) checks.push({
       name: "OpenCode agent discovery (GLM)",
-      env: { ...process.env, OPENCODE_CONFIG: path.join(roots.opencode, "profiles/glm/opencode.jsonc") },
+      env: globalAgentEnv,
       pattern: /^glm-orchestrator(?:\s|$)/m,
+    });
+    if (profiles.includes("union")) checks.push({
+      name: "OpenCode agent discovery (Union)",
+      env: globalAgentEnv,
+      pattern: /^union-orchestrator(?:\s|$)/m,
     });
     for (const check of checks) {
       const result = await command("mise", ["exec", "--", "opencode", "agent", "list"], { env: check.env });
@@ -356,8 +366,63 @@ async function runtimeChecks(roots, profiles, selected, report) {
         const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });
         let agent;
         try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
-        const problems = result.code === 0 ? validateResolvedGlmAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
+        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
         report(`GLM merged agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "model and effective permissions match profile; model invocation not tested");
+      }
+      for (const expectation of expectations) {
+        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env: globalAgentEnv });
+        let agent;
+        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
+        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
+        report(`GLM global agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "global agent model and effective permissions match profile; model invocation not tested");
+      }
+    }
+  }
+  if (profiles.includes("union") && selected.includes("opencode")) {
+    const config = path.join(roots.opencode, "profiles/union/opencode.jsonc");
+    const installed = stat(config);
+    report("Union native profile", installed ? "PASS" : "FAIL", installed ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
+    if (installed) {
+      const env = {
+        ...process.env,
+        OPENCODE_CONFIG: config,
+        OPENCODE_CONFIG_DIR: roots.opencode,
+        AGENT_ENVIRONMENT_DIR: roots.environment,
+      };
+      const availableModels = await command("mise", ["exec", "--", "opencode", "models", "opencode-go"], { env });
+      const availableModelOutput = availableModels.stdout.replace(/\x1b\[[0-9;]*m/g, "");
+      const unionModelAvailable = availableModels.code === 0 && /(?:^|\n)opencode-go\/union-alpha(?:\s|$)/m.test(availableModelOutput);
+      report("Union model availability", unionModelAvailable ? "PASS" : "FAIL", unionModelAvailable
+        ? "opencode-go/union-alpha is listed; model invocation is checked separately"
+        : availableModels.stderr || availableModels.stdout || "opencode-go/union-alpha was not listed by the installed OpenCode model registry.");
+      const resolvedConfig = await command("mise", ["exec", "--", "opencode", "debug", "config"], { env });
+      let configJson;
+      try { configJson = JSON.parse(resolvedConfig.stdout); } catch { /* Report the raw command failure below. */ }
+      report("Union merged default agent", resolvedConfig.code === 0 && configJson?.default_agent === "union-orchestrator" ? "PASS" : "FAIL",
+        resolvedConfig.code === 0 && configJson?.default_agent === "union-orchestrator"
+          ? "default_agent=union-orchestrator; model invocation not tested"
+          : resolvedConfig.stderr || resolvedConfig.stdout || "Resolved config was not valid JSON or selected another default agent.");
+
+      const expectations = [
+        { name: "union-orchestrator", mode: "primary", model: "union-alpha", profile: "union" },
+        { name: "union-implementer", mode: "subagent", model: "glm-5.3-flash", profile: "union" },
+        { name: "union-reviewer", mode: "subagent", model: "deepseek-v4.1-flash", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "union-ui-ux", mode: "subagent", model: "glm-5.3", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "union-mockup", mode: "subagent", model: "glm-5.3", profile: "union" },
+      ];
+      for (const expectation of expectations) {
+        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });
+        let agent;
+        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
+        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
+        report(`Union merged agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "model and effective permissions match profile; model invocation not tested");
+      }
+      for (const expectation of expectations) {
+        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env: globalAgentEnv });
+        let agent;
+        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
+        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
+        report(`Union global agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "global agent model and effective permissions match profile; model invocation not tested");
       }
     }
   }

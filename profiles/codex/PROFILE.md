@@ -22,6 +22,14 @@ explicit task choices take precedence.
 The Pi native invocation uses provider `opencode-go` and model
 `glm-5.3-flash` for the existing browser-verification contract.
 
+The profile supplies those values directly to the shared runner; no provider or
+model environment variables are required:
+
+```bash
+mise exec -- node "${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}/src/run.mjs" \
+  --provider opencode-go --model glm-5.3-flash "$REQUEST"
+```
+
 Use the common `tools/` documents for invocation, continuation, permissions,
 and completion evidence. A profile document does not change an already-running
 Codex or OpenCode session; select the profile before starting a new session.

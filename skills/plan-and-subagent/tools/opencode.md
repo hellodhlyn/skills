@@ -9,7 +9,7 @@ and native configuration.
 - Codex profile: use the external reviewer runner at
   `../scripts/run-opencode-review.sh`. It invokes the configured OpenCode agent
   and variant for the independent review.
-- GLM profile: use OpenCode native primary/subagent execution. Do not invoke
+- GLM and Union profiles: use OpenCode native primary/subagent execution. Do not invoke
   `opencode run` from inside a GLM implementation or review subagent.
 
 The active profile must identify the actual OpenCode configuration root and
@@ -50,14 +50,20 @@ The optional agent and variant arguments are supplied by the profile. Preserve
 the complete process result, including output, process identity, and numeric
 exit status. Do not read an empty or in-progress result file as a review.
 
-## Native GLM path
+## Native GLM and Union paths
 
-The GLM orchestrator starts the configured implementation subagent through
+The selected native orchestrator starts the configured implementation subagent through
 OpenCode's native subagent tool. Corrections continue in that same child session
 using the supported session continuation mechanism. The independent reviewer
 always uses a fresh child context and its explicitly configured model. Record
 the agent names, model identities, session IDs, terminal states, and complete
 reports. A successful parent response is not proof that a child completed.
+
+For the Union profile, only the primary orchestrator changes to the explicitly
+configured `opencode-go/union-alpha`; implementation, independent review, UI/UX,
+mockup, and Pi settings remain the profile's copied GLM bindings under distinct
+`union-*` role names. Do not infer Union Alpha's model family or substitute a
+different model when the configured identifier is unavailable.
 
 ## Review result
 

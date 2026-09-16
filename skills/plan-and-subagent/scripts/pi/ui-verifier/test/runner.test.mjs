@@ -5,8 +5,19 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { parseArguments } from "../src/run.mjs";
 
-test("requires provider and model values from the selected profile", async () => {
+test("requires explicit provider and model arguments from the selected profile", () => {
+  assert.deepEqual(parseArguments(["--provider", "opencode-go", "--model", "glm-5.3-flash", "request.json"]), {
+    provider: "opencode-go",
+    model: "glm-5.3-flash",
+    requestPath: "request.json",
+  });
+  assert.throws(() => parseArguments(["request.json"]), /--provider, --model/);
+  assert.throws(() => parseArguments(["--provider", "opencode-go", "request.json", "extra"]), /Unexpected argument/);
+});
+
+test("does not use environment variables as the provider/model source", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "pi-ui-runner-"));
   const requestPath = path.join(directory, "request.json");
   await writeFile(requestPath, JSON.stringify({
@@ -21,13 +32,13 @@ test("requires provider and model values from the selected profile", async () =>
     stateChangesAuthorized: false,
   }));
   const env = { ...process.env };
-  delete env.PI_UI_VERIFIER_PROVIDER;
-  delete env.PI_UI_VERIFIER_MODEL;
+  env.PI_UI_VERIFIER_PROVIDER = "wrong-provider";
+  env.PI_UI_VERIFIER_MODEL = "wrong-model";
   const result = spawnSync(process.execPath, ["src/run.mjs", requestPath], {
     cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
     env,
     encoding: "utf8",
   });
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /PI_UI_VERIFIER_PROVIDER and PI_UI_VERIFIER_MODEL/);
+  assert.match(result.stderr, /--provider, --model/);
 });

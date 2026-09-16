@@ -34,6 +34,7 @@ test("requires an explicit operation and rejects contradictory flags", () => {
   }
   assert.equal(parseArguments(["--apply", "--force"]).force, true);
   assert.equal(parseArguments(["--dry-run", "--profile", "glm"]).profile, "glm");
+  assert.equal(parseArguments(["--dry-run", "--profile", "union"]).profile, "union");
   assert.equal(parseArguments(["--dry-run", "--profile", "both"]).profile, "both");
   assert.throws(() => parseArguments(["--dry-run", "--profile", "unknown"]));
   assert.throws(() => resolveRoots({ PI_UI_VERIFIER_DIR: "relative" }, "/home/test"));
@@ -51,6 +52,7 @@ test("profile plans keep Codex and GLM native targets separate", (t) => {
 
   const glm = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["glm"]);
   assert.ok(glm.files.some((entry) => entry.target.endsWith("profiles/glm/PROFILE.md")));
+  assert.ok(glm.files.some((entry) => entry.target.endsWith("agents/glm-orchestrator.md")));
   assert.ok(glm.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")));
   assert.equal(glm.files.some((entry) => entry.target.endsWith("agents/luna_implementer.toml")), false);
   assert.equal(glm.files.some((entry) => entry.target.endsWith("skills/plan-and-subagent/SKILL.md") && entry.target.includes(`${path.sep}codex${path.sep}`)), false);
@@ -58,6 +60,13 @@ test("profile plans keep Codex and GLM native targets separate", (t) => {
 
   const both = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm"]);
   assert.equal(new Set(both.files.map((entry) => entry.target)).size, both.files.length);
+
+  const union = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["union"]);
+  assert.ok(union.files.some((entry) => entry.target.endsWith("profiles/union/PROFILE.md")));
+  assert.ok(union.files.some((entry) => entry.target.endsWith("agents/union-orchestrator.md")));
+  assert.ok(union.files.some((entry) => entry.target.endsWith("profiles/union/opencode.jsonc")));
+  assert.equal(union.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")), false);
+  assert.equal(union.files.some((entry) => entry.target.endsWith("agents/luna_implementer.toml")), false);
 });
 
 test("GLM native config pins roles, models, and reviewer write boundaries", () => {
@@ -78,6 +87,56 @@ test("GLM native config pins roles, models, and reviewer write boundaries", () =
   assert.match(fs.readFileSync(path.join(repository, "profiles/glm/PROFILE.md"), "utf8"), /opencode --agent glm-orchestrator/);
   assert.match(fs.readFileSync(path.join(repository, "README.md"), "utf8"), /opencode --agent glm-orchestrator/);
   assert.ok(config.agent["glm-orchestrator"].permission.task["glm-implementer"] === "allow");
+});
+
+test("Union native config changes only the primary model and keeps copied role contracts", () => {
+  const config = JSON.parse(fs.readFileSync(path.join(repository, "profiles/union/opencode.jsonc"), "utf8"));
+  assert.equal(config.default_agent, "union-orchestrator");
+  assert.equal(config.agent["union-orchestrator"].model, "opencode-go/union-alpha");
+  assert.equal(config.agent["union-orchestrator"].reasoningEffort, undefined);
+  assert.equal(config.agent["union-implementer"].model, "opencode-go/glm-5.3-flash");
+  assert.equal(config.agent["union-reviewer"].model, "opencode-go/deepseek-v4.1-flash");
+  assert.equal(config.agent["union-reviewer"].permission["*"], "deny");
+  assert.equal(config.agent["union-reviewer"].permission.external_directory["*"], "deny");
+  assert.equal(config.agent["union-reviewer"].permission.external_directory["$HOME/.config/agents/profiles/union/**"], "allow");
+  assert.equal(config.agent["union-ui-ux"].permission["*"], "deny");
+  assert.match(fs.readFileSync(path.join(repository, "profiles/union/PROFILE.md"), "utf8"), /opencode --agent union-orchestrator/);
+  assert.match(fs.readFileSync(path.join(repository, "README.md"), "utf8"), /opencode --agent union-orchestrator/);
+});
+
+test("all profiles bind the shared Pi verifier without environment variables", () => {
+  for (const profile of ["codex", "glm", "union"]) {
+    const contents = fs.readFileSync(path.join(repository, `profiles/${profile}/PROFILE.md`), "utf8");
+    assert.match(contents, /--provider opencode-go --model glm-5\.3-flash/);
+    assert.doesNotMatch(contents, /PI_UI_VERIFIER_(?:PROVIDER|MODEL)=/);
+  }
+});
+
+test("GLM and Union native agents are globally discoverable and keep distinct model bindings", () => {
+  const expected = {
+    glm: {
+      "glm-orchestrator": "opencode-go/glm-5.3",
+      "glm-implementer": "opencode-go/glm-5.3-flash",
+      "glm-reviewer": "opencode-go/deepseek-v4.1-flash",
+      "glm-ui-ux": "opencode-go/glm-5.3",
+      "glm-mockup": "opencode-go/glm-5.3",
+    },
+    union: {
+      "union-orchestrator": "opencode-go/union-alpha",
+      "union-implementer": "opencode-go/glm-5.3-flash",
+      "union-reviewer": "opencode-go/deepseek-v4.1-flash",
+      "union-ui-ux": "opencode-go/glm-5.3",
+      "union-mockup": "opencode-go/glm-5.3",
+    },
+  };
+  for (const [profile, agents] of Object.entries(expected)) {
+    for (const [name, model] of Object.entries(agents)) {
+      const file = path.join(repository, `profiles/${profile}/opencode/agents/${name}.md`);
+      const contents = fs.readFileSync(file, "utf8");
+      assert.match(contents, new RegExp(`^model: ${model.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`, "m"));
+      assert.match(contents, /^mode: (primary|subagent)$/m);
+    }
+  }
 });
 
 test("read-only permission evaluation denies unknown tools while allowing installed contracts", (t) => {
@@ -119,7 +178,7 @@ test("the source inventory is self-contained under skill and profile roots", (t)
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
   const selected = ["skill", "skill-opencode", "profile", "codex", "opencode", "pi"];
-  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm"]);
+  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm", "union"]);
   assert.deepEqual(missingLinks(plan.files, true), []);
   assert.deepEqual(missingLinks(plan.files, true, true), []);
   for (const obsoleteRoot of ["environments", "opencode", "pi", "scripts"]) {
@@ -252,12 +311,15 @@ fs.appendFileSync(process.env.SETUP_TEST_LOG, JSON.stringify([path.basename(proc
 if(path.basename(process.argv[1])==='gh') {
   fs.cpSync(path.join(args[2],'skills',args[3]),path.join(args[args.indexOf('--dir')+1],args[3]),{recursive:true});
 } else if(args.includes('--version')) {console.log('test-version');}
-else if(args.includes('debug') && args.includes('config')) {console.log(JSON.stringify({default_agent:process.env.SETUP_TEST_CONFIG_MISMATCH?'other-agent':'glm-orchestrator'}));}
+else if(args.includes('models')) {console.log('opencode-go/union-alpha');}
+else if(args.includes('debug') && args.includes('config')) {const profile=process.env.OPENCODE_CONFIG?.includes('/profiles/union/')?'union':'glm';console.log(JSON.stringify({default_agent:process.env.SETUP_TEST_CONFIG_MISMATCH?'other-agent':profile+'-orchestrator'}));}
 else if(args.includes('debug') && args.includes('agent')) {
   const name=args[args.indexOf('agent')+1];
-  const models={'glm-orchestrator':'glm-5.3','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-v4.1-flash','glm-ui-ux':'glm-5.3','glm-mockup':'glm-5.3'};
+  const profile=name.startsWith('union-')?'union':process.env.OPENCODE_CONFIG?.includes('/profiles/union/')?'union':'glm';
+  const prefix=profile+'-';
+  const models=profile==='union' ? {'union-orchestrator':'union-alpha','union-implementer':'glm-5.3-flash','union-reviewer':'deepseek-v4.1-flash','union-ui-ux':'glm-5.3','union-mockup':'glm-5.3'} : {'glm-orchestrator':'glm-5.3','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-v4.1-flash','glm-ui-ux':'glm-5.3','glm-mockup':'glm-5.3'};
   if(process.env.SETUP_TEST_CONFIG_MISMATCH) models[name]='test/override';
-  const readOnly=name==='glm-reviewer'||name==='glm-ui-ux';
+  const readOnly=name===prefix+'reviewer'||name===prefix+'ui-ux';
   const permission=readOnly ? [
     {permission:'*',action:'allow',pattern:'*'}, {permission:'*',action:'deny',pattern:'*'},
     {permission:'read',action:'allow',pattern:'*'}, {permission:'glob',action:'allow',pattern:'*'},
@@ -268,12 +330,12 @@ else if(args.includes('debug') && args.includes('agent')) {
     {permission:'websearch',action:'deny',pattern:'*'}, {permission:'question',action:'deny',pattern:'*'},
     {permission:'external_directory',action:'deny',pattern:'*'},
     {permission:'external_directory',action:'allow',pattern:process.env.OPENCODE_CONFIG_DIR+'/skills/plan-and-subagent/**'},
-    {permission:'external_directory',action:'allow',pattern:process.env.AGENT_ENVIRONMENT_DIR+'/profiles/glm/**'},
+    {permission:'external_directory',action:'allow',pattern:process.env.AGENT_ENVIRONMENT_DIR+'/profiles/'+profile+'/**'},
     {permission:'bash',action:'deny',pattern:'*'},
   ] : [{permission:'*',action:'allow',pattern:'*'}];
-  console.log(JSON.stringify({name,mode:name==='glm-orchestrator'?'primary':'subagent',model:{providerID:'opencode-go',modelID:models[name]},permission}));
+  console.log(JSON.stringify({name,mode:name===prefix+'orchestrator'?'primary':'subagent',model:{providerID:'opencode-go',modelID:models[name]},permission}));
 }
-else if(args.includes('agent')) {console.log(process.env.OPENCODE_CONFIG?.includes('/profiles/glm/') ? 'glm-orchestrator (primary)' : 'reviewer (primary)');}
+else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_CONFIG_DIR,'agents'); if(fs.existsSync(directory)) {for(const file of fs.readdirSync(directory).filter((name)=>name.endsWith('.md')).sort()) console.log(file.slice(0,-3)+' (primary)');} else {console.log('reviewer (primary)');}}
 else if(args.includes('auth')) {
   if(process.env.SETUP_TEST_BAD_AUTH) {console.log('private-auth-output');process.exitCode=1;}
   else if(process.env.SETUP_TEST_MISSING_AUTH) {console.log(JSON.stringify({status:'not_ready',provider:'opencode-go',reason:'credentials_not_configured'}));process.exitCode=1;}
@@ -338,6 +400,31 @@ test("GLM-only setup does not require Codex skill staging or write Codex targets
   assert.equal(mismatch.status, 1);
   assert.match(mismatch.stdout, /\[FAIL\] GLM merged default agent/);
   assert.match(mismatch.stdout, /\[FAIL\] GLM merged agent glm-reviewer/);
+});
+
+test("Union-only setup keeps GLM and Codex destinations untouched", (t) => {
+  const f = fixture(t);
+  const { run, calls } = fakeCommands(f);
+  const dry = run(["--dry-run", "--profile", "union"]);
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.equal(calls().length, 0);
+  assert.doesNotMatch(dry.stdout, /profiles\/glm/);
+  assert.doesNotMatch(dry.stdout, /agents\/luna_implementer\.toml/);
+  assert.match(dry.stdout, /Selected profile\(s\): union/);
+
+  const applied = run(["--apply", "--profile", "union"]);
+  assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+  assert.equal(fs.existsSync(path.join(f.roots.codex, "skills/plan-and-subagent")), false);
+  assert.ok(fs.existsSync(path.join(f.roots.environment, "profiles/union/PROFILE.md")));
+  assert.ok(fs.existsSync(path.join(f.roots.opencode, "profiles/union/opencode.jsonc")));
+  assert.equal(fs.existsSync(path.join(f.roots.environment, "profiles/glm/PROFILE.md")), false);
+  assert.equal(fs.existsSync(path.join(f.roots.opencode, "profiles/glm/opencode.jsonc")), false);
+  assert.ok(calls().some((call) => call[0] === "mise" && call.includes("union")) || calls().some((call) => call[0] === "mise"));
+
+  const mismatch = run(["--check", "--profile", "union"], { SETUP_TEST_CONFIG_MISMATCH: "1" });
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stdout, /\[FAIL\] Union merged default agent/);
+  assert.match(mismatch.stdout, /\[FAIL\] Union merged agent union-reviewer/);
 });
 
 test("dependency failure retains progress and the same installation can resume", (t) => {
