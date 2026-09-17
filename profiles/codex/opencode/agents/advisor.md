@@ -1,7 +1,7 @@
 ---
 description: Independent read-only architecture advisor
 mode: primary
-model: opencode-go/glm-5.3
+model: zai-coding-plan/glm-5.3
 reasoningEffort: high
 permission:
   read: allow

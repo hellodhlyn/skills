@@ -1,7 +1,7 @@
 ---
 description: Independently reviews the approved change without editing it.
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
+model: deepseek/deepseek-flash
 reasoningEffort: max
 permission:
   "*": deny

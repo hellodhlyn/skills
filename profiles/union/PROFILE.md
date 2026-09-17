@@ -54,7 +54,7 @@ not an automatic model substitution.
 - `union-implementer` is the only product-code implementation subagent and
   keeps the GLM-5.3-Flash model.
 - `union-reviewer` is an independent read-only review subagent using
-  DeepSeek V4.1 Flash.
+  DeepSeek V4.1 Flash (canonical API id `deepseek-flash`).
 - `union-ui-ux` and `union-mockup` retain the GLM profile's conditional roles.
 - Implemented UI verification uses the common Pi verifier with its existing
   provider/model values passed explicitly by the invocation.

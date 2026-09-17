@@ -127,7 +127,7 @@ export function validateResolvedAgent(agent, expectation, roots) {
   const problems = [];
   if (!agent || agent.name !== expectation.name) problems.push(`name=${agent?.name || "missing"}`);
   if (agent?.mode !== expectation.mode) problems.push(`mode=${agent?.mode || "missing"}`);
-  if (agent?.model?.providerID !== "opencode-go" || agent?.model?.modelID !== expectation.model) {
+  if (agent?.model?.providerID !== expectation.provider || agent?.model?.modelID !== expectation.model) {
     problems.push(`model=${agent?.model?.providerID || "missing"}/${agent?.model?.modelID || "missing"}`);
   }
   const policies = agent?.permission;
@@ -356,11 +356,11 @@ async function runtimeChecks(roots, profiles, selected, report) {
           : resolvedConfig.stderr || resolvedConfig.stdout || "Resolved config was not valid JSON or selected another default agent.");
 
       const expectations = [
-        { name: "glm-orchestrator", mode: "primary", model: "glm-5.3" },
-        { name: "glm-implementer", mode: "subagent", model: "glm-5.3-flash" },
-        { name: "glm-reviewer", mode: "subagent", model: "deepseek-v4.1-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "glm-ui-ux", mode: "subagent", model: "glm-5.3", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "glm-mockup", mode: "subagent", model: "glm-5.3" },
+        { name: "glm-orchestrator", mode: "primary", provider: "zai-coding-plan", model: "glm-5.3-flash" },
+        { name: "glm-implementer", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash" },
+        { name: "glm-reviewer", mode: "subagent", provider: "deepseek", model: "deepseek-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "glm-ui-ux", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "glm-mockup", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash" },
       ];
       for (const expectation of expectations) {
         const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });
@@ -404,11 +404,11 @@ async function runtimeChecks(roots, profiles, selected, report) {
           : resolvedConfig.stderr || resolvedConfig.stdout || "Resolved config was not valid JSON or selected another default agent.");
 
       const expectations = [
-        { name: "union-orchestrator", mode: "primary", model: "union-alpha", profile: "union" },
-        { name: "union-implementer", mode: "subagent", model: "glm-5.3-flash", profile: "union" },
-        { name: "union-reviewer", mode: "subagent", model: "deepseek-v4.1-flash", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "union-ui-ux", mode: "subagent", model: "glm-5.3", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "union-mockup", mode: "subagent", model: "glm-5.3", profile: "union" },
+        { name: "union-orchestrator", mode: "primary", provider: "opencode-go", model: "union-alpha", profile: "union" },
+        { name: "union-implementer", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash", profile: "union" },
+        { name: "union-reviewer", mode: "subagent", provider: "deepseek", model: "deepseek-flash", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "union-ui-ux", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash", profile: "union", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
+        { name: "union-mockup", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash", profile: "union" },
       ];
       for (const expectation of expectations) {
         const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });

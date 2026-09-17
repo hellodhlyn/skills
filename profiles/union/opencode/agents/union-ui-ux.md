@@ -1,7 +1,7 @@
 ---
 description: Provides read-only UI/UX evidence for applicable product changes.
 mode: subagent
-model: opencode-go/glm-5.3
+model: zai-coding-plan/glm-5.3-flash
 reasoningEffort: high
 permission:
   "*": deny

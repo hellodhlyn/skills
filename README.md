@@ -50,10 +50,10 @@ The GLM profile uses OpenCode native agents:
 
 | Role | Native model |
 | --- | --- |
-| Orchestrator | `opencode-go/glm-5.3` |
-| Implementer | `opencode-go/glm-5.3-flash` |
-| Independent reviewer | `opencode-go/deepseek-v4.1-flash` |
-| UI/UX and mockup | `opencode-go/glm-5.3` |
+| Orchestrator | `zai-coding-plan/glm-5.3-flash` |
+| Implementer | `zai-coding-plan/glm-5.3-flash` |
+| Independent reviewer | `deepseek/deepseek-flash` |
+| UI/UX and mockup | `zai-coding-plan/glm-5.3-flash` |
 
 Start it by selecting the globally installed primary agent:
 

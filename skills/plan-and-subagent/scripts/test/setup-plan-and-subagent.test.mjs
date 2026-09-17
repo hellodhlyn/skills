@@ -72,9 +72,9 @@ test("profile plans keep Codex and GLM native targets separate", (t) => {
 test("GLM native config pins roles, models, and reviewer write boundaries", () => {
   const config = JSON.parse(fs.readFileSync(path.join(repository, "profiles/glm/opencode.jsonc"), "utf8"));
   assert.equal(config.default_agent, "glm-orchestrator");
-  assert.equal(config.agent["glm-orchestrator"].model, "opencode-go/glm-5.3");
-  assert.equal(config.agent["glm-implementer"].model, "opencode-go/glm-5.3-flash");
-  assert.equal(config.agent["glm-reviewer"].model, "opencode-go/deepseek-v4.1-flash");
+  assert.equal(config.agent["glm-orchestrator"].model, "zai-coding-plan/glm-5.3-flash");
+  assert.equal(config.agent["glm-implementer"].model, "zai-coding-plan/glm-5.3-flash");
+  assert.equal(config.agent["glm-reviewer"].model, "deepseek/deepseek-flash");
   assert.equal(config.agent["glm-reviewer"].mode, "subagent");
   assert.equal(config.agent["glm-reviewer"].permission["*"], "deny");
   assert.equal(config.agent["glm-reviewer"].permission.edit, "deny");
@@ -94,8 +94,8 @@ test("Union native config changes only the primary model and keeps copied role c
   assert.equal(config.default_agent, "union-orchestrator");
   assert.equal(config.agent["union-orchestrator"].model, "opencode-go/union-alpha");
   assert.equal(config.agent["union-orchestrator"].reasoningEffort, undefined);
-  assert.equal(config.agent["union-implementer"].model, "opencode-go/glm-5.3-flash");
-  assert.equal(config.agent["union-reviewer"].model, "opencode-go/deepseek-v4.1-flash");
+  assert.equal(config.agent["union-implementer"].model, "zai-coding-plan/glm-5.3-flash");
+  assert.equal(config.agent["union-reviewer"].model, "deepseek/deepseek-flash");
   assert.equal(config.agent["union-reviewer"].permission["*"], "deny");
   assert.equal(config.agent["union-reviewer"].permission.external_directory["*"], "deny");
   assert.equal(config.agent["union-reviewer"].permission.external_directory["$HOME/.config/agents/profiles/union/**"], "allow");
@@ -115,18 +115,18 @@ test("all profiles bind the shared Pi verifier without environment variables", (
 test("GLM and Union native agents are globally discoverable and keep distinct model bindings", () => {
   const expected = {
     glm: {
-      "glm-orchestrator": "opencode-go/glm-5.3",
-      "glm-implementer": "opencode-go/glm-5.3-flash",
-      "glm-reviewer": "opencode-go/deepseek-v4.1-flash",
-      "glm-ui-ux": "opencode-go/glm-5.3",
-      "glm-mockup": "opencode-go/glm-5.3",
+      "glm-orchestrator": "zai-coding-plan/glm-5.3-flash",
+      "glm-implementer": "zai-coding-plan/glm-5.3-flash",
+      "glm-reviewer": "deepseek/deepseek-flash",
+      "glm-ui-ux": "zai-coding-plan/glm-5.3-flash",
+      "glm-mockup": "zai-coding-plan/glm-5.3-flash",
     },
     union: {
       "union-orchestrator": "opencode-go/union-alpha",
-      "union-implementer": "opencode-go/glm-5.3-flash",
-      "union-reviewer": "opencode-go/deepseek-v4.1-flash",
-      "union-ui-ux": "opencode-go/glm-5.3",
-      "union-mockup": "opencode-go/glm-5.3",
+      "union-implementer": "zai-coding-plan/glm-5.3-flash",
+      "union-reviewer": "deepseek/deepseek-flash",
+      "union-ui-ux": "zai-coding-plan/glm-5.3-flash",
+      "union-mockup": "zai-coding-plan/glm-5.3-flash",
     },
   };
   for (const [profile, agents] of Object.entries(expected)) {
@@ -157,7 +157,7 @@ test("read-only permission evaluation denies unknown tools while allowing instal
   const agent = {
     name: "glm-reviewer",
     mode: "subagent",
-    model: { providerID: "opencode-go", modelID: "deepseek-v4.1-flash" },
+    model: { providerID: "deepseek", modelID: "deepseek-flash" },
     permission: policies,
   };
   assert.equal(effectivePermission(policies, "mcp_test_write", "*"), "deny");
@@ -166,7 +166,8 @@ test("read-only permission evaluation denies unknown tools while allowing instal
   assert.deepEqual(validateResolvedGlmAgent(agent, {
     name: "glm-reviewer",
     mode: "subagent",
-    model: "deepseek-v4.1-flash",
+    provider: "deepseek",
+    model: "deepseek-flash",
     allowed: ["read", "glob", "grep", "lsp", "skill"],
     denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"],
     skills: ["plan-and-subagent"],
@@ -317,7 +318,8 @@ else if(args.includes('debug') && args.includes('agent')) {
   const name=args[args.indexOf('agent')+1];
   const profile=name.startsWith('union-')?'union':process.env.OPENCODE_CONFIG?.includes('/profiles/union/')?'union':'glm';
   const prefix=profile+'-';
-  const models=profile==='union' ? {'union-orchestrator':'union-alpha','union-implementer':'glm-5.3-flash','union-reviewer':'deepseek-v4.1-flash','union-ui-ux':'glm-5.3','union-mockup':'glm-5.3'} : {'glm-orchestrator':'glm-5.3','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-v4.1-flash','glm-ui-ux':'glm-5.3','glm-mockup':'glm-5.3'};
+  const providers=profile==='union' ? {'union-orchestrator':'opencode-go','union-implementer':'zai-coding-plan','union-reviewer':'deepseek','union-ui-ux':'zai-coding-plan','union-mockup':'zai-coding-plan'} : {'glm-orchestrator':'zai-coding-plan','glm-implementer':'zai-coding-plan','glm-reviewer':'deepseek','glm-ui-ux':'zai-coding-plan','glm-mockup':'zai-coding-plan'};
+  const models=profile==='union' ? {'union-orchestrator':'union-alpha','union-implementer':'glm-5.3-flash','union-reviewer':'deepseek-flash','union-ui-ux':'glm-5.3-flash','union-mockup':'glm-5.3-flash'} : {'glm-orchestrator':'glm-5.3-flash','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-flash','glm-ui-ux':'glm-5.3-flash','glm-mockup':'glm-5.3-flash'};
   if(process.env.SETUP_TEST_CONFIG_MISMATCH) models[name]='test/override';
   const readOnly=name===prefix+'reviewer'||name===prefix+'ui-ux';
   const permission=readOnly ? [
@@ -333,7 +335,7 @@ else if(args.includes('debug') && args.includes('agent')) {
     {permission:'external_directory',action:'allow',pattern:process.env.AGENT_ENVIRONMENT_DIR+'/profiles/'+profile+'/**'},
     {permission:'bash',action:'deny',pattern:'*'},
   ] : [{permission:'*',action:'allow',pattern:'*'}];
-  console.log(JSON.stringify({name,mode:name===prefix+'orchestrator'?'primary':'subagent',model:{providerID:'opencode-go',modelID:models[name]},permission}));
+  console.log(JSON.stringify({name,mode:name===prefix+'orchestrator'?'primary':'subagent',model:{providerID:providers[name],modelID:models[name]},permission}));
 }
 else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_CONFIG_DIR,'agents'); if(fs.existsSync(directory)) {for(const file of fs.readdirSync(directory).filter((name)=>name.endsWith('.md')).sort()) console.log(file.slice(0,-3)+' (primary)');} else {console.log('reviewer (primary)');}}
 else if(args.includes('auth')) {

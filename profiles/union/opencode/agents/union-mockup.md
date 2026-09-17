@@ -1,7 +1,7 @@
 ---
 description: Creates only assigned UI/UX briefing mockup artifacts.
 mode: subagent
-model: opencode-go/glm-5.3
+model: zai-coding-plan/glm-5.3-flash
 reasoningEffort: high
 permission:
   read: allow

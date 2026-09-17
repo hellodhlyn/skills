@@ -8,7 +8,7 @@
     "glm-orchestrator": {
       "description": "Plans and coordinates the plan-and-subagent workflow using OpenCode native agents.",
       "mode": "primary",
-      "model": "opencode-go/glm-5.3",
+      "model": "zai-coding-plan/glm-5.3-flash",
       "reasoningEffort": "high",
       "prompt": "Load the plan-and-subagent skill. Own requirements, decisions, delegation, review triage, validation oversight, and completion judgment. Delegate product edits to glm-implementer.",
       "permission": {
@@ -33,7 +33,7 @@
     "glm-implementer": {
       "description": "Implements only the approved brief in the assigned paths.",
       "mode": "subagent",
-      "model": "opencode-go/glm-5.3-flash",
+      "model": "zai-coding-plan/glm-5.3-flash",
       "reasoningEffort": "max",
       "prompt": "Load the plan-and-subagent skill and implement only the approved brief. Preserve unrelated changes, do not spawn agents, and report deviations instead of inventing decisions.",
       "permission": {
@@ -52,7 +52,7 @@
     "glm-reviewer": {
       "description": "Independently reviews the approved change without editing it.",
       "mode": "subagent",
-      "model": "opencode-go/deepseek-v4.1-flash",
+      "model": "deepseek/deepseek-flash",
       "reasoningEffort": "max",
       "prompt": "Load the plan-and-subagent independent review contract. Review the supplied code, diff, requirements, and validation evidence independently. Report only concrete actionable findings with evidence; never edit, delegate, or substitute a model.",
       "permission": {
@@ -82,7 +82,7 @@
     "glm-ui-ux": {
       "description": "Provides read-only UI/UX evidence for applicable product changes.",
       "mode": "subagent",
-      "model": "opencode-go/glm-5.3",
+      "model": "zai-coding-plan/glm-5.3-flash",
       "reasoningEffort": "high",
       "prompt": "Load the plan-and-subagent UI/UX contract. Work read-only, assess only the assigned surface, and return advisory evidence without choosing unresolved product meaning.",
       "permission": {
@@ -112,7 +112,7 @@
     "glm-mockup": {
       "description": "Creates only assigned UI/UX briefing mockup artifacts.",
       "mode": "subagent",
-      "model": "opencode-go/glm-5.3",
+      "model": "zai-coding-plan/glm-5.3-flash",
       "reasoningEffort": "high",
       "prompt": "Load the plan-and-subagent mockup contract. Create only the explicitly assigned mockup artifacts, preserve product code, and report material design choices as decision-required.",
       "permission": {

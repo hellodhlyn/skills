@@ -1,7 +1,7 @@
 ---
 description: Independent read-only code reviewer
 mode: primary
-model: opencode-go/glm-5.3-flash
+model: zai-coding-plan/glm-5.3-flash
 reasoningEffort: max
 permission:
   read: allow

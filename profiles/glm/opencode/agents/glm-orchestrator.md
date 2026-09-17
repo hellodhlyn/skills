@@ -1,7 +1,7 @@
 ---
 description: Plans and coordinates the plan-and-subagent workflow using OpenCode native agents.
 mode: primary
-model: opencode-go/glm-5.3
+model: zai-coding-plan/glm-5.3-flash
 reasoningEffort: high
 permission:
   read: allow
