@@ -39,6 +39,14 @@ that work. Use [planning artifacts](references/planning.md) to record the
 request, baseline, pre-existing changes, and effective environment.
 Preserve user-owned changes outside task ownership.
 
+Check whether the task input carries an explicit external approved handoff.
+When present, read [external handoff](references/external-handoff.md) and run
+its import validation. A valid imported handoff reuses its existing approval
+without re-running Step 2 and Step 3. For a valid external handoff, scope the
+inspection below to import validation, current implementation context, and
+verification needs; do not repeat planning investigation already covered by the
+approved brief.
+
 Inspect project instructions and the code, knowledge, dependencies, and tests
 needed for the task. Resolve explicitly linked requirements and comments through
 the applicable integration. Derive the smallest checks proving the requested
@@ -90,7 +98,9 @@ execute it, then wait for the user's answer. Silence, elapsed time, a saved
 file, and an agent's understanding check are not user approval.
 
 Existing explicit approval given after presentation of the same complete brief
-remains valid; do not ask again for an unchanged approved contract. There is no
+remains valid; do not ask again for an unchanged approved contract. An external
+handoff counts as the same approval evidence only when it passes
+[external handoff](references/external-handoff.md) validation. There is no
 approval-step waiver in this workflow: an initial implementation request, blanket
 autonomy, a request to skip approval, an environment preference, or approval of
 a design choice before the full brief is shown cannot open this gate. Approval
@@ -111,7 +121,9 @@ Material contract changes require renewed agreement before affected work.
 
 Verify Step 3 approval evidence against the current brief, then follow
 [the implementer handoff](references/implementer-handoff.md) and the selected
-execution procedure. Send self-contained context and retain the implementer's
+execution procedure. A valid imported approval under
+[external handoff](references/external-handoff.md) enters this same flow
+without other changes. Send self-contained context and retain the implementer's
 identity for understanding checks, implementation, and corrections. The primary
 performs read-only work while implementation runs; no overlapping edits.
 

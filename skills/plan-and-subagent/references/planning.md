@@ -50,6 +50,13 @@ message reference (or a precise description when references are unavailable),
 the user's approving response verbatim, and the behavior and execution scope
 it covers. Record their order and preserve the exact displayed document in
 `approved_brief.md`. Keep design-choice answers distinct from implementation approval.
+For an approval imported through [external handoff](external-handoff.md),
+record in `decisions.md` that the source was an external handoff, the received
+approval wording or equivalent evidence, the verification that the approved
+target matches the current `approved_brief.md`, the baseline and freshness
+validation result, and the source conversation or reference when available.
+Keep `approved_brief.md` as the brief verbatim; record handoff metadata in
+`decisions.md` or `session.md`, never mixed into `approved_brief.md`.
 For conditional result-confirmation records and changes in applicability, follow
 [implementation feedback](implementation-feedback.md); for separate iteration and
 review counters, follow [validation](validation.md).
