@@ -1,8 +1,9 @@
 {
-  "profiles": ["codex", "glm", "union"],
+  "profiles": ["codex", "glm", "union", "zcode"],
   "entries": [
     {"component": "skill", "profile": "codex", "root": "codex", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent"},
     {"component": "skill-opencode", "profiles": ["codex", "glm", "union"], "root": "opencode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
+    {"component": "skill-zcode", "profiles": ["codex", "glm", "union", "zcode"], "root": "zcode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
     {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/codex/PROFILE.md", "target": "profiles/codex/PROFILE.md"},
     {"component": "codex", "profile": "codex", "root": "codex", "source": "profiles/codex/codex/agents", "target": "agents"},
     {"component": "opencode", "profile": "codex", "root": "opencode", "source": "profiles/codex/opencode/agents", "target": "agents"},
@@ -12,6 +13,8 @@
     {"component": "profile", "profile": "union", "root": "environment", "source": "profiles/union/PROFILE.md", "target": "profiles/union/PROFILE.md"},
     {"component": "opencode", "profile": "union", "root": "opencode", "source": "profiles/union/opencode/agents", "target": "agents"},
     {"component": "opencode", "profile": "union", "root": "opencode", "source": "profiles/union/opencode.jsonc", "target": "profiles/union/opencode.jsonc"},
+    {"component": "profile", "profile": "zcode", "root": "environment", "source": "profiles/zcode/PROFILE.md", "target": "profiles/zcode/PROFILE.md"},
+    {"component": "zcode", "profile": "zcode", "root": "zcode", "source": "profiles/zcode/zcode/agents", "target": "cli/agents"},
     {"component": "pi", "profiles": ["codex", "glm", "union"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/package.json", "target": "package.json"},
     {"component": "pi", "profiles": ["codex", "glm", "union"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/pnpm-lock.yaml", "target": "pnpm-lock.yaml"},
     {"component": "pi", "profiles": ["codex", "glm", "union"], "root": "pi", "source": "skills/plan-and-subagent/scripts/pi/ui-verifier/pnpm-workspace.yaml", "target": "pnpm-workspace.yaml"},

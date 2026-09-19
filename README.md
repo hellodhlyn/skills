@@ -16,6 +16,7 @@ profiles/
   codex/                   # existing Codex/OpenCode native configuration
   glm/                     # OpenCode-native GLM configuration
   union/                   # OpenCode-native Union Alpha comparison profile
+  zcode/                   # ZCode-native GLM Flash configuration
 skills/advisor/            # standalone advisor skill
 ```
 
@@ -100,6 +101,33 @@ Install or check it with `--profile union`. To compare both native OpenCode
 profiles, install `glm` and `union` separately; the shared receipt and
 inventory keep their profile paths and role names separate. Return to GLM by
 starting a new session with `--agent glm-orchestrator`.
+
+### ZCode
+
+The ZCode profile runs the pipeline with ZCode native subagents. Every role
+uses the ZCode session model `account:zai-start-plan/GLM-5.3-Flash` at
+reasoning level high; no model family is inferred and an unavailable model is
+never substituted automatically.
+
+| Role | Native binding |
+| --- | --- |
+| Orchestrator | the primary ZCode agent session (session model) |
+| Implementer | `zcode-implementer` subagent, default permission mode |
+| Independent reviewer | `zcode-reviewer` subagent, read-only tools and `plan` mode, separate child context |
+| UI/UX and mockup | `zcode-ui-ux` and `zcode-mockup` subagents |
+| UI verification | ZCode's judge subagent; browser interaction stays with the primary agent |
+
+The reviewer keeps its independence through a separate child context and a
+read-only tool whitelist (Read, Glob, Grep) rather than a different model
+family. This profile does not use the shared Pi verifier.
+
+Install or check it with `--profile zcode`. The installer places the common
+skill in `~/.zcode/skills/plan-and-subagent/` and the `zcode-*` subagent
+definitions in `~/.zcode/cli/agents/`. It reports (but never performs) one
+required manual step: designating the installed
+`profiles/zcode/PROFILE.md` path in `~/.zcode/AGENTS.md`. Start a new ZCode
+session after installation; skills, subagents, and model bindings are
+discovered at session start and cannot be verified by the installer.
 
 ## OpenCode agents
 

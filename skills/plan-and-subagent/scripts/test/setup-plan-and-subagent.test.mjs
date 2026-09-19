@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermission, loadReceipt, missingLinks, parseArguments, resolveRoots, validateResolvedGlmAgent } from "../lib/setup-plan-and-subagent.mjs";
+import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermission, loadReceipt, missingLinks, parseArguments, parseZcodeAgentFrontmatter, resolveRoots, validateResolvedGlmAgent, validateZcodeAgentFile } from "../lib/setup-plan-and-subagent.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cli = path.join(repository, "skills/plan-and-subagent/scripts/lib/setup-plan-and-subagent.mjs");
@@ -15,7 +15,7 @@ function fixture(t) {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const repo = path.join(directory, "repo");
   fs.mkdirSync(repo);
-  const roots = Object.fromEntries(["codex", "environment", "opencode", "legacyOpencode", "pi", "state"].map((name) => [name, path.join(directory, name)]));
+  const roots = Object.fromEntries(["codex", "environment", "opencode", "legacyOpencode", "pi", "state", "zcode"].map((name) => [name, path.join(directory, name)]));
   const receiptPath = path.join(roots.state, "receipt.json");
   const receipt = loadReceipt(receiptPath);
   const manifest = { entries: [
@@ -35,6 +35,7 @@ test("requires an explicit operation and rejects contradictory flags", () => {
   assert.equal(parseArguments(["--apply", "--force"]).force, true);
   assert.equal(parseArguments(["--dry-run", "--profile", "glm"]).profile, "glm");
   assert.equal(parseArguments(["--dry-run", "--profile", "union"]).profile, "union");
+  assert.equal(parseArguments(["--dry-run", "--profile", "zcode"]).profile, "zcode");
   assert.equal(parseArguments(["--dry-run", "--profile", "both"]).profile, "both");
   assert.throws(() => parseArguments(["--dry-run", "--profile", "unknown"]));
   assert.throws(() => resolveRoots({ PI_UI_VERIFIER_DIR: "relative" }, "/home/test"));
@@ -178,8 +179,8 @@ test("read-only permission evaluation denies unknown tools while allowing instal
 test("the source inventory is self-contained under skill and profile roots", (t) => {
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
-  const selected = ["skill", "skill-opencode", "profile", "codex", "opencode", "pi"];
-  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm", "union"]);
+  const selected = ["skill", "skill-opencode", "skill-zcode", "profile", "codex", "opencode", "zcode", "pi"];
+  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm", "union", "zcode"]);
   assert.deepEqual(missingLinks(plan.files, true), []);
   assert.deepEqual(missingLinks(plan.files, true, true), []);
   for (const obsoleteRoot of ["environments", "opencode", "pi", "scripts"]) {
@@ -351,7 +352,8 @@ else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.err
     PLAN_AND_SUBAGENT_CODEX_DIR: f.roots.codex,
     AGENT_ENVIRONMENT_DIR: f.roots.environment, OPENCODE_CONFIG_DIR: f.roots.opencode,
     OPENCODE_LEGACY_CONFIG_DIR: f.roots.legacyOpencode,
-    PI_UI_VERIFIER_DIR: f.roots.pi, PLAN_AND_SUBAGENT_SETUP_DIR: f.roots.state,
+    PI_UI_VERIFIER_DIR: f.roots.pi, PLAN_AND_SUBAGENT_ZCODE_DIR: f.roots.zcode,
+    PLAN_AND_SUBAGENT_SETUP_DIR: f.roots.state,
     SETUP_TEST_LOG: log,
   };
   fs.mkdirSync(f.roots.codex);
@@ -427,6 +429,67 @@ test("Union-only setup keeps GLM and Codex destinations untouched", (t) => {
   assert.equal(mismatch.status, 1);
   assert.match(mismatch.stdout, /\[FAIL\] Union merged default agent/);
   assert.match(mismatch.stdout, /\[FAIL\] Union merged agent union-reviewer/);
+});
+
+test("ZCode native agents pin one Flash model and separate tool boundaries", () => {
+  const model = "account:zai-start-plan/GLM-5.3-Flash";
+  const expected = {
+    "zcode-implementer": { model, thoughtLevel: "high", permissionMode: undefined, tools: undefined },
+    "zcode-reviewer": { model, thoughtLevel: "high", permissionMode: "plan", tools: ["Read", "Glob", "Grep"] },
+    "zcode-ui-ux": { model, thoughtLevel: "high", permissionMode: "plan", tools: ["Read", "Glob", "Grep"] },
+    "zcode-mockup": { model, thoughtLevel: "high", permissionMode: "edit", tools: undefined },
+  };
+  for (const [name, expectation] of Object.entries(expected)) {
+    const file = path.join(repository, `profiles/zcode/zcode/agents/${name}.md`);
+    const contents = fs.readFileSync(file, "utf8");
+    const fields = parseZcodeAgentFrontmatter(contents);
+    assert.equal(fields.name, name);
+    assert.deepEqual(validateZcodeAgentFile(contents, { name, ...expectation }), []);
+  }
+  assert.match(fs.readFileSync(path.join(repository, "profiles/zcode/PROFILE.md"), "utf8"), /account:zai-start-plan\/GLM-5\.3-Flash/);
+  assert.doesNotMatch(fs.readFileSync(path.join(repository, "profiles/zcode/PROFILE.md"), "utf8"), /pi-ui-verifier|PI_UI_VERIFIER/);
+});
+
+test("ZCode-only setup installs skill, profile, and agents without OpenCode or Pi targets", (t) => {
+  const f = fixture(t);
+  const { run, calls } = fakeCommands(f);
+  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
+  const selected = ["skill", "skill-opencode", "skill-zcode", "profile", "environment", "codex", "opencode", "zcode", "pi"];
+  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["zcode"]);
+  assert.ok(plan.files.some((entry) => entry.target === path.join(f.roots.zcode, "skills/plan-and-subagent/SKILL.md")));
+  assert.ok(plan.files.some((entry) => entry.target === path.join(f.roots.zcode, "cli/agents/zcode-implementer.md")));
+  assert.ok(plan.files.some((entry) => entry.target === path.join(f.roots.environment, "profiles/zcode/PROFILE.md")));
+  assert.equal(plan.files.some((entry) => entry.component === "pi" || entry.target.startsWith(`${f.roots.pi}${path.sep}`)), false);
+  assert.equal(plan.files.some((entry) => entry.target.endsWith("agents/glm-orchestrator.md")), false);
+  assert.equal(plan.files.some((entry) => entry.target.endsWith("agents/luna_implementer.toml")), false);
+  assert.equal(new Set(plan.files.map((entry) => entry.target)).size, plan.files.length);
+
+  const dry = run(["--dry-run", "--profile", "zcode"]);
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.equal(calls().length, 0);
+  assert.doesNotMatch(dry.stdout, /profiles\/glm|luna_implementer/);
+  assert.equal(dry.stdout.includes(f.roots.pi), false);
+  assert.match(dry.stdout, /Selected profile\(s\): zcode/);
+
+  const undesignated = run(["--apply", "--profile", "zcode"]);
+  assert.equal(undesignated.status, 2, undesignated.stderr);
+  assert.match(undesignated.stdout, /\[PASS\] ZCode agent zcode-reviewer/);
+  assert.match(undesignated.stdout, /\[ACTION_REQUIRED\] ZCode profile designation/);
+  assert.equal(fs.existsSync(path.join(f.roots.zcode, "skills/plan-and-subagent/SKILL.md")), true);
+  assert.equal(fs.existsSync(path.join(f.roots.zcode, "cli/agents/zcode-reviewer.md")), true);
+  assert.equal(fs.existsSync(f.roots.opencode), false);
+  assert.equal(fs.existsSync(f.roots.pi), false);
+
+  fs.writeFileSync(path.join(f.roots.zcode, "AGENTS.md"), `Read ${path.join(f.roots.environment, "profiles/zcode/PROFILE.md")} when running plan-and-subagent.`);
+  const applied = run(["--apply", "--profile", "zcode"]);
+  assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+  assert.doesNotMatch(applied.stdout, /\[(ADD|UPDATE|CONFLICT)\]/);
+
+  const reviewer = path.join(f.roots.zcode, "cli/agents/zcode-reviewer.md");
+  fs.writeFileSync(reviewer, fs.readFileSync(reviewer, "utf8").replace(/^model: .*$/m, "model: test/override"));
+  const mismatch = run(["--check", "--profile", "zcode"]);
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stdout, /\[FAIL\] ZCode agent zcode-reviewer/);
 });
 
 test("dependency failure retains progress and the same installation can resume", (t) => {

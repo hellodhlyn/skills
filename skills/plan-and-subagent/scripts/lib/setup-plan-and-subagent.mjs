@@ -8,8 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const manifestPath = path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json");
 const usage = `Usage: bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --check | --dry-run | --apply [options]
-  --profile codex|glm|union|both  Select the native profile (default: codex).
-  --component environment|opencode|pi  Compatibility component-only selection.
+  --profile codex|glm|union|zcode|both  Select the native profile (default: codex).
+  --component environment|opencode|pi|zcode  Compatibility component-only selection.
   --check     Inspect installed files and local runtime readiness (no configuration writes).
   --dry-run   Show the entire file plan and required operations without applying them.
   --apply     Synchronize the selected profile, then check readiness.
@@ -17,7 +17,7 @@ const usage = `Usage: bash skills/plan-and-subagent/scripts/setup-plan-and-subag
   --with-browser  Install Chromium for the Pi-only compatibility entry point.
 
 Destinations: PLAN_AND_SUBAGENT_CODEX_DIR, AGENT_ENVIRONMENT_DIR, OPENCODE_CONFIG_DIR,
-PI_UI_VERIFIER_DIR, PLAN_AND_SUBAGENT_SETUP_DIR. All must be absolute paths.
+PI_UI_VERIFIER_DIR, PLAN_AND_SUBAGENT_ZCODE_DIR, PLAN_AND_SUBAGENT_SETUP_DIR. All must be absolute paths.
 Exit codes: 0 = passed; 1 = conflict/install/check failure; 2 = setup needs user action.
 No command invokes a paid model, changes credentials, or edits global AGENTS.md.`;
 
@@ -30,13 +30,13 @@ export function parseArguments(args) {
       options.mode = arg.slice(2);
     } else if (arg === "--profile") {
       options.profile = args[++index];
-      if (!["codex", "glm", "union", "both"].includes(options.profile)) throw new Error("Unknown profile.");
+      if (!["codex", "glm", "union", "zcode", "both"].includes(options.profile)) throw new Error("Unknown profile.");
     } else if (arg === "--force") options.force = true;
     else if (arg === "--with-browser") options.withBrowser = true;
     else if (arg === "--component") {
       if (options.component) throw new Error("Choose only one component.");
       options.component = args[++index];
-      if (!["environment", "opencode", "pi"].includes(options.component)) throw new Error("Unknown component.");
+      if (!["environment", "opencode", "pi", "zcode"].includes(options.component)) throw new Error("Unknown component.");
     } else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!options.mode) throw new Error("Choose --check, --dry-run, or --apply.");
@@ -52,6 +52,7 @@ export function resolveRoots(env = process.env, home = os.homedir()) {
     opencode: env.OPENCODE_CONFIG_DIR || path.join(home, ".config/opencode"),
     legacyOpencode: env.OPENCODE_LEGACY_CONFIG_DIR || path.join(home, ".opencode"),
     pi: env.PI_UI_VERIFIER_DIR || path.join(home, ".local/share/plan-and-subagent/pi-ui-verifier"),
+    zcode: env.PLAN_AND_SUBAGENT_ZCODE_DIR || path.join(home, ".zcode"),
     state: env.PLAN_AND_SUBAGENT_SETUP_DIR || path.join(home, ".local/share/plan-and-subagent/setup"),
   };
   for (const [name, value] of Object.entries(roots)) {
@@ -163,6 +164,47 @@ export function validateResolvedAgent(agent, expectation, roots) {
 }
 
 export const validateResolvedGlmAgent = validateResolvedAgent;
+
+export const zcodeAgentExpectations = [
+  { name: "zcode-implementer", model: "account:zai-start-plan/GLM-5.3-Flash", thoughtLevel: "high", permissionMode: undefined, tools: undefined },
+  { name: "zcode-reviewer", model: "account:zai-start-plan/GLM-5.3-Flash", thoughtLevel: "high", permissionMode: "plan", tools: ["Read", "Glob", "Grep"] },
+  { name: "zcode-ui-ux", model: "account:zai-start-plan/GLM-5.3-Flash", thoughtLevel: "high", permissionMode: "plan", tools: ["Read", "Glob", "Grep"] },
+  { name: "zcode-mockup", model: "account:zai-start-plan/GLM-5.3-Flash", thoughtLevel: "high", permissionMode: "edit", tools: undefined },
+];
+
+export function parseZcodeAgentFrontmatter(contents) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(contents);
+  if (!match) return undefined;
+  const fields = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const colon = line.indexOf(":");
+    if (colon <= 0 || /\s/.test(line.slice(0, colon))) continue;
+    fields[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
+  }
+  return fields;
+}
+
+export function validateZcodeAgentFile(contents, expectation) {
+  const problems = [];
+  const fields = parseZcodeAgentFrontmatter(contents);
+  if (!fields) return ["frontmatter=missing"];
+  const model = fields.model === undefined ? undefined : fields.model.replace(/^["']|["']$/g, "");
+  if (fields.name !== expectation.name) problems.push(`name=${fields.name || "missing"}`);
+  if (model !== expectation.model) problems.push(`model=${model || "missing"}`);
+  if ((fields.thoughtLevel || undefined) !== expectation.thoughtLevel) problems.push(`thoughtLevel=${fields.thoughtLevel || "missing"}`);
+  const permissionMode = (fields.permissionMode || undefined)?.replace(/^["']|["']$/g, "");
+  if ((permissionMode || undefined) !== expectation.permissionMode) problems.push(`permissionMode=${permissionMode || "default"}`);
+  const tools = fields.tools === undefined ? undefined
+    : fields.tools.replace(/^\[|\]$/g, "").split(",").map((tool) => tool.trim()).filter(Boolean);
+  if (expectation.tools === undefined) {
+    if (tools !== undefined) problems.push(`tools=${fields.tools}`);
+  } else if (tools === undefined || tools.join(",") !== expectation.tools.join(",")) {
+    problems.push(`tools=${fields.tools || "missing"}`);
+  }
+  if (!fields.description) problems.push("description=missing");
+  if (!contents.split(/^---\r?\n[\s\S]*?\r?\n---/)[1]?.trim()) problems.push("body=missing");
+  return problems;
+}
 
 export function loadReceipt(file) {
   assertSafeDestination(file);
@@ -308,11 +350,11 @@ async function requireCommand(binary, args, options) {
   return result;
 }
 
-async function runtimeChecks(roots, profiles, selected, report) {
+async function runtimeChecks(roots, profiles, activeComponents, report) {
   const globalAgentEnv = { ...process.env, OPENCODE_CONFIG_DIR: roots.opencode };
   delete globalAgentEnv.OPENCODE_CONFIG;
   delete globalAgentEnv.OPENCODE_CONFIG_CONTENT;
-  if (selected.includes("opencode")) {
+  if (activeComponents.has("opencode")) {
     const checks = [];
     if (profiles.includes("codex")) checks.push({
       name: "OpenCode agent discovery (Codex)",
@@ -336,7 +378,7 @@ async function runtimeChecks(roots, profiles, selected, report) {
       report(check.name, found ? "PASS" : "FAIL", found ? "configured agent found; model invocation not tested" : result.stderr || result.stdout);
     }
   }
-  if (profiles.includes("glm") && selected.includes("opencode")) {
+  if (profiles.includes("glm") && activeComponents.has("opencode")) {
     const config = path.join(roots.opencode, "profiles/glm/opencode.jsonc");
     const installed = stat(config);
     report("GLM native profile", installed ? "PASS" : "FAIL", installed ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
@@ -378,7 +420,7 @@ async function runtimeChecks(roots, profiles, selected, report) {
       }
     }
   }
-  if (profiles.includes("union") && selected.includes("opencode")) {
+  if (profiles.includes("union") && activeComponents.has("opencode")) {
     const config = path.join(roots.opencode, "profiles/union/opencode.jsonc");
     const installed = stat(config);
     report("Union native profile", installed ? "PASS" : "FAIL", installed ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
@@ -426,7 +468,7 @@ async function runtimeChecks(roots, profiles, selected, report) {
       }
     }
   }
-  if (selected.includes("pi")) {
+  if (activeComponents.has("pi")) {
     const check = await command("mise", ["exec", "--", "pnpm", "--dir", roots.pi, "run", "check"]);
     report("Pi package checks", check.code === 0 ? "PASS" : "FAIL", check.code === 0 ? "package checks passed; browser checked separately" : check.stderr || check.stdout);
     const browser = await command("mise", ["exec", "--", "node", "--input-type=module", "-e",
@@ -443,7 +485,36 @@ async function runtimeChecks(roots, profiles, selected, report) {
       : missing ? "Credentials are not configured. Credentials were not changed."
       : "Authentication/model check failed or returned an invalid result; credential output was suppressed.");
   }
-  if (profiles.includes("codex") && selected.includes("profile")) {
+  if (profiles.includes("zcode") && activeComponents.has("zcode")) {
+    for (const expectation of zcodeAgentExpectations) {
+      const file = path.join(roots.zcode, "cli/agents", `${expectation.name}.md`);
+      if (!stat(file)) {
+        report(`ZCode agent ${expectation.name}`, "FAIL", `Missing ${file}`);
+        continue;
+      }
+      const problems = validateZcodeAgentFile(fs.readFileSync(file, "utf8"), expectation);
+      report(`ZCode agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length
+        ? problems.join(", ")
+        : `${file} pins ${expectation.model}; live discovery and model invocation are checked in a new ZCode session`);
+    }
+  }
+  if (profiles.includes("zcode") && activeComponents.has("skill-zcode")) {
+    const skill = path.join(roots.zcode, "skills/plan-and-subagent/SKILL.md");
+    report("ZCode skill installation", stat(skill) ? "PASS" : "FAIL", stat(skill)
+      ? `${skill} is installed; session discovery is checked in a new ZCode session`
+      : `Missing ${skill}`);
+  }
+  if (profiles.includes("zcode") && activeComponents.has("profile")) {
+    const instructions = [path.join(roots.zcode, "AGENTS.md")];
+    const active = instructions.find((file) => fs.existsSync(file) && fs.readFileSync(file, "utf8").trim());
+    const expected = path.join(roots.environment, "profiles/zcode/PROFILE.md");
+    const contents = active ? fs.readFileSync(active, "utf8").replaceAll("`", "").replaceAll("~/", `${os.homedir()}/`) : "";
+    report("ZCode profile designation", contents.includes(expected) ? "PASS" : "ACTION_REQUIRED", contents.includes(expected)
+      ? `Profile path found in ${active}.`
+      : `Designate ${expected} in ${path.join(roots.zcode, "AGENTS.md")}. It was not edited.`);
+    report("ZCode session", "NOTICE", "Start a new ZCode session after installation; skills, subagents, and model bindings cannot be verified by this installer.");
+  }
+  if (profiles.includes("codex") && activeComponents.has("profile")) {
     const instructions = ["AGENTS.override.md", "AGENTS.md"].map((name) => path.join(roots.codex, name));
     const active = instructions.find((file) => fs.existsSync(file) && fs.readFileSync(file, "utf8").trim());
     const expected = path.join(roots.environment, "profiles/codex/PROFILE.md");
@@ -464,8 +535,10 @@ export async function main(args) {
   const roots = resolveRoots();
   const profiles = options.profile === "both" ? ["codex", "glm"] : [options.profile];
   const selected = options.component
-    ? options.component === "environment" ? ["profile", "environment"] : [options.component]
-    : ["skill", "skill-opencode", "profile", "environment", "codex", "opencode", "pi"];
+    ? options.component === "environment" ? ["profile", "environment"]
+      : options.component === "zcode" ? ["skill-zcode", "zcode"]
+      : [options.component]
+    : ["skill", "skill-opencode", "skill-zcode", "profile", "environment", "codex", "opencode", "zcode", "pi"];
   const receiptPath = path.join(roots.state, "receipt.json");
   if (within(repository, receiptPath)) throw new Error("Installation receipt must be outside the repository.");
   const receipt = loadReceipt(receiptPath);
@@ -487,6 +560,7 @@ export async function main(args) {
       }
     }
     const plan = buildPlan(manifest, repository, roots, receipt, selected, stagedSkills, profiles);
+    const activeComponents = new Set(plan.files.map((entry) => entry.component));
     const sourceLinks = missingLinks(plan.files, true);
     if (sourceLinks.length) throw new Error(`Missing source links:\n${sourceLinks.join("\n")}`);
     const plannedLinks = missingLinks(plan.files, true, true);
@@ -495,16 +569,16 @@ export async function main(args) {
     console.log(`Files: ${plan.files.length}; unchanged: ${plan.files.filter((entry) => entry.action === "unchanged").length}.`);
     for (const file of plan.stale) report("Obsolete managed file (preserved)", "NOTICE", file);
     if (options.mode === "dry-run") {
-      if (selected.includes("pi")) console.log(`Apply: install locked Pi dependencies${!options.component || options.withBrowser ? " and Chromium" : " (Chromium requires --with-browser for Pi-only install)"}, then package/browser/auth checks.`);
+      if (activeComponents.has("pi")) console.log(`Apply: install locked Pi dependencies${!options.component || options.withBrowser ? " and Chromium" : " (Chromium requires --with-browser for Pi-only install)"}, then package/browser/auth checks.`);
       console.log(`Selected profile(s): ${profiles.join(", ")}. No configuration or receipt was written.`);
       return plan.files.some((entry) => entry.action === "conflict") ? 1 : 0;
     }
     if (options.mode === "apply") {
-      if (selected.includes("pi")) await requireCommand("mise", ["exec", "--", "pnpm", "--version"]);
-      if (selected.includes("opencode")) await requireCommand("mise", ["exec", "--", "opencode", "--version"]);
+      if (activeComponents.has("pi")) await requireCommand("mise", ["exec", "--", "pnpm", "--version"]);
+      if (activeComponents.has("opencode")) await requireCommand("mise", ["exec", "--", "opencode", "--version"]);
       applyPlan(plan, receipt, receiptPath, options.force);
       report("Managed file writes", "PASS", `${plan.files.length} files synchronized and recorded in ${receiptPath}.`);
-      if (selected.includes("pi")) {
+      if (activeComponents.has("pi")) {
         console.log("Installing locked Pi dependencies...");
         await requireCommand("mise", ["exec", "--", "pnpm", "--dir", roots.pi, "install", "--frozen-lockfile", "--prod"], { timeout: 300_000 });
         if (!options.component || options.withBrowser) {
@@ -517,7 +591,7 @@ export async function main(args) {
     report("File synchronization", mismatches.length ? "FAIL" : "PASS", mismatches.length ? `${mismatches.length} file(s) missing or different; run --dry-run.` : `${plan.files.length} managed files match the source.`);
     const links = missingLinks(plan.files);
     report("Linked documents", links.length ? "FAIL" : "PASS", links.join("\n"));
-    await runtimeChecks(roots, profiles, selected, report);
+    await runtimeChecks(roots, profiles, activeComponents, report);
     console.log(options.component ? `Component-only result: ${options.component}; full environment readiness was not checked.` : "Local checks complete; no paid model invocation was performed.");
     return exitCode;
   } catch (error) {
