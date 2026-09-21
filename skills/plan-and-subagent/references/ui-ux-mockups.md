@@ -42,7 +42,9 @@ When the mockup applies:
    Do not start a separate project search while rendering the mockup.
 3. Show the smallest surface that resolves the decision. Use a contained mockup
    unless the application shell, page-level hierarchy, or navigation is itself
-   changing. Include only representative states needed for the decision.
+   changing. Use representative content to expose the proposed information
+   structure, visual hierarchy, and relevant interaction. Include only the
+   situations and states needed to judge the design against its user purpose.
 4. Present multiple alternatives only when each represents a real material
    choice. Do not invent variants to decorate a settled direction.
 5. Ask for or accept focused feedback on the proposed structure, interaction,

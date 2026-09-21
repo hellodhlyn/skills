@@ -10,8 +10,8 @@ explicit task choices take precedence.
 - The primary Codex session selects the profile's existing model and reasoning
   preference in Codex itself.
 - Implementation uses `luna_implementer`.
-- UI/UX review uses `ui_ux_designer` when the common skill classifies it as
-  applicable; `luna_mockup` owns only applicable mockup artifacts.
+- UI/UX design and implementation review use `ui_ux_designer` when the common
+  skill classifies them as applicable; `luna_mockup` owns only applicable mockup artifacts.
 - Their native Codex definitions are under this profile's `codex/agents/`.
 - Independent code review uses the external OpenCode `reviewer` agent with the
   profile's configured variant. The OpenCode definitions for `reviewer` and the
@@ -19,7 +19,7 @@ explicit task choices take precedence.
 - Implemented UI verification uses the common Pi verifier. Its provider and
   model are passed explicitly by the invocation; the runner has no fallback.
 
-The Pi native invocation uses provider `opencode-go` and model
+The Pi native invocation uses provider `zai` and model
 `glm-5.3-flash` for the existing browser-verification contract.
 
 The profile supplies those values directly to the shared runner; no provider or
@@ -27,7 +27,7 @@ model environment variables are required:
 
 ```bash
 mise exec -- node "${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}/src/run.mjs" \
-  --provider opencode-go --model glm-5.3-flash "$REQUEST"
+  --provider zai --model glm-5.3-flash "$REQUEST"
 ```
 
 Use the common `tools/` documents for invocation, continuation, permissions,

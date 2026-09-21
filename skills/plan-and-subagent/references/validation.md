@@ -42,9 +42,13 @@ For UI browser checks, use the separate verifier and evidence acceptance procedu
 in [delegated UI execution](ui-execution.md) instead of repeating execution in the
 primary. This exception delegates execution, not final validation judgment or
 the primary's engineering review.
-For applicable specialist review, supply the approved contract, current task
-diff, and verified evidence to the retained specialist using its handoff.
-Verify its conclusions and route accepted deviations through the fix loop.
+For applicable specialist review, supply the user's purpose, approved contract,
+current task diff, and verified evidence to the retained specialist using its
+handoff. Review contract conformance and support for the user purpose separately
+within the same internal round, following [purpose-led design](ui-ux-design.md).
+Verify its conclusions and route accepted deviations or design omissions through
+the existing fix/decision loop. The primary performs both judgments when specialist
+review is skipped.
 
 For interface changes, apply [semantic UX verification](ui-ux-domain.md) to the
 approved domain relationships and current rendered/interaction evidence. The
@@ -68,6 +72,12 @@ evidence under the delegated procedure, rather than copying implementer claims.
 Record unavailable inputs and blocked checks as `UNVERIFIED`, not as success. An applicable UI/UX
 contract item is also a required completion condition: `CONFORMANT` maps to
 `PASS`, `DEVIATION` to `FAIL`, and `UNVERIFIED` remains unverified.
+Record `PURPOSE_SUPPORT` separately with its `PASS`, `FAIL`, or `UNVERIFIED`
+evidence, referencing the relevant purpose-derived conditions. Contract conformance
+does not override a purpose-support failure. Triage newly discovered design omissions
+against the requested purpose and scope; accepted unresolved omissions block a clean
+internal review even when all contract items conform. Material changes require the
+existing decision and approval process before affected work, not unilateral redesign.
 
 Do not run broad checks after every minor visual adjustment. Gather visual
 feedback first, then perform the required final verification once the direction
@@ -92,12 +102,12 @@ focus, and activation against the existing pattern; a correct tag or passing
 navigation test does not prove the requested visual control was implemented.
 
 Select representative scenarios affected by this change before presenting it.
-For list editing, these may include a long list with reachable save/error feedback,
-empty results, consecutive edits, and preservation of unsaved input on failure.
-Choose relevant scenarios from the contract and actual interaction, not a fixed
-E2E checklist for every UI change. Obtain any necessary authorization for state
+Derive the situations, content, and relevant interactions from the user's purpose
+and actual constraints. Assess whether the presentation and behavior support that
+purpose, not just whether controls function. Do not impose a linear workflow or
+a fixed E2E checklist on every interface. Obtain any necessary authorization for state
 changes. Distinguish rendered, interaction-tested, and unverified behavior;
-component presence and automated tests alone do not establish the whole user flow.
+component presence and automated tests alone do not establish support for the purpose.
 
 ## Four review perspectives
 
@@ -143,7 +153,9 @@ Proceed to delivery only when any required result confirmation or scoped
 delegation is recorded, every required condition has current `PASS` evidence,
 primary review is clean, and mandatory independent review has completed with no
 accepted unresolved findings. Use the applicability rule and approved brief to
-determine confirmation requirements. An `INCONCLUSIVE` re-review does not resolve
+determine confirmation requirements. For interface changes, the primary's accepted
+`PURPOSE_SUPPORT` judgment must also be `PASS` within the requested scope; contract
+conformance cannot override a `FAIL` or missing required evidence. An `INCONCLUSIVE` re-review does not resolve
 a finding. Missing required visual, interaction, runtime, or other evidence blocks
 completion even if tests pass or the reviewer found no defect. Obtain the missing
 evidence within scope, or report partial/blocked with the specific gap. Never

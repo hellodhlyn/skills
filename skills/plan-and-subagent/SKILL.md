@@ -59,12 +59,12 @@ or domain-semantic choices. Resolve minor implementation details directly.
 Use concrete repository evidence for reuse, deletion, and consistency decisions;
 avoid speculative abstractions, dependencies, and unrelated refactoring.
 
-For interface changes, apply [domain knowledge for UI/UX](references/ui-ux-domain.md)
+For interface changes, apply [purpose-led UI/UX design](references/ui-ux-design.md)
 before proposing the design, independently of specialist or mockup applicability.
 Classify specialist review using the environment. When UI/UX review applies,
 use [the UI/UX handoff](references/ui-ux-handoff.md) and retain the specialist
-for conformance review. For interface changes, independently classify and apply
-[briefing mockups](references/ui-ux-mockups.md). Delegate applicable mockup production
+for conformance and user-purpose review. For interface changes, independently
+classify and apply [briefing mockups](references/ui-ux-mockups.md). Delegate applicable mockup production
 through the UI execution procedure. Verify advice before using it.
 
 Prepare the complete [implementation brief](references/planning.md), including

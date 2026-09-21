@@ -301,11 +301,13 @@ provider and model values explicitly through the runner's `--provider` and
 `--model` arguments; users do not need to set environment variables and the
 runner has no model/provider fallback.
 
-All three profiles currently bind the verifier to `opencode-go/glm-5.3-flash`:
+The Codex profile binds the verifier to `zai/glm-5.3-flash`; the GLM and Union
+profiles use `opencode-go/glm-5.3-flash`. The installer checks authentication for
+each selected profile's binding. For Codex:
 
 ```bash
 mise exec -- node "${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}/src/run.mjs" \
-  --provider opencode-go --model glm-5.3-flash "$REQUEST"
+  --provider zai --model glm-5.3-flash "$REQUEST"
 ```
 
 For an intentional Pi-only installation:

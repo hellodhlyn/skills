@@ -106,9 +106,9 @@ test("Union native config changes only the primary model and keeps copied role c
 });
 
 test("all profiles bind the shared Pi verifier without environment variables", () => {
-  for (const profile of ["codex", "glm", "union"]) {
+  for (const [profile, provider] of [["codex", "zai"], ["glm", "opencode-go"], ["union", "opencode-go"]]) {
     const contents = fs.readFileSync(path.join(repository, `profiles/${profile}/PROFILE.md`), "utf8");
-    assert.match(contents, /--provider opencode-go --model glm-5\.3-flash/);
+    assert.ok(contents.includes(`--provider ${provider} --model glm-5.3-flash`));
     assert.doesNotMatch(contents, /PI_UI_VERIFIER_(?:PROVIDER|MODEL)=/);
   }
 });
@@ -340,9 +340,10 @@ else if(args.includes('debug') && args.includes('agent')) {
 }
 else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_CONFIG_DIR,'agents'); if(fs.existsSync(directory)) {for(const file of fs.readdirSync(directory).filter((name)=>name.endsWith('.md')).sort()) console.log(file.slice(0,-3)+' (primary)');} else {console.log('reviewer (primary)');}}
 else if(args.includes('auth')) {
+  const provider=process.env.SETUP_TEST_AUTH_PROVIDER || args[args.indexOf('--provider')+1];
   if(process.env.SETUP_TEST_BAD_AUTH) {console.log('private-auth-output');process.exitCode=1;}
-  else if(process.env.SETUP_TEST_MISSING_AUTH) {console.log(JSON.stringify({status:'not_ready',provider:'opencode-go',reason:'credentials_not_configured'}));process.exitCode=1;}
-  else console.log(JSON.stringify({status:'ready',provider:'opencode-go'}));
+  else if(process.env.SETUP_TEST_MISSING_AUTH) {console.log(JSON.stringify({status:'not_ready',provider,reason:'credentials_not_configured'}));process.exitCode=1;}
+  else console.log(JSON.stringify({status:'ready',provider}));
 } else if(args.includes('install') && process.env.SETUP_TEST_FAIL_INSTALL) {console.error('fixture dependency failure');process.exitCode=1;}
 else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.error('fixture browser failure');process.exitCode=1;}
 `;
@@ -377,6 +378,9 @@ test("full dry-run writes no destinations; apply installs all components; repeat
     assert.ok(fs.existsSync(file), file);
   }
   assert.ok(calls().some((call) => call.includes("chromium")));
+  const auth = calls().filter((call) => call.includes("auth"));
+  assert.equal(auth.length, 1);
+  assert.equal(auth[0][auth[0].indexOf("--provider") + 1], "zai");
   const repeated = run(["--apply"]);
   assert.equal(repeated.status, 0, repeated.stderr);
   assert.doesNotMatch(repeated.stdout, /\[(ADD|UPDATE|CONFLICT)\]/);
@@ -400,6 +404,9 @@ test("GLM-only setup does not require Codex skill staging or write Codex targets
   assert.equal(fs.existsSync(path.join(f.roots.codex, "skills/plan-and-subagent")), false);
   assert.ok(fs.existsSync(path.join(f.roots.opencode, "profiles/glm/opencode.jsonc")));
   assert.ok(calls().every((call) => call[0] !== "gh"));
+  const auth = calls().filter((call) => call.includes("auth"));
+  assert.equal(auth.length, 1);
+  assert.equal(auth[0][auth[0].indexOf("--provider") + 1], "opencode-go");
   const mismatch = run(["--check", "--profile", "glm"], { SETUP_TEST_CONFIG_MISMATCH: "1" });
   assert.equal(mismatch.status, 1);
   assert.match(mismatch.stdout, /\[FAIL\] GLM merged default agent/);
@@ -504,6 +511,16 @@ test("dependency failure retains progress and the same installation can resume",
   assert.doesNotMatch(resumed.stdout, /\[(ADD|UPDATE|CONFLICT)\]/);
 });
 
+test("combined setup checks both profiles' distinct Pi authentication bindings", (t) => {
+  const f = fixture(t);
+  const { run, calls } = fakeCommands(f);
+  const applied = run(["--apply", "--profile", "both"]);
+  assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+  const auth = calls().filter((call) => call.includes("auth"));
+  assert.deepEqual(auth.map((call) => call[call.indexOf("--provider") + 1]).sort(), ["opencode-go", "zai"]);
+  assert.ok(auth.every((call) => call[call.indexOf("--model") + 1] === "glm-5.3-flash"));
+});
+
 test("missing authentication returns action-required; invalid auth is a failure without leaking output", (t) => {
   const f = fixture(t);
   const { run } = fakeCommands(f);
@@ -514,6 +531,9 @@ test("missing authentication returns action-required; invalid auth is a failure 
   const invalid = run(["--check"], { SETUP_TEST_BAD_AUTH: "1" });
   assert.equal(invalid.status, 1);
   assert.doesNotMatch(invalid.stdout + invalid.stderr, /private-auth-output/);
+  const wrongProvider = run(["--check"], { SETUP_TEST_AUTH_PROVIDER: "opencode-go" });
+  assert.equal(wrongProvider.status, 1);
+  assert.match(wrongProvider.stdout, /\[FAIL\] Pi authentication \(zai\/glm-5\.3-flash\)/);
 });
 
 test("browser failure is not hidden by passing package checks or missing auth", (t) => {

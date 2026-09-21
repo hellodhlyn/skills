@@ -475,15 +475,27 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
       'import {chromium} from "playwright"; import {spawnSync} from "node:child_process"; const r=spawnSync(process.execPath,["--test","test/browser-smoke.test.mjs"],{stdio:"inherit",env:{...process.env,PI_UI_VERIFIER_BROWSER_EXECUTABLE:chromium.executablePath()}}); process.exit(r.status ?? 1);',
     ], { cwd: roots.pi });
     report("Chromium capture and audit", browser.code === 0 ? "PASS" : "FAIL", browser.code === 0 ? "real browser smoke test passed" : browser.stderr || browser.stdout);
-    const auth = await command("mise", ["exec", "--", path.join(roots.pi, "node_modules/.bin/pi"), "auth", "check", "--provider", "opencode-go", "--model", "glm-5.3-flash", "--json", "--no-refresh"]);
-    let status;
-    try { status = JSON.parse(auth.stdout); } catch { /* Do not print auth output, even on failure. */ }
-    const ready = auth.code === 0 && status?.status === "ready" && status.provider === "opencode-go";
-    const missing = status?.provider === "opencode-go" && status?.status === "not_ready" && status?.reason === "credentials_not_configured";
-    report("Pi authentication", ready ? "PASS" : missing ? "ACTION_REQUIRED" : "FAIL", ready
-      ? "credential check passed; model invocation not tested"
-      : missing ? "Credentials are not configured. Credentials were not changed."
-      : "Authentication/model check failed or returned an invalid result; credential output was suppressed.");
+    // Read the same explicit binding used by each profile's invocation. A combined
+    // install must check every distinct binding, not just the first profile.
+    const bindings = new Map();
+    for (const profile of profiles) {
+      const contents = fs.readFileSync(path.join(repository, "profiles", profile, "PROFILE.md"), "utf8");
+      const matches = [...contents.matchAll(/--provider ([\w-]+) --model ([\w./-]+)/g)];
+      if (matches.length !== 1) throw new Error(`Profile ${profile} must specify one explicit Pi provider/model invocation.`);
+      const [, provider, model] = matches[0];
+      bindings.set(`${provider}/${model}`, { provider, model });
+    }
+    for (const [binding, { provider, model }] of bindings) {
+      const auth = await command("mise", ["exec", "--", path.join(roots.pi, "node_modules/.bin/pi"), "auth", "check", "--provider", provider, "--model", model, "--json", "--no-refresh"]);
+      let status;
+      try { status = JSON.parse(auth.stdout); } catch { /* Do not print auth output, even on failure. */ }
+      const ready = auth.code === 0 && status?.status === "ready" && status.provider === provider;
+      const missing = status?.provider === provider && status?.status === "not_ready" && status?.reason === "credentials_not_configured";
+      report(`Pi authentication (${binding})`, ready ? "PASS" : missing ? "ACTION_REQUIRED" : "FAIL", ready
+        ? "credential check passed; model invocation not tested"
+        : missing ? "Credentials are not configured. Credentials were not changed."
+        : "Authentication/model check failed or returned an invalid result; credential output was suppressed.");
+    }
   }
   if (profiles.includes("zcode") && activeComponents.has("zcode")) {
     for (const expectation of zcodeAgentExpectations) {

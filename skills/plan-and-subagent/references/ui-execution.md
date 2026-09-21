@@ -4,7 +4,7 @@ Read before briefing mockup production, implemented UI preview checks, or final
 browser verification. Resolve executor roles and procedures from the environment.
 Keep design decisions, acceptance criteria, evidence triage, and completion
 judgment in the primary; delegate artifact production and browser work. The UI/UX
-specialist retains design and semantic conformance review when applicable.
+specialist retains design, user-purpose, and semantic review when applicable.
 
 ## Ownership and handoff
 
@@ -20,7 +20,7 @@ silently substituting the primary or another model.
 Start with a fresh context and a self-contained, bounded handoff:
 
 - phase: briefing mockup, implemented preview, or final verification;
-- verified design evidence or approved UI/UX contract and condition IDs;
+- user purpose, verified design evidence or approved UI/UX contract and condition IDs;
 - relevant instructions, reference paths, and exact surfaces/states to cover;
 - artifact ownership, product-code read-only boundary, and current code state;
 - intended URL/environment/session and permitted interaction/state changes;
@@ -100,11 +100,12 @@ artifact or request a focused recheck for missing, contradictory, ambiguous, or
 unsupported evidence. Directly examine evidence needed for material domain/UX
 judgments; do not delegate those decisions to the executor.
 
-Supply the same accepted evidence to the retained UI/UX specialist. Its conformance
-review interprets the approved design and meaning; it should request focused missing
+Supply the same accepted evidence to the retained UI/UX specialist. Its review
+judges contract conformance and support for the user's purpose separately, following
+[the handoff](ui-ux-handoff.md); it should request focused missing
 evidence instead of routinely redoing browser execution. If specialist review is
-skipped, the primary still performs the semantic judgment. Required conditions
-without sufficient current evidence block completion. User confirmation and the
+skipped, the primary still performs both judgments and semantic verification.
+Required conditions without sufficient current evidence block completion. User confirmation and the
 mandatory independent code review remain separate requirements.
 
 After fixes, delegate only affected browser checks and concrete regression paths.

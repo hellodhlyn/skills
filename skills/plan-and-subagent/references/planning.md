@@ -30,7 +30,7 @@ SESSION_DIR/
       fix-request-N.md       # accepted findings sent back for revision
     uiux/
       design-N.md            # pre-approval UI/UX contract proposal
-      conformance-N.md       # post-implementation conformance review
+      conformance-N.md       # post-implementation conformance and user-purpose review
       execution-N.md         # mockup/preview/final phase, executor identity, condition evidence and artifact paths
     external/
       round-N/
@@ -141,9 +141,10 @@ language to user and project instructions; the example labels are not fixed keys
 - 일관성: 인접 화면과 맞춰야 할 사용자 문구, UX 상태, 이름
 
 ## UI/UX 계약
-<인터페이스 변경 시 사용자 목표, 근거,
-상호작용과 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
-근거와 확인된 방향, 검증 시나리오, 미결정 사항을 기록>
+<인터페이스 변경 시 사용자 목적과 사용 맥락, 근거, 정보 구조와 시각적 위계,
+구체적인 화면 구성과 상호작용, 중요한 설계 이유와 절충을 기록.
+변경에 관련된 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
+근거와 확인된 방향, 목적에서 도출한 관찰 가능한 검증 기준, 미결정 사항을 포함>
 <도메인 지침에 따라 지식 출처 → 설계에 영향을 준 개념 관계 → 화면 표현 →
 관찰 가능한 검증을 연결하고, 해당하지 않으면 간단한 사유를 기록>
 

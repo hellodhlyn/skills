@@ -63,7 +63,7 @@ The implementation child session is retained for understanding checks and
 corrections. The independent reviewer always starts in a different child
 context. No Union role invokes `opencode run` recursively.
 
-The shared Pi verifier uses the same profile binding as Codex and GLM. The
+The shared Pi verifier uses the same profile binding as GLM. The
 profile supplies those values directly to the runner; no provider or model
 environment variables are required:
 
