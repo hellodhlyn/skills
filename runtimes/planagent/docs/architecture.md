@@ -1,85 +1,66 @@
 # Planagent architecture
 
-## Identity and ownership
+The workflow controller owns sequencing, approval, budgets, verification, and
+completion. Pi models provide reasoning and edits within scoped tool access.
+Artifacts connect stages; implementation conversation is not inherited by
+reviewers. The runtime has no dependency on existing Codex/OpenCode skill files.
 
-- Project and package: `planagent`.
-- Executables: `planagent`, with the equivalent short command `plana`.
-- Repository location: `runtimes/planagent/`.
-- Engine: Pi, invoked by an independent workflow controller.
-- Existing Codex/OpenCode skill packages, profiles, installers, and histories
-  remain independent.
+## Modules
 
-The workflow controller chooses stages and checks transition conditions. Agents
-reason within assigned roles; they do not advance the workflow or manufacture
-user approval. Validation commands provide execution evidence.
+- `src/cli.mjs`: run, approval, revision, status, resume, cancellation, models.
+- `src/workflow.mjs`: persistent transitions and current-evidence completion gate.
+- `src/contracts.mjs`: structured result schemas and complete-ID coverage checks.
+- `src/runtime/stage.mjs`: one Pi RPC process per role invocation; exact model and
+  thinking verification, successful result submission, settlement, and process exit.
+- `extensions/stage.mjs`: trusted result submission and file/tool access guards.
+- `src/repository.mjs`: baseline, dirty ownership, content snapshots, task diff,
+  applicable project instructions, and safe paths.
+- `src/validation.mjs`: approved argv execution, logs, timeout, cancellation.
+- `src/store.mjs`: atomic state files, events, project locks, process ownership.
+- `src/profile.mjs` and `profiles/`: validated, explicit model/limit bindings.
+- `agents/`: role instructions, separate from machine-enforced rules.
 
-## Current scaffold
+## Flow
 
-```text
-bin/planagent.mjs       Both command names enter here
-src/cli.mjs            Help, version, and unsupported-command handling
-package.json           Package identity and both executable names
-README.md              Local execution and explicit linking instructions
-docs/architecture.md   Architecture and future module boundaries
-```
+Plan → optional UI design and plan integration → approval → implement → validate
+→ internal review → optional UI review → independent review → complete.
 
-## Planned layout
+Validation failures and accepted review findings enter repair, then validation
+and current internal/UI review. Independent rechecks focus on previously accepted
+findings and current completion evidence. A triager can reject a finding with
+specific evidence, but cannot turn missing required evidence into a pass.
 
-Create these modules when their functionality is implemented, rather than
-shipping empty implementations. The small CLI scaffold uses JavaScript modules;
-the planned TypeScript runtime can introduce a build step when it is added:
+Unresolved planning choices wait for feedback. The complete plan is displayed
+before approval. CLI hash approval permits non-interactive continuation of a
+previously inspected plan. Neither a successful model invocation nor a valid JSON
+result alone can satisfy completion.
 
-```text
-src/
-  workflow/            State transitions, execution, approval and completion gates
-  agents/              Role loading and role-specific context construction
-  runtime/             Pi RPC processes, events, deadlines, and termination
-  tools/               Repository access and deterministic validation commands
-  artifacts/           Schemas, persistence, and code-state identity
-agents/                Planner, implementer, reviewer, and triager instructions
-profiles/              Explicit provider/model bindings and execution limits
-extensions/            Optional Pi UI entry point to the same controller
-test/                  Workflow, process failure, and resume tests
-```
+## Trust and state boundaries
 
-Role documents define responsibilities, input/output contracts, and tool access.
-Profiles bind roles to providers and models. Workflow code owns sequencing and
-gates. These are Planagent's own formats, not assumed Pi core agent formats.
+The controller, extension code, role prompts, saved profile, and approval belong
+to the runtime. Models cannot change workflow state or select a new model. They
+submit schema-checked results through a fixed tool. Only implement/repair stages
+have write/edit/remove tools, scoped to the approved exact paths. No stage has
+shell or delegation tools. The active runtime cannot be a task-owned target.
 
-The first integration should use separate Pi processes and contexts per role.
-Repair uses the implementer role with a scoped repair request. Separate
-processes do not themselves provide filesystem isolation; tool and filesystem
-access boundaries must be implemented explicitly.
+Validation scripts execute locally with the operator's privileges. Approved
+commands are argument arrays, not implicitly evaluated shell strings. Filesystem
+path/tool controls do not provide OS sandboxing of these project scripts.
 
-The CLI is the first user entry point. A later Pi extension may collect input,
-display progress, and surface approval requests, but must call the same workflow
-controller rather than maintaining a second pipeline.
+Baseline ownership excludes pre-existing dirty files. Each check/review is tied
+to a content snapshot; source edits invalidate evidence. UI artifact hashes are
+also bound to that state. Profile choices and retry counters survive restarts.
 
-## Runtime state
+Each project has an exclusive process-owned lock. The active model or validation
+child is also recorded so a killed parent cannot immediately start a competing
+run over a surviving child. State is atomically replaced, and stage artifacts
+have unique invocation directories. Resume may repeat an interrupted invocation;
+it does not promise exactly-once execution of validation commands.
 
-The intended invocation directory is the target repository, not the Planagent
-source directory. Future workflow commands must resolve that target explicitly
-and record its identity before execution.
+## Deliverable
 
-Proposed personal locations, not created by this scaffold:
-
-```text
-~/.config/planagent/profile.json
-~/.local/state/planagent/runs/<run-id>/
-```
-
-Credentials remain managed by Pi. Profiles should contain model references and
-execution settings, not copied credentials. Workflow records live outside the
-target repository and must not be writable through implementer tools.
-
-## Next implementation boundary
-
-Start with a single-repository, non-UI workflow importing an approved brief.
-Implement role execution, validation, internal and independent review, finding
-triage, and scoped repair with traceable artifacts. Preserve separate approval,
-execution-success, evidence-freshness, and completion checks. Add planning and
-interactive approval after the execution contract is established.
-
-The initial CLI scaffold does not claim any of these capabilities. Pi runtime
-version, model selections, role schemas, budgets, and permission enforcement
-remain implementation decisions to resolve before model execution.
+A successful run leaves verified local changes, a task diff, and a final summary.
+The CLI does not commit, push, deploy, or open pull requests. UI browser actions
+are performed by project validation commands; the specialist inspects the
+resulting evidence. A Pi TUI extension is optional future presentation work and
+is not required to run this CLI pipeline.

@@ -1,0 +1,47 @@
+{
+  "limits": {
+    "maxCalls": 50,
+    "maxRepairs": 5,
+    "maxInternalReviews": 5,
+    "maxExternalReviews": 5,
+    "stageTimeoutMs": 600000,
+    "validationTimeoutMs": 300000
+  },
+  "roles": {
+    "planner": {
+      "provider": "openai-codex",
+      "model": "gpt-5.6-sol",
+      "thinking": "high"
+    },
+    "implementer": {
+      "provider": "openai-codex",
+      "model": "gpt-5.6-luna",
+      "thinking": "max"
+    },
+    "repair": {
+      "provider": "openai-codex",
+      "model": "gpt-5.6-luna",
+      "thinking": "max"
+    },
+    "internal-reviewer": {
+      "provider": "openai-codex",
+      "model": "gpt-5.6-sol",
+      "thinking": "high"
+    },
+    "triager": {
+      "provider": "openai-codex",
+      "model": "gpt-5.6-sol",
+      "thinking": "high"
+    },
+    "reviewer": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "thinking": "high"
+    },
+    "ui-ux": {
+      "provider": "zai",
+      "model": "glm-5.3-flash",
+      "thinking": "high"
+    }
+  }
+}

@@ -14,11 +14,21 @@
   "files": [
     "bin/",
     "src/",
+    "agents/",
+    "profiles/",
+    "extensions/",
+    "scripts/",
+    "test/",
     "README.md",
     "docs/"
   ],
   "scripts": {
     "start": "node bin/planagent.mjs",
-    "check": "node --check bin/planagent.mjs && node --check src/cli.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "typebox": "1.3.7"
   }
 }
