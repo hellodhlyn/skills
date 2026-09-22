@@ -37,6 +37,75 @@ mise exec -- npm link --ignore-scripts
 Otherwise replace `plana` below with
 `node /absolute/path/to/skills/runtimes/planagent/bin/planagent.mjs`.
 
+## Linear MCP
+
+Connect once using Planagent's own OAuth login:
+
+```bash
+mise exec -- plana auth linear
+```
+
+The integration uses Linear's official read/write MCP endpoint,
+`https://mcp.linear.app/mcp`, via Streamable HTTP. OAuth credentials live in
+`~/.config/planagent/linear-oauth.json` (mode 0600), separate from model credentials
+and task artifacts. `PLANAGENT_CONFIG_DIR` overrides the credential directory.
+Alternatively supply your own `LINEAR_API_KEY` environment variable. The runtime
+does not import another application's Linear credentials.
+
+```bash
+mise exec -- plana linear show ENG-123
+mise exec -- plana run --issue ENG-123
+mise exec -- plana run --issue 'https://linear.app/workspace/issue/ENG-123/title' "Only implement the read path"
+mise exec -- plana run --issue ENG-123 --document DOCUMENT_ID_OR_URL
+```
+
+Before planning, the controller reads the issue, all comment pages, attached
+Linear documents and document links from its description/comments. Additional
+documents can be specified with repeated `--document`. The complete source is
+saved outside the target repository and its content hash is bound to plan
+approval. Related issues, arbitrary external links and binary attachments are
+references only; the planner must ask if their contents are needed. Missing
+required content, incomplete pagination and oversized sources block planning.
+
+The planner receives this source snapshot; subsequent roles receive the approved
+plan and source identity. Models have no MCP tools or Linear write privileges.
+Resume reuses the saved source. To explicitly incorporate newer requirements:
+
+```bash
+mise exec -- plana refresh RUN_ID
+```
+
+Refresh preserves existing task edits, invalidates the previous approval and
+review evidence, and generates a new plan for approval. A failed fetch preserves
+the previous source. Refresh does not post anything to Linear.
+
+**Comments and issue status changes are always explicit.** Running, approving,
+resuming, cancelling, or completing a task never writes to Linear. Use these
+commands when you want an update:
+
+```bash
+mise exec -- plana linear comment RUN_ID --body-file /path/to/comment.md
+mise exec -- plana linear statuses ENG-123
+mise exec -- plana linear set-status RUN_ID "In Progress" --from "Todo"
+mise exec -- plana linear delete-comment RUN_ID COMMENT_ID
+```
+
+These commands target only the issue already resolved for that run. Comment
+files are sent verbatim. Status names are resolved against the issue's own team;
+`--from` optionally checks the current status before applying the change. No
+workflow stage is automatically mapped to a Linear status. Deletion is limited
+to an unchanged comment confirmed as posted by the same run.
+
+Writes are recorded separately under the run's `linear-actions/` directory and
+verified by reading the issue/comments afterward. Identical confirmed comments
+are not reposted. An uncertain delivery is reconciled by reading before retrying;
+`comment --retry` explicitly authorizes another attempt if you have confirmed
+the previous one was not posted. Network errors never trigger blind write retries.
+Explicit updates can be posted while the implementation process is running.
+
+See [Linear's MCP documentation](https://linear.app/docs/mcp) for server and
+authentication details.
+
 ## Run a task
 
 Run from the target Git repository:
@@ -45,7 +114,7 @@ Run from the target Git repository:
 mise exec -- plana run "Fix the parser's empty-input handling and add regression coverage"
 ```
 
-The controller:
+The controller (after source resolution for a Linear-linked task):
 
 1. Inspects the project with Sol and generates a structured plan: exact owned
    files, steps, completion conditions, and validation command argument arrays.

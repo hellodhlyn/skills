@@ -18,11 +18,18 @@ reviewers. The runtime has no dependency on existing Codex/OpenCode skill files.
 - `src/validation.mjs`: approved argv execution, logs, timeout, cancellation.
 - `src/store.mjs`: atomic state files, events, project locks, process ownership.
 - `src/profile.mjs` and `profiles/`: validated, explicit model/limit bindings.
+- `src/integrations/linear-mcp.mjs`: official Streamable HTTP client, independent
+  OAuth/API-key authentication and a bounded tool allowlist.
+- `src/sources/linear.mjs`: issue identity normalization, complete comment
+  pagination, Linear documents and immutable task-source snapshots.
+- `src/integrations/linear-actions.mjs`: explicit comment/status commands,
+  independent action locks, delivery journals and read-after-write verification.
+- `src/integrations/linear-cli.mjs`: operator-facing Linear commands.
 - `agents/`: role instructions, separate from machine-enforced rules.
 
 ## Flow
 
-Plan → optional UI design and plan integration → approval → implement → validate
+Optional Linear source resolution → Plan → optional UI design and plan integration → approval → implement → validate
 → internal review → optional UI review → independent review → complete.
 
 Validation failures and accepted review findings enter repair, then validation
@@ -34,6 +41,19 @@ Unresolved planning choices wait for feedback. The complete plan is displayed
 before approval. CLI hash approval permits non-interactive continuation of a
 previously inspected plan. Neither a successful model invocation nor a valid JSON
 result alone can satisfy completion.
+
+Linear source hashes are part of approval. The planner receives the captured
+requirements; later roles receive their approved plan and source identity.
+Explicit source refresh invalidates approval and evidence while preserving task
+edits and budgets. Fetch failures never substitute an empty issue or guessed ID.
+
+Linear writes are not workflow transitions. Only explicit CLI commands post
+comments, patch the linked issue's status, or remove a comment created by that
+run. The controller never maps local completion to Linear Done. Actions have a
+separate lock/journal, so posting an update does not rewrite concurrent workflow
+state. A failed write acknowledgment is uncertain until reconciled by reading;
+it is never silently retried. Status preconditions are checked before the write,
+but are not an atomic compare-and-swap across independent Linear clients.
 
 ## Trust and state boundaries
 

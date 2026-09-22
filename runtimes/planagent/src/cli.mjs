@@ -10,9 +10,14 @@ Usage:
 
 Commands:
   run "<request>" [--profile FILE]  Plan, approve, implement, validate, review, repair
+  run --issue REF ["<request>"]     Read a Linear issue, comments and linked documents
+                                  Optional: --document ID_OR_URL (repeatable)
+  auth linear                     Connect Linear MCP with read/write OAuth
+  linear <command>                Explicit Linear read/comment/status commands
   show <run-id>                    Show the complete plan and approval hash
   approve <run-id> --hash HASH      Approve that exact plan and continue
   revise <run-id> "<feedback>"      Revise a plan and require renewed approval
+  refresh <run-id>                 Refresh Linear context and generate a new plan
   resume <run-id>                  Resume an interrupted or blocked run
   status [run-id] [--json]          Inspect saved progress and execution evidence
   cancel <run-id>                  Cancel a run and its active process
@@ -45,16 +50,28 @@ export async function runCli(args) {
     return 0;
   }
 
+  if (args[0] === "auth" && args[1] === "linear" && args.length === 2) {
+    const { loginLinear } = await import("./integrations/linear-mcp.mjs");
+    const result = await loginLinear();
+    process.stdout.write(`Linear connected (${result.method}). Comments and status changes require explicit commands.\n`);
+    return 0;
+  }
+  if (args[0] === "linear") {
+    const { runLinearCli } = await import("./integrations/linear-cli.mjs");
+    return runLinearCli(args.slice(1));
+  }
   let parsed;
-  try { parsed = parseArgs({ args, allowPositionals: true, options: { hash: { type: "string" }, json: { type: "boolean" }, profile: { type: "string" } } }); }
+  try { parsed = parseArgs({ args, allowPositionals: true, options: { hash: { type: "string" }, json: { type: "boolean" }, profile: { type: "string" }, issue: { type: "string" }, document: { type: "string", multiple: true } } }); }
   catch (error) { process.stderr.write(`${error.message}\n`); return 2; }
   const { positionals: [command, first, second, ...extra], values } = parsed;
-  const counts = { run: [1], show: [1], approve: [1], revise: [2], resume: [1], status: [0, 1], cancel: [1] };
+  const counts = { run: values.issue ? [0, 1] : [1], show: [1], approve: [1], revise: [2], refresh: [1], resume: [1], status: [0, 1], cancel: [1] };
+  const flags = { run: ["profile", "issue", "document"], approve: ["hash"], status: ["json"] };
   const count = parsed.positionals.length - 1;
-  if (!counts[command]?.includes(count) || extra.length || (values.hash && command !== "approve") || (values.json && command !== "status") || (values.profile && command !== "run") || (command === "approve" && !values.hash)) {
+  const invalidFlag = Object.entries(values).some(([key, value]) => !(flags[command] || []).includes(key) || (typeof value === "string" && !value.trim()) || (Array.isArray(value) && value.some((item) => !item.trim())));
+  if (!counts[command]?.includes(count) || extra.length || invalidFlag || (values.document && !values.issue) || (command === "approve" && !values.hash)) {
     process.stderr.write("Unsupported command or arguments. Run plana --help.\n"); return 2;
   }
-  const { createRun, execute, planHash, showPlan, reviseRun } = await import("./workflow.mjs");
+  const { createRun, execute, planHash, showPlan, reviseRun, refreshInput } = await import("./workflow.mjs");
   const { load, listRuns, runDirectory, cancel, acquire } = await import("./store.mjs");
   if (command === "status") {
     const runs = first ? [load(first)] : listRuns();
@@ -64,10 +81,10 @@ export async function runCli(args) {
   }
   if (command === "show") { process.stdout.write(showPlan(load(first))); return 0; }
   if (command === "cancel") { const run = cancel(first); process.stdout.write(`${run.id}: cancellation requested\n`); return 0; }
-  let run = command === "run" ? createRun(first, process.cwd(), values.profile) : load(first);
-  if (command === "revise") {
+  let run = command === "run" ? createRun(first, process.cwd(), values.profile, { issue: values.issue, documents: values.document }) : load(first);
+  if (command === "revise" || command === "refresh") {
     const release = acquire(run.project, run.id);
-    try { run = load(run.id); reviseRun(run, second); } finally { release(); }
+    try { run = load(run.id); if (command === "refresh") await refreshInput(run); else reviseRun(run, second); } finally { release(); }
   }
   run = await execute(run, command === "approve" ? values.hash : undefined);
   process.stdout.write(`\nRun ${run.id}: ${run.status} (${run.stage})\nArtifacts: ${runDirectory(run.id)}\n`);

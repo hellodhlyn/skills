@@ -53,3 +53,25 @@ blocks completion without a validated result and never substitutes providers.
 Run records include each stage's prompt, result, model/usage metadata and process
 exit, plus validation logs and saved state. Provider usage is not a subscription
 quota measurement.
+
+## Linear MCP integration
+
+Planagent's separate OAuth login was completed against the official read/write
+Linear MCP server. Its actual tool schemas were inspected before integration.
+The current server exposes an issue's human identifier as `id` and stable ID as
+`uuid`; the source adapter explicitly normalizes these fields.
+
+On an issue explicitly selected by the user, the following live checks passed:
+
+- Issue and comment retrieval, source snapshot persistence and canonical identity.
+- Posting the user-authorized test comment through `plana linear comment`.
+- Reading back and verifying the exact posted comment.
+- Deleting that same test comment through `plana linear delete-comment` and
+  verifying its absence.
+
+No issue description or status was changed during this check. Actual status
+mutation was not exercised on the user's issue. The status path is covered by
+focused tests for team-scoped lookup, stale-state rejection and an exact
+state-only update. Source pagination, approval hashing, lost comment
+acknowledgments, duplicate prevention and deletion ownership are also tested.
+The suite contains 16 passing tests, including the original eight runtime tests.

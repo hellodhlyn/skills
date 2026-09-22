@@ -9,11 +9,12 @@ import { runStage } from "./runtime/stage.mjs";
 import { validate } from "./validation.mjs";
 import { digest, git, projectRoot, snapshot, dirtyPaths, changedPaths, validatePlanPaths, taskDiff, projectInstructions, safePath } from "./repository.mjs";
 import { acquire, load, save, record, runDirectory, stateRoot, writeJson } from "./store.mjs";
+import { linearReference, readLinearContext } from "./sources/linear.mjs";
 
-export function planHash(run) { return digest({ plan: run.plan, uiDesign: run.uiDesign || null }); }
+export function planHash(run) { return digest({ plan: run.plan, uiDesign: run.uiDesign || null, ...(run.source ? { sourceHash: run.source.hash } : {}) }); }
 export function showPlan(run) {
   if (!run.plan) throw new Error("This run has not produced a plan yet.");
-  return `# Planagent plan\n\nRun: ${run.id}\nProject: ${run.project}\n\nRequest: ${run.request}\n\n${JSON.stringify(run.plan, null, 2)}\n${run.uiDesign ? `\nUI/UX guidance:\n${run.uiDesign.guidance}\n` : ""}\nPlan hash: ${planHash(run)}\n`;
+  return `# Planagent plan\n\nRun: ${run.id}\nProject: ${run.project}\n\nRequest: ${run.request}\n${run.source ? `\nLinear: ${run.source.ref} — ${run.source.context.issue.url}\nSource captured: ${run.source.fetchedAt}\nSource hash: ${run.source.hash}\n` : ""}\n${JSON.stringify(run.plan, null, 2)}\n${run.uiDesign ? `\nUI/UX guidance:\n${run.uiDesign.guidance}\n` : ""}\nPlan hash: ${planHash(run)}\n`;
 }
 function move(run, stage) { run.stage = stage; save(run); record(run, "stage", { stage }); }
 function bound(run, counter, maximum) {
@@ -38,6 +39,7 @@ function reconcile(run, before, writable) {
 function input(run) {
   return {
     request: run.request, feedback: run.feedback, project: run.project,
+    source: run.source ? { kind: run.source.kind, ref: run.source.ref, url: run.source.context.issue.url, hash: run.source.hash } : undefined,
     priorPlan: run.priorPlan, alreadyChangedFiles: run.alreadyChangedFiles,
     instructions: projectInstructions(run.project, run.plan?.files),
     plan: run.plan, uiDesign: run.uiDesign, snapshot: run.codeState.id,
@@ -96,16 +98,38 @@ function checkVisualEvidence(run) {
     if (!saved || saved.codeState !== run.codeState.id || !existsSync(absolute) || digest(readFileSync(absolute)) !== saved.hash) throw new Error(`UI evidence is missing or stale: ${filename}`);
   }
 }
-export function createRun(request, cwd = process.cwd(), profileFile) {
-  if (!request.trim()) throw new Error("Request must not be empty.");
+export function createRun(request, cwd = process.cwd(), profileFile, { issue, documents = [] } = {}) {
+  const issueRef = issue ? linearReference(issue) : undefined;
+  if (!request?.trim() && !issueRef) throw new Error("Request must not be empty.");
+  if (documents.length && !issueRef) throw new Error("Linear documents require an issue reference.");
+  request = request?.trim() || `Implement the requested change from Linear issue ${issueRef}.`;
   const project = projectRoot(cwd);
   if (stateRoot() === project || stateRoot().startsWith(`${project}${path.sep}`)) throw new Error("PLANAGENT_STATE_DIR must be outside the target repository.");
   const baseHead = git(project, ["rev-parse", "HEAD"]).trim();
   const baseline = snapshot(project);
   const run = { id: randomUUID(), project, request, feedback: [], createdAt: new Date().toISOString(),
     baseHead, baseline, codeState: baseline, dirtyPaths: dirtyPaths(project), profile: readProfile(profileFile),
-    status: "ready", stage: "plan", counters: { calls: 0, repairs: 0, internal: 0, external: 0, ui: 0 }, executions: [] };
+    ...(issueRef ? { sourceInput: { issue: issueRef, documents } } : {}),
+    status: "ready", stage: issueRef ? "resolve-input" : "plan", counters: { calls: 0, repairs: 0, internal: 0, external: 0, ui: 0 }, executions: [] };
   save(run); record(run, "created"); return run;
+}
+export async function resolveInput(run, signal) {
+  if (run.stage !== "resolve-input" || !run.sourceInput) throw new Error("This run is not waiting for Linear input.");
+  const source = await readLinearContext(run.sourceInput.issue, run.sourceInput.documents, { signal });
+  run.source = source;
+  writeJson(path.join(runDirectory(run.id), "sources", `${source.hash}.json`), source);
+  record(run, "source-resolved", { kind: source.kind, ref: source.ref, hash: source.hash });
+  move(run, "plan");
+}
+export async function refreshInput(run) {
+  if (!run.sourceInput || ["completed", "cancelled"].includes(run.status)) throw new Error("Only an unfinished Linear-linked run can refresh its source.");
+  const source = await readLinearContext(run.sourceInput.issue, run.sourceInput.documents);
+  if (run.source && source.context.issue.id !== run.source.context.issue.id) throw new Error("Linear workspace/issue identity changed.");
+  reviseRun(run, "Refresh the Linear issue, comments, and documents; reconcile changes with the existing work and produce a new plan for approval.");
+  run.source = source;
+  writeJson(path.join(runDirectory(run.id), "sources", `${source.hash}.json`), source);
+  record(run, "source-refreshed", { ref: source.ref, hash: source.hash });
+  save(run);
 }
 export function approveRun(run, hash) {
   if (run.stage !== "approval" || run.status !== "waiting_approval" || hash !== planHash(run)) throw new Error("Approval must match the current displayed plan and waiting run.");
@@ -131,7 +155,7 @@ export function reviseRun(run, feedback) {
   record(run, "revision", { feedback, previousApproval: run.approval, previousPlan: run.plan });
   run.priorPlan = run.plan;
   run.feedback.push(feedback); delete run.plan; delete run.uiDesign; delete run.approval;
-  clearEvidence(run); delete run.externalFindings; delete run.pendingFindings; delete run.pendingReview; delete run.clarification;
+  clearEvidence(run); delete run.externalFindings; delete run.pendingFindings; delete run.pendingReview; delete run.clarification; delete run.validationFailure;
   run.status = "ready"; move(run, "plan");
 }
 async function approval(run, signal) {
@@ -155,6 +179,7 @@ export async function execute(run, approveHash) {
   try {
     // Reload under the project lock so two commands cannot act on stale state.
     run = load(run.id);
+    if (run.source && digest(run.source.context) !== run.source.hash) throw new Error("Saved Linear context was changed; refresh it explicitly before continuing.");
     if (run.status === "completed") {
       if (snapshot(run.project).id !== run.codeState.id) throw new Error("Completed run's code state has changed; its evidence is historical. Start a new run.");
       return run;
@@ -176,8 +201,10 @@ export async function execute(run, approveHash) {
       if (git(run.project, ["rev-parse", "HEAD"]).trim() !== run.baseHead) throw new Error("Repository HEAD changed during execution.");
       if (snapshot(run.project).id !== run.codeState.id) throw new Error("Concurrent file changes detected; resume only after resolving them.");
       const ids = run.plan?.conditions.map(({ id }) => id) || [];
-      if (run.stage === "plan") {
-        run.plan = await call(run, "planner", "plan", input(run), controller.signal);
+      if (run.stage === "resolve-input") {
+        await resolveInput(run, controller.signal);
+      } else if (run.stage === "plan") {
+        run.plan = await call(run, "planner", "plan", { ...input(run), sourceContext: run.source?.context }, controller.signal);
         assertResult("plan", run.plan); validatePlanPaths(run.project, run.plan, run.dirtyPaths);
         if (run.alreadyChangedFiles?.some((file) => !run.plan.files.includes(file))) throw new Error("Revised plan must account for all files already changed by this run.");
         const runtimeRoot = fileURLToPath(new URL("../", import.meta.url));
