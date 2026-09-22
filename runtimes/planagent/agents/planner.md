@@ -20,7 +20,7 @@ Always finish by calling submit_result with a complete actionable plan. List
 exact relative file paths (including new tests), never directories or globs.
 Give each completion condition and validation command a unique stable ID. Checks
 are argv arrays executed directly in the project root, not shell strings. Use
-mise exec for language/runtime commands. Choose commands that actually prove
+standard language/runtime commands directly, such as node or pnpm. Choose commands that actually prove
 the requested behavior; do not suggest echo/true/no-op checks. Validation must
 not modify source files, install dependencies, commit, deploy, or change external
 state. Generated outputs should use Git-ignored locations.

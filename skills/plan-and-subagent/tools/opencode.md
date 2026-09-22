@@ -45,7 +45,7 @@ review prompt and matching skill contract to `prompt.md`, then invoke the
 configured runner as one process:
 
 ```bash
-mise exec -- sh "$RUNNER" "$WORKDIR" "$REVIEW_DIR/prompt.md" "$REVIEW_DIR/result.md" "$REVIEW_DIR/stderr.log"
+sh "$RUNNER" "$WORKDIR" "$REVIEW_DIR/prompt.md" "$REVIEW_DIR/result.md" "$REVIEW_DIR/stderr.log"
 ```
 
 The optional agent and variant arguments are supplied by the profile. Preserve
@@ -60,7 +60,7 @@ handoff preamble, user purpose, approved contract when available, evidence, and
 scope to `prompt.md`, then invoke:
 
 ```bash
-mise exec -- sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" codex-ui-ux high "$REPORT_DIR/browser-request.json"
+sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" codex-ui-ux high "$REPORT_DIR/browser-request.json"
 ```
 
 Preserve the terminal process result and model identity in `execution-N.md`.

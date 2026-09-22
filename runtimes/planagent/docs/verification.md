@@ -12,7 +12,7 @@ repository or credentials were included in the fixture.
 | Plan | `openai-codex/gpt-5.6-sol` | Produced a structured plan and exited at the approval gate. |
 | Approval | Controller | Accepted the inspected plan's exact hash. |
 | Implement | `openai-codex/gpt-5.6-luna` | Wrote the two approved files and submitted its result. |
-| Validate | `mise exec -- node --test duration.test.mjs` | Four test groups passed. |
+| Validate | `node --test duration.test.mjs` | Four test groups passed. |
 | Internal review | `openai-codex/gpt-5.6-sol` | All five completion conditions passed; no findings. |
 | Initial independent review (incorrect provider) | `opencode-go/deepseek-v4.1-flash` | Blocked by HTTP 429 `GoUsageLimitError: Go usage limit exceeded`. This route was subsequently corrected at the user's request. |
 | Initial resume | Controller | Resumed at independent review without repeating implementation or validation; the incorrect provider's limit persisted. |

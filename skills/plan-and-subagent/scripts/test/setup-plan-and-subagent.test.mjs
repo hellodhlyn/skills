@@ -324,7 +324,7 @@ else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_
 else if(args.includes('install') && process.env.SETUP_TEST_FAIL_INSTALL) {console.error('fixture dependency failure');process.exitCode=1;}
 else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.error('fixture browser failure');process.exitCode=1;}
 `;
-  for (const name of ["gh", "mise"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
+  for (const name of ["gh", "opencode", "pnpm", "node"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
   const log = path.join(f.directory, "commands.jsonl");
   const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`,
     PLAN_AND_SUBAGENT_CODEX_DIR: f.roots.codex,
@@ -419,7 +419,7 @@ test("global instruction omission is reported without rewriting it; overrides ta
 test("component installer uses shared inventory and does not claim full readiness", (t) => {
   const f = fixture(t);
   const { env } = fakeCommands(f);
-  // Run the actual compatibility wrapper; use real mise for its initial Node invocation.
+  // Run the compatibility wrapper with the real Node executable.
   const result = spawnSync("bash", [path.join(repository, "skills/plan-and-subagent/scripts/install-agent-environment.sh")], {
     env: { ...env, PATH: process.env.PATH }, encoding: "utf8", timeout: 15_000,
   });

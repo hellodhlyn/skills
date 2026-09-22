@@ -19,5 +19,8 @@
 - Requests to edit skill source or installation tooling do not automatically
   authorize applying it to the user's environment. Test installers with disposable
   destination overrides. Keep existing workspace changes intact.
-- Run installer tests with `mise exec -- node --test skills/plan-and-subagent/scripts/test/*.test.mjs`.
-  Use `mise exec` for runtime commands.
+- Show standard runtime commands directly in repository documentation and agent plans
+  (for example, `node`, `pnpm`, and `opencode`), without requiring a local version
+  manager. Contributors may use their own local runtime manager to make
+  the required executables available on `PATH`.
+- Run installer tests with `node --test skills/plan-and-subagent/scripts/test/*.test.mjs`.

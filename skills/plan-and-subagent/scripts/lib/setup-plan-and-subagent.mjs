@@ -321,7 +321,7 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
       pattern: /^glm-orchestrator(?:\s|$)/m,
     });
     for (const check of checks) {
-      const result = await command("mise", ["exec", "--", "opencode", "agent", "list"], { env: check.env });
+      const result = await command("opencode", ["agent", "list"], { env: check.env });
       const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
       const found = result.code === 0 && check.pattern.test(clean);
       report(check.name, found ? "PASS" : "FAIL", found ? "configured agent found; model invocation not tested" : result.stderr || result.stdout);
@@ -333,7 +333,7 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
     report("OpenCode UI browser configuration", stat(config) && stat(server) ? "PASS" : "FAIL",
       stat(config) && stat(server) ? "profile config and local MCP server are installed" : `Missing ${!stat(config) ? config : server}`);
     if (stat(config) && stat(server)) {
-      const result = await command("mise", ["exec", "--", "opencode", "mcp", "list"], {
+      const result = await command("opencode", ["mcp", "list"], {
         env: { ...process.env, OPENCODE_CONFIG_DIR: roots.opencode, OPENCODE_CONFIG: config, PLAN_AND_SUBAGENT_UI_BROWSER_DIR: roots.browser },
       });
       const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
@@ -352,7 +352,7 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
         OPENCODE_CONFIG_DIR: roots.opencode,
         AGENT_ENVIRONMENT_DIR: roots.environment,
       };
-      const resolvedConfig = await command("mise", ["exec", "--", "opencode", "debug", "config"], { env });
+      const resolvedConfig = await command("opencode", ["debug", "config"], { env });
       let configJson;
       try { configJson = JSON.parse(resolvedConfig.stdout); } catch { /* Report the raw command failure below. */ }
       report("GLM merged default agent", resolvedConfig.code === 0 && configJson?.default_agent === "glm-orchestrator" ? "PASS" : "FAIL",
@@ -368,14 +368,14 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
         { name: "glm-mockup", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash" },
       ];
       for (const expectation of expectations) {
-        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env });
+        const result = await command("opencode", ["debug", "agent", expectation.name], { env });
         let agent;
         try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
         const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
         report(`GLM merged agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "model and effective permissions match profile; model invocation not tested");
       }
       for (const expectation of expectations) {
-        const result = await command("mise", ["exec", "--", "opencode", "debug", "agent", expectation.name], { env: globalAgentEnv });
+        const result = await command("opencode", ["debug", "agent", expectation.name], { env: globalAgentEnv });
         let agent;
         try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
         const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
@@ -384,9 +384,9 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
     }
   }
   if (activeComponents.has("ui-browser")) {
-    const check = await command("mise", ["exec", "--", "pnpm", "--dir", roots.browser, "run", "check"]);
+    const check = await command("pnpm", ["--dir", roots.browser, "run", "check"]);
     report("OpenCode UI browser package", check.code === 0 ? "PASS" : "FAIL", check.code === 0 ? "package checks passed" : check.stderr || check.stdout);
-    const browser = await command("mise", ["exec", "--", "node", "--input-type=module", "-e",
+    const browser = await command("node", ["--input-type=module", "-e",
       'import {chromium} from "playwright"; const browser=await chromium.launch({headless:true}); const page=await browser.newPage(); await page.setContent("<main>browser-ready</main>"); if(await page.locator("main").textContent()!=="browser-ready") process.exitCode=1; await browser.close();',
     ], { cwd: roots.browser });
     report("OpenCode UI browser Chromium", browser.code === 0 ? "PASS" : "FAIL", browser.code === 0 ? "real browser capture runtime is available" : browser.stderr || browser.stdout);
@@ -406,7 +406,7 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
 export async function main(args) {
   if (args.includes("--help")) { console.log(usage); return 0; }
   const [major, minor] = process.versions.node.split(".").map(Number);
-  if (major < 22 || (major === 22 && minor < 19)) throw new Error("Setup requires Node.js 22.19 or later through mise.");
+  if (major < 22 || (major === 22 && minor < 19)) throw new Error("Setup requires Node.js 22.19 or later.");
   const options = parseArguments(args);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const roots = resolveRoots();
@@ -450,15 +450,15 @@ export async function main(args) {
       return plan.files.some((entry) => entry.action === "conflict") ? 1 : 0;
     }
     if (options.mode === "apply") {
-      if (activeComponents.has("ui-browser")) await requireCommand("mise", ["exec", "--", "pnpm", "--version"]);
-      if (activeComponents.has("opencode")) await requireCommand("mise", ["exec", "--", "opencode", "--version"]);
+      if (activeComponents.has("ui-browser")) await requireCommand("pnpm", ["--version"]);
+      if (activeComponents.has("opencode")) await requireCommand("opencode", ["--version"]);
       applyPlan(plan, receipt, receiptPath, options.force);
       report("Managed file writes", "PASS", `${plan.files.length} files synchronized and recorded in ${receiptPath}.`);
       if (activeComponents.has("ui-browser")) {
         console.log("Installing locked OpenCode UI browser dependencies...");
-        await requireCommand("mise", ["exec", "--", "pnpm", "--dir", roots.browser, "install", "--frozen-lockfile", "--prod"], { timeout: 300_000 });
+        await requireCommand("pnpm", ["--dir", roots.browser, "install", "--frozen-lockfile", "--prod"], { timeout: 300_000 });
         console.log("Installing Playwright Chromium...");
-        await requireCommand("mise", ["exec", "--", "node", path.join(roots.browser, "node_modules/playwright/cli.js"), "install", "chromium"], { timeout: 300_000 });
+        await requireCommand("node", [path.join(roots.browser, "node_modules/playwright/cli.js"), "install", "chromium"], { timeout: 300_000 });
       }
     }
     const mismatches = plan.files.filter((entry) => !stat(entry.target) || digest(entry.target) !== entry.hash);

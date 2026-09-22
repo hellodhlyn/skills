@@ -19,7 +19,7 @@ test("approval binds exact content, survives reload, and protects existing chang
     git('init','--initial-branch=main'); git('add','.'); git('commit','-m','Create state test fixture');
     writeFileSync(path.join(project, 'user.txt'), 'user change\n');
     const run = createRun('Change the value', project);
-    run.plan = { summary:'Change value', files:['code.mjs'], steps:['Update constant'], conditions:[{id:'C1',description:'value is two'}], checks:[{id:'V1',argv:['mise','exec','--','node','--check','code.mjs']}], ui:false, visualEvidence:[], questions:[] };
+    run.plan = { summary:'Change value', files:['code.mjs'], steps:['Update constant'], conditions:[{id:'C1',description:'value is two'}], checks:[{id:'V1',argv:['node','--check','code.mjs']}], ui:false, visualEvidence:[], questions:[] };
     validatePlanPaths(project, run.plan, run.dirtyPaths);
     assert.throws(() => validatePlanPaths(project, {...run.plan,files:['user.txt']}, run.dirtyPaths));
     run.stage='approval'; run.status='waiting_approval'; save(run);

@@ -53,7 +53,7 @@ async function call(run, role, kind, data, signal, expectedIds = [], write = fal
   const before = snapshot(run.project);
   const directory = path.join(runDirectory(run.id), "stages", `${String(run.counters.calls).padStart(3, "0")}-${role}`);
   const evidencePaths = (run.validation || []).flatMap((check) => [check.stdoutPath, check.stderrPath]);
-  const prompt = `${JSON.stringify(data, null, 2)}\n\nInspect the relevant code independently. Complete this stage with submit_result using its exact schema. Never claim checks you did not run. No other agents, external operations, commits, or installations. Language/runtime validation commands must use mise exec.\n`;
+  const prompt = `${JSON.stringify(data, null, 2)}\n\nInspect the relevant code independently. Complete this stage with submit_result using its exact schema. Never claim checks you did not run. No other agents, external operations, commits, or installations. Language/runtime validation commands should use standard executables directly.\n`;
   try {
     const response = await runStage({ project: run.project, directory, role, kind, model: run.profile.roles[role], prompt,
       activePath: path.join(runDirectory(run.id), "active-process.json"),

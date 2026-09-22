@@ -32,8 +32,8 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 ## Requirements
 
 - GitHub CLI `gh` v2.90.0 or later with `gh skill` support
-- Personal environment installers: `mise` and Node.js 22.19 or later
-- Planagent runtime: Node.js 24+, Git, mise, and authenticated Pi providers
+- Personal environment installers: Node.js 22.19 or later
+- Planagent runtime: Node.js 24+, Git, and authenticated Pi providers
 - OpenCode CLI for OpenCode-backed roles
 - For the `advisor` skill: a working `opencode` CLI authenticated for OpenCode Go
 - For the OpenCode UI browser: pnpm and Playwright Chromium
@@ -101,7 +101,7 @@ install only the Codex OpenCode definitions:
 
 ```bash
 bash skills/plan-and-subagent/scripts/install-opencode-agents.sh
-mise exec -- opencode agent list
+opencode agent list
 ```
 
 The component wrapper uses the same inventory and receipt as complete setup; it
@@ -208,13 +208,13 @@ Check each profile explicitly:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
-mise exec -- opencode agent list
-mise exec -- opencode debug config
-mise exec -- opencode debug agent glm-orchestrator
-mise exec -- opencode debug agent glm-implementer
-mise exec -- opencode debug agent glm-reviewer
-mise exec -- opencode debug agent glm-ui-ux
-mise exec -- opencode debug agent glm-mockup
+opencode agent list
+opencode debug config
+opencode debug agent glm-orchestrator
+opencode debug agent glm-implementer
+opencode debug agent glm-reviewer
+opencode debug agent glm-ui-ux
+opencode debug agent glm-mockup
 ```
 
 To migrate an existing Codex installation, run the Codex dry-run, inspect any
@@ -260,9 +260,9 @@ not implicitly authorize installation.
 ## Source validation
 
 ```bash
-mise exec -- node --test skills/plan-and-subagent/scripts/test/*.test.mjs
-mise exec -- pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser install --frozen-lockfile
-mise exec -- pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser run check
+node --test skills/plan-and-subagent/scripts/test/*.test.mjs
+pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser install --frozen-lockfile
+pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser run check
 gh skill publish --dry-run
 ```
 

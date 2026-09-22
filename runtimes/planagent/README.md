@@ -7,20 +7,20 @@ Codex/OpenCode skills, profiles, and installers.
 
 ## Setup
 
-Requires Node.js 24+, Git with an initial commit, and mise on PATH. From this
+Requires Node.js 24+ and Git with an initial commit. From this
 package directory:
 
 ```bash
-mise exec -- npm ci --ignore-scripts
-mise exec -- npm run check
-mise exec -- npm test
+npm ci --ignore-scripts
+npm run check
+npm test
 ```
 
 OpenAI roles use ChatGPT subscription OAuth through `openai-codex`. Authenticate
 once in the bundled Pi:
 
 ```bash
-mise exec -- node node_modules/.bin/pi --no-session --no-extensions --no-skills --no-prompt-templates --provider openai-codex --model gpt-5.6-sol
+node node_modules/.bin/pi --no-session --no-extensions --no-skills --no-prompt-templates --provider openai-codex --model gpt-5.6-sol
 ```
 
 Enter `/login openai-codex`, complete browser login, then `/quit`. Authenticate
@@ -28,10 +28,10 @@ Enter `/login openai-codex`, complete browser login, then `/quit`. Authenticate
 needed. Credentials stay in Pi; Planagent does not copy Codex credentials or use
 an OpenAI API-key fallback.
 
-Optionally link both commands into the active Node environment:
+Optionally link both commands into your npm global prefix:
 
 ```bash
-mise exec -- npm link --ignore-scripts
+npm link --ignore-scripts
 ```
 
 Otherwise replace `plana` below with
@@ -42,7 +42,7 @@ Otherwise replace `plana` below with
 Connect once using Planagent's own OAuth login:
 
 ```bash
-mise exec -- plana auth linear
+plana auth linear
 ```
 
 The integration uses Linear's official read/write MCP endpoint,
@@ -53,10 +53,10 @@ Alternatively supply your own `LINEAR_API_KEY` environment variable. The runtime
 does not import another application's Linear credentials.
 
 ```bash
-mise exec -- plana linear show ENG-123
-mise exec -- plana run --issue ENG-123
-mise exec -- plana run --issue 'https://linear.app/workspace/issue/ENG-123/title' "Only implement the read path"
-mise exec -- plana run --issue ENG-123 --document DOCUMENT_ID_OR_URL
+plana linear show ENG-123
+plana run --issue ENG-123
+plana run --issue 'https://linear.app/workspace/issue/ENG-123/title' "Only implement the read path"
+plana run --issue ENG-123 --document DOCUMENT_ID_OR_URL
 ```
 
 Before planning, the controller reads the issue, all comment pages, attached
@@ -72,7 +72,7 @@ plan and source identity. Models have no MCP tools or Linear write privileges.
 Resume reuses the saved source. To explicitly incorporate newer requirements:
 
 ```bash
-mise exec -- plana refresh RUN_ID
+plana refresh RUN_ID
 ```
 
 Refresh preserves existing task edits, invalidates the previous approval and
@@ -84,10 +84,10 @@ resuming, cancelling, or completing a task never writes to Linear. Use these
 commands when you want an update:
 
 ```bash
-mise exec -- plana linear comment RUN_ID --body-file /path/to/comment.md
-mise exec -- plana linear statuses ENG-123
-mise exec -- plana linear set-status RUN_ID "In Progress" --from "Todo"
-mise exec -- plana linear delete-comment RUN_ID COMMENT_ID
+plana linear comment RUN_ID --body-file /path/to/comment.md
+plana linear statuses ENG-123
+plana linear set-status RUN_ID "In Progress" --from "Todo"
+plana linear delete-comment RUN_ID COMMENT_ID
 ```
 
 These commands target only the issue already resolved for that run. Comment
@@ -111,7 +111,7 @@ authentication details.
 Run from the target Git repository:
 
 ```bash
-mise exec -- plana run "Fix the parser's empty-input handling and add regression coverage"
+plana run "Fix the parser's empty-input handling and add regression coverage"
 ```
 
 The controller (after source resolution for a Linear-linked task):
@@ -140,15 +140,15 @@ Without an interactive terminal, `run` saves its plan and exits with status 3.
 Read the complete plan before approving its displayed hash:
 
 ```bash
-mise exec -- plana show RUN_ID
-mise exec -- plana approve RUN_ID --hash PLAN_HASH
+plana show RUN_ID
+plana approve RUN_ID --hash PLAN_HASH
 ```
 
 Approval binds the exact plan and any UI/UX guidance. A changed plan or project
 state invalidates pending approval. For questions or changes:
 
 ```bash
-mise exec -- plana revise RUN_ID "Answers or requested planning changes"
+plana revise RUN_ID "Answers or requested planning changes"
 ```
 
 A revision generates another complete plan for approval. Existing task edits are
@@ -157,10 +157,10 @@ review evidence are invalidated; retry counters do not reset. The controller
 never silently expands ownership or rolls back existing task edits.
 
 ```bash
-mise exec -- plana status
-mise exec -- plana status RUN_ID --json
-mise exec -- plana resume RUN_ID
-mise exec -- plana cancel RUN_ID
+plana status
+plana status RUN_ID --json
+plana resume RUN_ID
+plana cancel RUN_ID
 ```
 
 Ctrl+C interrupts the current stage. Resume inspects partial edits and reruns the
@@ -191,8 +191,8 @@ canonical API ID is `deepseek-flash`. OpenCode Go is not used. Configure a
 DeepSeek API key with Pi's `/login deepseek` or `DEEPSEEK_API_KEY`.
 
 ```bash
-mise exec -- plana models
-mise exec -- plana run "Task" --profile /path/to/profile.json
+plana models
+plana run "Task" --profile /path/to/profile.json
 ```
 
 Each run saves its effective profile. No model/provider substitutions occur.
