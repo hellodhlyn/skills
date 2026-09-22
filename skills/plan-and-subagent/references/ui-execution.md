@@ -8,12 +8,12 @@ specialist retains design, user-purpose, and semantic review when applicable.
 
 ## Ownership and handoff
 
-Use distinct mockup and UI verification identities, separate from the product
-implementer. Resolve any required model and harness diversity from the environment
-and record the actual verifier runtime, model, session/process identity, and browser
-context. The mockup executor may write only assigned visualization artifacts; the
-verifier may write only assigned evidence artifacts and must not fix product code.
-Neither may spawn agents or decide material product/UX questions. Missing roles or
+Use a mockup identity separate from the product implementer. The configured UI/UX
+role may collect browser evidence and evaluate it in one OpenCode context; record
+its runtime, model, session/process identity, browser request, and browser context.
+The mockup executor may write only assigned visualization artifacts; the UI/UX role
+may write only assigned evidence artifacts and must not fix product code. Neither
+may spawn agents or decide material product/UX questions. Missing roles or
 browser/visualization capabilities block only dependent work; report the gap without
 silently substituting the primary or another model.
 
@@ -51,7 +51,7 @@ artifact and evidence without repeating the rendering/debugging loop.
 ## Implemented UI verification
 
 Supply [environment and scenario checks](validation.md#environment-and-user-scenarios)
-and relevant domain guidance. The verifier inspects the implemented surface
+and relevant domain guidance. The UI/UX role inspects the implemented surface
 independently of implementer claims. It confirms environment/session, then exercises
 the contract's visual, responsive, keyboard, focus, and interaction scenarios as
 applicable. Do not operate the same browser tab concurrently; retain the verifier's
@@ -68,7 +68,7 @@ provides it. Bind the evidence to stable condition IDs and record the named view
 URL, code state, reproduction steps, screenshot checkpoints, interaction results,
 console/page errors, overflow checks, accessibility scan, and missing states as
 applicable. Deterministic evidence establishes only what its check exercises; the
-visual verifier still inspects rendered hierarchy, spacing, alignment, styling,
+UI/UX role still inspects rendered hierarchy, spacing, alignment, styling,
 consistency, affordance, and cognitive load. Neither layer may infer that the other
 passed.
 
@@ -100,11 +100,10 @@ artifact or request a focused recheck for missing, contradictory, ambiguous, or
 unsupported evidence. Directly examine evidence needed for material domain/UX
 judgments; do not delegate those decisions to the executor.
 
-Supply the same accepted evidence to the retained UI/UX specialist. Its review
-judges contract conformance and support for the user's purpose separately, following
-[the handoff](ui-ux-handoff.md); it should request focused missing
-evidence instead of routinely redoing browser execution. If specialist review is
-skipped, the primary still performs both judgments and semantic verification.
+The retained UI/UX specialist uses its own collected and accepted evidence to judge
+contract conformance and support for the user's purpose separately, following [the
+handoff](ui-ux-handoff.md). If specialist review is skipped, the primary still
+performs both judgments and semantic verification.
 Required conditions without sufficient current evidence block completion. User confirmation and the
 mandatory independent code review remain separate requirements.
 

@@ -6,11 +6,13 @@ the role names and native definitions.
 ## Roles
 
 The profile must identify the implementation, UI/UX, and mockup roles and their
-native definitions under `~/.codex/agents/`. Install them separately from the
-portable skill when the profile requires it, and start a new session to discover
-new roles. Implemented browser verification uses the separate Pi procedure in
-`pi.md`, not a Codex role. Never replace a different installed definition
-without explicit authorization.
+native or external definitions. The Codex profile uses native Codex roles for
+implementation and mockups, and its configured external OpenCode UI/UX role for
+design and conformance review. Install them separately from the portable skill;
+start a new session to discover changed native roles. The OpenCode UI/UX role
+collects browser evidence through its scoped `ui-browser` MCP when a browser
+request is supplied. Never replace a different installed definition without
+explicit authorization.
 
 The role definition owns its model and reasoning effort. Confirm the role is
 available and do not pass model or reasoning overrides to `spawn_agent`. Never
@@ -30,10 +32,14 @@ a material contract change, interrupt the agent before revising the contract;
 resume only after the revised understanding check passes. Small corrections that
 preserve the approved contract may be sent without interruption.
 
-Use the same mechanism for the profile's UI/UX specialist with a distinct task
-name and identity. It is read-only and must not spawn agents. For applicable
-mockups, use a distinct mockup identity and keep its ownership limited to the
-assigned visualization artifacts. Route product fixes to the implementer.
+For Codex-profile UI/UX work, follow the external-role procedure in
+`opencode.md`: create a fresh bounded report directory, write the exact design
+or review prompt and supplied evidence, then run `run-opencode-ui-ux.sh`. Record
+the configured agent, variant, process identity, terminal status, and report.
+Do not replace it with a native Codex role or infer a fallback model. For
+applicable mockups, use a distinct native mockup identity and keep its ownership
+limited to the assigned visualization artifacts. Route product fixes to the
+implementer.
 
 ## Completion
 

@@ -51,20 +51,9 @@ not an automatic model substitution.
 - `glm-implementer` is the only product-code implementation subagent.
 - `glm-reviewer` is a separate read-only review subagent and context.
 - `glm-ui-ux` and `glm-mockup` are separate conditional UI/UX subagents.
-- Implemented UI verification uses the common Pi verifier with provider/model
-  values passed explicitly by the profile invocation.
-
-The Pi native invocation uses provider `opencode-go` and model
-`glm-5.3-flash`. It is independent of the OpenCode implementation and review
-agents.
-
-The profile supplies those values directly to the shared runner; no provider or
-model environment variables are required:
-
-```bash
-mise exec -- node "${PI_UI_VERIFIER_DIR:-$HOME/.local/share/plan-and-subagent/pi-ui-verifier}/src/run.mjs" \
-  --provider opencode-go --model glm-5.3-flash "$REQUEST"
-```
+- Browser evidence is supplied by the applicable project browser harness until a
+  GLM-native OpenCode browser role is configured. Record that capability gap as
+  `UNVERIFIED`; never substitute a separate model runtime.
 
 The implementation child session is retained for understanding checks and
 corrections. The independent reviewer always starts in a different child
@@ -75,7 +64,6 @@ context. No GLM role invokes `opencode run` recursively.
 - Native global agent definitions: `~/.config/opencode/agents/glm-*.md`
 - Optional profile configuration: `~/.config/opencode/profiles/glm/opencode.jsonc`
 - Shared OpenCode skill: `~/.config/opencode/skills/plan-and-subagent/`
-- Shared Pi runtime: `~/.local/share/plan-and-subagent/pi-ui-verifier/`
 
 The profile does not contain a second pipeline, adapter, inheritance layer, or
 installation registry. The common installer owns receipt, conflict, stale-file,

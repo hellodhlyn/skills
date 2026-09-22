@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "ui-browser": {
+      "type": "local",
+      "command": ["node", "{env:PLAN_AND_SUBAGENT_UI_BROWSER_DIR}/server.mjs"],
+      "timeout": 15000
+    }
+  }
+}

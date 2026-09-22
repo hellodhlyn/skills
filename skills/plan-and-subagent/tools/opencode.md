@@ -6,10 +6,12 @@ and native configuration.
 
 ## Execution paths
 
-- Codex profile: use the external reviewer runner at
-  `../scripts/run-opencode-review.sh`. It invokes the configured OpenCode agent
-  and variant for the independent review.
-- GLM and Union profiles: use OpenCode native primary/subagent execution. Do not invoke
+- Codex profile: use `../scripts/run-opencode-review.sh` for independent code
+  review. Use `../scripts/run-opencode-ui-ux.sh` for the configured read-only
+  GLM UI/UX role during design and implementation review. These are separate
+  processes and reports: UI/UX work does not replace or consume external code
+  review rounds.
+- GLM profile: use OpenCode native primary/subagent execution. Do not invoke
   `opencode run` from inside a GLM implementation or review subagent.
 
 The active profile must identify the actual OpenCode configuration root and
@@ -50,7 +52,28 @@ The optional agent and variant arguments are supplied by the profile. Preserve
 the complete process result, including output, process identity, and numeric
 exit status. Do not read an empty or in-progress result file as a review.
 
-## Native GLM and Union paths
+## Codex-profile UI/UX runner
+
+For each applicable design proposal, conformance review, or focused recheck,
+create a fresh `reviews/uiux/` report directory. Write the exact applicable
+handoff preamble, user purpose, approved contract when available, evidence, and
+scope to `prompt.md`, then invoke:
+
+```bash
+mise exec -- sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" codex-ui-ux high "$REPORT_DIR/browser-request.json"
+```
+
+Preserve the terminal process result and model identity in `execution-N.md`.
+The configured agent is read-only for product code. When the browser request is
+applicable, it may use only its scoped local `ui-browser` MCP to create evidence
+artifacts; it must not decide material product meaning. A fresh external context is
+intentional: the prompt carries the approved design and current evidence, so
+the review remains independent of the primary and implementation contexts.
+Nonzero execution, an empty result, a missing terminal status, or a model/agent
+mismatch is failed or inconclusive UI/UX evidence. Do not run the independent
+code-review runner in its place.
+
+## Native GLM path
 
 The selected native orchestrator starts the configured implementation subagent through
 OpenCode's native subagent tool. Corrections continue in that same child session
@@ -58,12 +81,6 @@ using the supported session continuation mechanism. The independent reviewer
 always uses a fresh child context and its explicitly configured model. Record
 the agent names, model identities, session IDs, terminal states, and complete
 reports. A successful parent response is not proof that a child completed.
-
-For the Union profile, only the primary orchestrator changes to the explicitly
-configured `opencode-go/union-alpha`; implementation, independent review, UI/UX,
-mockup, and Pi settings remain the profile's copied GLM bindings under distinct
-`union-*` role names. Do not infer Union Alpha's model family or substitute a
-different model when the configured identifier is unavailable.
 
 ## Review result
 

@@ -7,7 +7,7 @@ description: Plan a code change, delegate implementation, independently validate
 
 Keep requirements, important decisions, authorization, validation oversight,
 finding triage, and delivery in the primary agent. Delegate product edits to an
-implementer and mockup/browser execution to the environment's separate UI executors
+implementer and mockup execution to the environment's separate UI executors
 using [delegated UI execution](references/ui-execution.md) when applicable.
 Require an independent read-only reviewer with a separate context who did not
 implement the change. The primary makes the final finding decisions.
@@ -32,7 +32,7 @@ higher-priority instructions.
 ## 1. Resolve the environment and establish the task
 
 Read [environment resolution](references/environment.md) and the designated
-profile. The profile connects each stage to native Codex, OpenCode, Pi, GitHub,
+profile. The profile connects each stage to native Codex, OpenCode, GitHub,
 and Linear capabilities; it does not replace this skill's contracts. Resolve
 required capabilities before dependent work; missing configuration blocks only
 that work. Use [planning artifacts](references/planning.md) to record the
