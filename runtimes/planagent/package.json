@@ -1,0 +1,24 @@
+{
+  "name": "planagent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A standalone Pi workflow runtime for planning, implementation, validation, and review.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "bin": {
+    "planagent": "bin/planagent.mjs",
+    "plana": "bin/planagent.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "docs/"
+  ],
+  "scripts": {
+    "start": "node bin/planagent.mjs",
+    "check": "node --check bin/planagent.mjs && node --check src/cli.mjs"
+  }
+}

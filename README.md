@@ -1,8 +1,8 @@
-# Agent Skills
+# Agent Skills and Runtimes
 
-This repository stores portable agent skills in the [agentskills.io](https://agentskills.io/specification) format.
+This repository stores portable agent skills in the [agentskills.io](https://agentskills.io/specification) format and independent agent runtimes.
 
-The repository is the source of truth. Install skills into Codex or other supported agents with `gh skill` instead of editing installed copies in place.
+The repository is the source of truth. Install skills into Codex or other supported agents with `gh skill` instead of editing installed copies in place. Runtimes have their own package and setup instructions.
 
 ## Repository layout
 
@@ -18,10 +18,17 @@ profiles/
   union/                   # OpenCode-native Union Alpha comparison profile
   zcode/                   # ZCode-native GLM Flash configuration
 skills/advisor/            # standalone advisor skill
+runtimes/planagent/        # independent Pi workflow runtime; CLI: planagent / plana
 ```
 
-The common skill owns the pipeline and contracts. Native model, provider,
+For the existing skills, the common skill owns the pipeline and contracts. Native model, provider,
 permission, role, and start settings belong to the selected profile.
+
+[Planagent](runtimes/planagent/README.md) is a separate runtime package. Its
+configuration, role definitions, dependencies, and installation are independent
+of `skills/plan-and-subagent/`, the root `profiles/`, and the skill installers.
+The initial scaffold provides CLI help and version output; Pi workflow execution
+is not implemented yet.
 
 ## Requirements
 
