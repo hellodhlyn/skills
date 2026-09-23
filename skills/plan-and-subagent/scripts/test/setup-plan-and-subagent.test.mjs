@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermission, loadReceipt, missingLinks, parseArguments, resolveRoots, validateResolvedGlmAgent } from "../lib/setup-plan-and-subagent.mjs";
+import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermission, loadReceipt, missingLinks, parseArguments, resolveRoots, validateResolvedAgent } from "../lib/setup-plan-and-subagent.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cli = path.join(repository, "skills/plan-and-subagent/scripts/lib/setup-plan-and-subagent.mjs");
@@ -33,13 +34,14 @@ test("requires an explicit operation and rejects contradictory flags", () => {
     assert.throws(() => parseArguments(args));
   }
   assert.equal(parseArguments(["--apply", "--force"]).force, true);
-  assert.equal(parseArguments(["--dry-run", "--profile", "glm"]).profile, "glm");
-  assert.equal(parseArguments(["--dry-run", "--profile", "both"]).profile, "both");
+  assert.equal(parseArguments(["--dry-run", "--profile", "codex"]).profile, "codex");
+  assert.throws(() => parseArguments(["--dry-run", "--profile", "glm"]));
+  assert.throws(() => parseArguments(["--dry-run", "--profile", "both"]));
   assert.throws(() => parseArguments(["--dry-run", "--profile", "unknown"]));
   assert.throws(() => resolveRoots({ PLAN_AND_SUBAGENT_UI_BROWSER_DIR: "relative" }, "/home/test"));
 });
 
-test("profile plans keep Codex and GLM native targets separate", (t) => {
+test("the Codex inventory installs GPT-6 roles and no independent GLM profile", (t) => {
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
   const selected = ["skill", "skill-opencode", "profile", "codex", "opencode", "ui-browser"];
@@ -50,41 +52,15 @@ test("profile plans keep Codex and GLM native targets separate", (t) => {
   assert.ok(codex.files.some((entry) => entry.target.endsWith("agents/codex-ui-ux.md")));
   assert.equal(codex.files.some((entry) => entry.target.endsWith("agents/ui_ux_designer.toml")), false);
   assert.equal(codex.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")), false);
-
-  const glm = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["glm"]);
-  assert.ok(glm.files.some((entry) => entry.target.endsWith("profiles/glm/PROFILE.md")));
-  assert.ok(glm.files.some((entry) => entry.target.endsWith("agents/glm-orchestrator.md")));
-  assert.ok(glm.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")));
-  assert.equal(glm.files.some((entry) => entry.target.endsWith("agents/luna_implementer.toml")), false);
-  assert.equal(glm.files.some((entry) => entry.target.endsWith("skills/plan-and-subagent/SKILL.md") && entry.target.includes(`${path.sep}codex${path.sep}`)), false);
-  assert.ok(glm.files.some((entry) => entry.target.endsWith("skills/plan-and-subagent/SKILL.md") && entry.target.includes(`${path.sep}opencode${path.sep}`)));
-
-  const both = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm"]);
-  assert.equal(new Set(both.files.map((entry) => entry.target)).size, both.files.length);
-
+  assert.equal(manifest.profiles.includes("glm"), false);
+  assert.equal(manifest.removeProfileFiles.filter((entry) => entry.profile === "glm").length, 7);
+  assert.equal(fs.existsSync(path.join(repository, "profiles/glm")), false);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /GPT-6 Sol \(`gpt-6-sol`\)/);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_implementer.toml"), "utf8"), /model = "gpt-6-luna"/);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_mockup.toml"), "utf8"), /model = "gpt-6-luna"/);
 });
 
-test("GLM native config pins roles, models, and reviewer write boundaries", () => {
-  const config = JSON.parse(fs.readFileSync(path.join(repository, "profiles/glm/opencode.jsonc"), "utf8"));
-  assert.equal(config.default_agent, "glm-orchestrator");
-  assert.equal(config.agent["glm-orchestrator"].model, "zai-coding-plan/glm-5.3-flash");
-  assert.equal(config.agent["glm-implementer"].model, "zai-coding-plan/glm-5.3-flash");
-  assert.equal(config.agent["glm-reviewer"].model, "deepseek/deepseek-flash");
-  assert.equal(config.agent["glm-reviewer"].mode, "subagent");
-  assert.equal(config.agent["glm-reviewer"].permission["*"], "deny");
-  assert.equal(config.agent["glm-reviewer"].permission.edit, "deny");
-  assert.equal(config.agent["glm-reviewer"].permission.task, "deny");
-  assert.equal(config.agent["glm-reviewer"].permission.bash, "deny");
-  assert.equal(config.agent["glm-reviewer"].permission.external_directory["*"], "deny");
-  assert.equal(config.agent["glm-reviewer"].permission.external_directory["$HOME/.config/opencode/skills/plan-and-subagent/**"], "allow");
-  assert.equal(config.agent["glm-ui-ux"].permission["*"], "deny");
-  assert.equal(config.agent["glm-ui-ux"].permission.external_directory["*"], "deny");
-  assert.match(fs.readFileSync(path.join(repository, "profiles/glm/PROFILE.md"), "utf8"), /opencode --agent glm-orchestrator/);
-  assert.match(fs.readFileSync(path.join(repository, "README.md"), "utf8"), /opencode --agent glm-orchestrator/);
-  assert.ok(config.agent["glm-orchestrator"].permission.task["glm-implementer"] === "allow");
-});
-
-test("Codex profile runs UI/UX work through the read-only external GLM agent", () => {
+test("Codex profile preserves its read-only GLM UI/UX specialist", () => {
   const agent = fs.readFileSync(path.join(repository, "profiles/codex/opencode/agents/codex-ui-ux.md"), "utf8");
   assert.match(agent, /^mode: primary$/m);
   assert.match(agent, /^model: zai-coding-plan\/glm-5\.3-flash$/m);
@@ -102,26 +78,6 @@ test("Codex profile runs UI/UX work through the read-only external GLM agent", (
   assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"), "utf8"), /PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST/);
 });
 
-test("GLM native agents are globally discoverable and keep their model bindings", () => {
-  const expected = {
-    glm: {
-      "glm-orchestrator": "zai-coding-plan/glm-5.3-flash",
-      "glm-implementer": "zai-coding-plan/glm-5.3-flash",
-      "glm-reviewer": "deepseek/deepseek-flash",
-      "glm-ui-ux": "zai-coding-plan/glm-5.3-flash",
-      "glm-mockup": "zai-coding-plan/glm-5.3-flash",
-    },
-  };
-  for (const [profile, agents] of Object.entries(expected)) {
-    for (const [name, model] of Object.entries(agents)) {
-      const file = path.join(repository, `profiles/${profile}/opencode/agents/${name}.md`);
-      const contents = fs.readFileSync(file, "utf8");
-      assert.match(contents, new RegExp(`^model: ${model.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`, "m"));
-      assert.match(contents, /^mode: (primary|subagent)$/m);
-    }
-  }
-});
-
 test("read-only permission evaluation denies unknown tools while allowing installed contracts", (t) => {
   const f = fixture(t);
   const policies = [
@@ -135,22 +91,22 @@ test("read-only permission evaluation denies unknown tools while allowing instal
     { permission: "skill", action: "allow", pattern: "plan-and-subagent" },
     { permission: "external_directory", action: "deny", pattern: "*" },
     { permission: "external_directory", action: "allow", pattern: `${f.roots.opencode}/skills/plan-and-subagent/**` },
-    { permission: "external_directory", action: "allow", pattern: `${f.roots.environment}/profiles/glm/**` },
+    { permission: "external_directory", action: "allow", pattern: `${f.roots.environment}/profiles/codex/**` },
   ];
   const agent = {
-    name: "glm-reviewer",
+    name: "reviewer",
     mode: "subagent",
-    model: { providerID: "deepseek", modelID: "deepseek-flash" },
+    model: { providerID: "opencode-go", modelID: "glm-5.3-flash" },
     permission: policies,
   };
   assert.equal(effectivePermission(policies, "mcp_test_write", "*"), "deny");
   assert.equal(effectivePermission(policies, "skill", "plan-and-subagent"), "allow");
   assert.equal(effectivePermission(policies, "skill", "unapproved-skill"), "deny");
-  assert.deepEqual(validateResolvedGlmAgent(agent, {
-    name: "glm-reviewer",
+  assert.deepEqual(validateResolvedAgent(agent, {
+    name: "reviewer",
     mode: "subagent",
-    provider: "deepseek",
-    model: "deepseek-flash",
+    provider: "opencode-go",
+    model: "glm-5.3-flash",
     allowed: ["read", "glob", "grep", "lsp", "skill"],
     denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"],
     skills: ["plan-and-subagent"],
@@ -162,13 +118,80 @@ test("the source inventory is self-contained under skill and profile roots", (t)
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
   const selected = ["skill", "skill-opencode", "profile", "codex", "opencode", "ui-browser"];
-  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex", "glm"]);
+  const plan = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex"]);
   assert.deepEqual(missingLinks(plan.files, true), []);
   assert.deepEqual(missingLinks(plan.files, true, true), []);
   for (const obsoleteRoot of ["environments", "opencode", "scripts"]) {
     assert.equal(fs.existsSync(path.join(repository, obsoleteRoot)), false, obsoleteRoot);
   }
   assert.equal(fs.existsSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json")), true);
+});
+
+test("retired profile cleanup removes only unchanged receipt-owned files", (t) => {
+  const f = fixture(t);
+  f.manifest.removeProfileFiles = [
+    { profile: "glm", component: "profile", root: "environment", target: "profiles/glm/PROFILE.md" },
+    { profile: "glm", component: "opencode", root: "opencode", target: "profiles/glm/opencode.jsonc" },
+    { profile: "glm", component: "opencode", root: "opencode", target: "agents/glm-reviewer.md" },
+    { profile: "glm", component: "opencode", root: "opencode", target: "agents/glm-mockup.md" },
+  ];
+  const tracked = [
+    [path.join(f.roots.environment, "profiles/glm/PROFILE.md"), "profile", "old profile"],
+    [path.join(f.roots.opencode, "profiles/glm/opencode.jsonc"), "opencode", "old config"],
+    [path.join(f.roots.opencode, "agents/glm-reviewer.md"), "opencode", "old agent"],
+  ];
+  fs.mkdirSync(f.roots.state, { recursive: true });
+  for (const [target, component, contents] of tracked) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, contents);
+    f.receipt.files[target] = {
+      component,
+      profile: "glm",
+      hash: createHash("sha256").update(contents).digest("hex"),
+    };
+  }
+  const unmanaged = path.join(f.roots.opencode, "agents/personal.md");
+  fs.writeFileSync(unmanaged, "keep me");
+  const untrackedRetired = path.join(f.roots.opencode, "agents/glm-mockup.md");
+  fs.writeFileSync(untrackedRetired, "untracked local file");
+  fs.writeFileSync(f.receiptPath, JSON.stringify(f.receipt));
+
+  const plan = buildPlan(f.manifest, f.repo, f.roots, loadReceipt(f.receiptPath), ["environment", "profile", "opencode"]);
+  assert.deepEqual(plan.removals.map((entry) => entry.target).sort(), tracked.map(([target]) => target).sort());
+  assert.deepEqual(plan.retirementConflicts, []);
+  assert.deepEqual(plan.untrackedRetired, [untrackedRetired]);
+  applyPlan(plan, loadReceipt(f.receiptPath), f.receiptPath);
+
+  for (const [target] of tracked) assert.equal(fs.existsSync(target), false);
+  assert.equal(fs.existsSync(unmanaged), true);
+  assert.equal(fs.readFileSync(untrackedRetired, "utf8"), "untracked local file");
+  assert.ok(tracked.every(([target]) => !Object.hasOwn(loadReceipt(f.receiptPath).files, target)));
+  assert.equal(fs.existsSync(path.join(f.roots.environment, "profiles/glm")), false);
+  assert.equal(fs.existsSync(path.join(f.roots.opencode, "profiles/glm")), false);
+});
+
+test("modified retired profile files are preserved and block all writes", (t) => {
+  const f = fixture(t);
+  f.manifest.removeProfileFiles = [
+    { profile: "glm", component: "profile", root: "environment", target: "profiles/glm/PROFILE.md" },
+  ];
+  const target = path.join(f.roots.environment, "profiles/glm/PROFILE.md");
+  const original = "installed profile";
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, "local customization");
+  fs.mkdirSync(f.roots.state, { recursive: true });
+  f.receipt.files[target] = {
+    component: "profile",
+    profile: "glm",
+    hash: createHash("sha256").update(original).digest("hex"),
+  };
+  fs.writeFileSync(f.receiptPath, JSON.stringify(f.receipt));
+
+  const plan = buildPlan(f.manifest, f.repo, f.roots, loadReceipt(f.receiptPath), ["environment", "profile"]);
+  assert.deepEqual(plan.retirementConflicts, [target]);
+  assert.throws(() => applyPlan(plan, loadReceipt(f.receiptPath), f.receiptPath), /local changes and were preserved/);
+  assert.equal(fs.readFileSync(target, "utf8"), "local customization");
+  assert.equal(fs.existsSync(path.join(f.roots.environment, "a.md")), false);
 });
 
 test("a timed-out command cannot pass by exiting zero on termination", async () => {
@@ -295,30 +318,6 @@ fs.appendFileSync(process.env.SETUP_TEST_LOG, JSON.stringify([path.basename(proc
 if(path.basename(process.argv[1])==='gh') {
   fs.cpSync(path.join(args[2],'skills',args[3]),path.join(args[args.indexOf('--dir')+1],args[3]),{recursive:true});
 } else if(args.includes('--version')) {console.log('test-version');}
-else if(args.includes('debug') && args.includes('config')) {console.log(JSON.stringify({default_agent:process.env.SETUP_TEST_CONFIG_MISMATCH?'other-agent':'glm-orchestrator'}));}
-else if(args.includes('debug') && args.includes('agent')) {
-  const name=args[args.indexOf('agent')+1];
-  const profile='glm';
-  const prefix='glm-';
-  const providers={'glm-orchestrator':'zai-coding-plan','glm-implementer':'zai-coding-plan','glm-reviewer':'deepseek','glm-ui-ux':'zai-coding-plan','glm-mockup':'zai-coding-plan'};
-  const models={'glm-orchestrator':'glm-5.3-flash','glm-implementer':'glm-5.3-flash','glm-reviewer':'deepseek-flash','glm-ui-ux':'glm-5.3-flash','glm-mockup':'glm-5.3-flash'};
-  if(process.env.SETUP_TEST_CONFIG_MISMATCH) models[name]='test/override';
-  const readOnly=name===prefix+'reviewer'||name===prefix+'ui-ux';
-  const permission=readOnly ? [
-    {permission:'*',action:'allow',pattern:'*'}, {permission:'*',action:'deny',pattern:'*'},
-    {permission:'read',action:'allow',pattern:'*'}, {permission:'glob',action:'allow',pattern:'*'},
-    {permission:'grep',action:'allow',pattern:'*'}, {permission:'lsp',action:'allow',pattern:'*'},
-    {permission:'skill',action:'deny',pattern:'*'}, {permission:'skill',action:'allow',pattern:'plan-and-subagent'},
-    {permission:'edit',action:'deny',pattern:'*'}, {permission:'write',action:'deny',pattern:'*'},
-    {permission:'task',action:'deny',pattern:'*'}, {permission:'webfetch',action:'deny',pattern:'*'},
-    {permission:'websearch',action:'deny',pattern:'*'}, {permission:'question',action:'deny',pattern:'*'},
-    {permission:'external_directory',action:'deny',pattern:'*'},
-    {permission:'external_directory',action:'allow',pattern:process.env.OPENCODE_CONFIG_DIR+'/skills/plan-and-subagent/**'},
-    {permission:'external_directory',action:'allow',pattern:process.env.AGENT_ENVIRONMENT_DIR+'/profiles/'+profile+'/**'},
-    {permission:'bash',action:'deny',pattern:'*'},
-  ] : [{permission:'*',action:'allow',pattern:'*'}];
-  console.log(JSON.stringify({name,mode:name===prefix+'orchestrator'?'primary':'subagent',model:{providerID:providers[name],modelID:models[name]},permission}));
-}
 else if(args.includes('mcp') && args.includes('list')) {console.log('ui-browser (local)');}
 else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_CONFIG_DIR,'agents'); if(fs.existsSync(directory)) {for(const file of fs.readdirSync(directory).filter((name)=>name.endsWith('.md')).sort()) console.log(file.slice(0,-3)+' (primary)');} else {console.log('reviewer (primary)');}}
 else if(args.includes('install') && process.env.SETUP_TEST_FAIL_INSTALL) {console.error('fixture dependency failure');process.exitCode=1;}
@@ -361,27 +360,6 @@ test("full dry-run writes no destinations; apply installs all components; repeat
   const receiptBefore = fs.readFileSync(f.receiptPath, "utf8");
   assert.equal(run(["--check"]).status, 0);
   assert.equal(fs.readFileSync(f.receiptPath, "utf8"), receiptBefore);
-});
-
-test("GLM-only setup does not require Codex skill staging or write Codex targets", (t) => {
-  const f = fixture(t);
-  const { run, calls } = fakeCommands(f);
-  const result = run(["--dry-run", "--profile", "glm"]);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(calls().length, 0);
-  assert.equal(result.stdout.includes(f.roots.codex), false);
-  assert.doesNotMatch(result.stdout, /agents\/luna_implementer\.toml/);
-  assert.match(result.stdout, /Selected profile\(s\): glm/);
-
-  const applied = run(["--apply", "--profile", "glm"]);
-  assert.equal(applied.status, 0, applied.stdout + applied.stderr);
-  assert.equal(fs.existsSync(path.join(f.roots.codex, "skills/plan-and-subagent")), false);
-  assert.ok(fs.existsSync(path.join(f.roots.opencode, "profiles/glm/opencode.jsonc")));
-  assert.ok(calls().every((call) => call[0] !== "gh"));
-  const mismatch = run(["--check", "--profile", "glm"], { SETUP_TEST_CONFIG_MISMATCH: "1" });
-  assert.equal(mismatch.status, 1);
-  assert.match(mismatch.stdout, /\[FAIL\] GLM merged default agent/);
-  assert.match(mismatch.stdout, /\[FAIL\] GLM merged agent glm-reviewer/);
 });
 
 test("dependency failure retains progress and the same installation can resume", (t) => {

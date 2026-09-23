@@ -9,7 +9,7 @@ fi
 
 if ! command -v opencode >/dev/null 2>&1; then
   echo "ERROR: 'opencode' CLI not found in PATH." >&2
-  echo "Install OpenCode CLI and authenticate for OpenCode Go." >&2
+  echo "Install OpenCode CLI and configure an advisor agent in the active profile." >&2
   exit 127
 fi
 

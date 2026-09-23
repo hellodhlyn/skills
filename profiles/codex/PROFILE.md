@@ -7,15 +7,16 @@ explicit task choices take precedence.
 
 ## Native bindings
 
-- The primary Codex session selects the profile's existing model and reasoning
-  preference in Codex itself.
-- Implementation uses `luna_implementer`.
+- Select GPT-6 Sol (`gpt-6-sol`) for the primary Codex session and choose its
+  reasoning preference in Codex itself.
+- Implementation uses `luna_implementer` on GPT-6 Luna (`gpt-6-luna`).
 - UI/UX design and implementation review use the external OpenCode
   `codex-ui-ux` agent, pinned to `zai-coding-plan/glm-5.3-flash` with `high`
   reasoning. Each run receives the complete applicable contract and evidence;
   it is read-only and returns advisory evidence.
-- `luna_mockup` owns only applicable mockup artifacts. Its and the implementer's
-  native Codex definitions are under this profile's `codex/agents/`.
+- `luna_mockup` uses GPT-6 Luna and owns only applicable mockup artifacts. Its
+  and the implementer's native Codex definitions are under this profile's
+  `codex/agents/`.
 - Independent code review uses the separate external OpenCode `reviewer` agent.
   The OpenCode definitions for `codex-ui-ux`, `reviewer`, and the standalone
   `advisor` are under this profile's `opencode/agents/`.

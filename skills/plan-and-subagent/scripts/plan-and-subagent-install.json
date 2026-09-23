@@ -1,14 +1,20 @@
 {
-  "profiles": ["codex", "glm"],
+  "profiles": ["codex"],
+  "removeProfileFiles": [
+    {"profile": "glm", "component": "profile", "root": "environment", "target": "profiles/glm/PROFILE.md"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "profiles/glm/opencode.jsonc"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "agents/glm-implementer.md"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "agents/glm-mockup.md"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "agents/glm-orchestrator.md"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "agents/glm-reviewer.md"},
+    {"profile": "glm", "component": "opencode", "root": "opencode", "target": "agents/glm-ui-ux.md"}
+  ],
   "entries": [
     {"component": "skill", "profile": "codex", "root": "codex", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent"},
-    {"component": "skill-opencode", "profiles": ["codex", "glm"], "root": "opencode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
+    {"component": "skill-opencode", "profiles": ["codex"], "root": "opencode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
     {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/codex/PROFILE.md", "target": "profiles/codex/PROFILE.md"},
     {"component": "codex", "profile": "codex", "root": "codex", "source": "profiles/codex/codex/agents", "target": "agents"},
     {"component": "opencode", "profile": "codex", "root": "opencode", "source": "profiles/codex/opencode/agents", "target": "agents"},
-    {"component": "profile", "profile": "glm", "root": "environment", "source": "profiles/glm/PROFILE.md", "target": "profiles/glm/PROFILE.md"},
-    {"component": "opencode", "profile": "glm", "root": "opencode", "source": "profiles/glm/opencode/agents", "target": "agents"},
-    {"component": "opencode", "profile": "glm", "root": "opencode", "source": "profiles/glm/opencode.jsonc", "target": "profiles/glm/opencode.jsonc"},
     {"component": "ui-browser", "profile": "codex", "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/package.json", "target": "package.json"},
     {"component": "ui-browser", "profile": "codex", "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/pnpm-lock.yaml", "target": "pnpm-lock.yaml"},
     {"component": "ui-browser", "profile": "codex", "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/server.mjs", "target": "server.mjs"},

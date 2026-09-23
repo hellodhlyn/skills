@@ -13,8 +13,7 @@ skills/plan-and-subagent/
   tools/                   # Codex/OpenCode/UI-browser/GitHub/Linear procedures
   scripts/                 # installer, runners, tests, and UI-browser MCP
 profiles/
-  codex/                   # existing Codex/OpenCode native configuration
-  glm/                     # OpenCode-native GLM configuration
+  codex/                   # Codex and its OpenCode specialist configuration
 skills/advisor/            # standalone advisor skill
 runtimes/planagent/        # independent Pi workflow runtime; CLI: planagent / plana
 ```
@@ -35,7 +34,7 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 - Personal environment installers: Node.js 22.19 or later
 - Planagent runtime: Node.js 24+, Git, and authenticated Pi providers
 - OpenCode CLI for OpenCode-backed roles
-- For the `advisor` skill: a working `opencode` CLI authenticated for OpenCode Go
+- For the `advisor` skill: a working `opencode` CLI with an advisor agent in the active profile
 - For the OpenCode UI browser: pnpm and Playwright Chromium
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
 
@@ -46,55 +45,21 @@ No installer mode invokes a paid model, changes credentials, or edits global
 
 ### Codex
 
-The Codex profile keeps the Codex implementer and mockup executor, uses a
-read-only external OpenCode GLM 5.3 Flash agent for UI/UX design and review,
-and keeps the external reviewer, standalone advisor, and OpenCode UI browser.
-definitions are sourced from `profiles/codex/`. Start a new Codex session after
-changing native role definitions.
-
-### GLM
-
-The GLM profile uses OpenCode native agents:
-
-| Role | Native model |
-| --- | --- |
-| Orchestrator | `zai-coding-plan/glm-5.3-flash` |
-| Implementer | `zai-coding-plan/glm-5.3-flash` |
-| Independent reviewer | `deepseek/deepseek-flash` |
-| UI/UX and mockup | `zai-coding-plan/glm-5.3-flash` |
-
-Start it by selecting the globally installed primary agent:
-
-```bash
-opencode --agent glm-orchestrator "$PROJECT_DIR"
-```
-
-The installer places the `glm-*` agents in `~/.config/opencode/agents/`, so no
-profile environment variable is required. Native GLM implementation
-corrections continue in the same child session; independent review uses a
-separate child context. GLM roles never nest `opencode run`. The explicit
-`--agent` fixes the starting role, while project and managed configuration can
-still override an agent with the same name; inspect the project-merged agent
-configuration before accepting readiness.
+The Codex profile uses GPT-6 Sol (`gpt-6-sol`) for the primary session and GPT-6
+Luna (`gpt-6-luna`) for implementation and mockup work. Read-only UI/UX review,
+architecture advice, and independent code review use the configured external
+OpenCode agents, including the Codex profile's GLM UI/UX specialist. Definitions
+are sourced from `profiles/codex/`. Start a new Codex session after changing
+native role definitions.
 
 ## OpenCode agents
 
 The Codex profile's external `codex-ui-ux`, `advisor`, and `reviewer` definitions
-are installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/` location is
-reported for migration and is never deleted automatically. GLM native agent
-definitions are also installed globally under `~/.config/opencode/agents/`.
-Its optional profile JSONC file remains under
-`~/.config/opencode/profiles/glm/` for explicit profile defaults and
-merged-configuration checks.
-
-After installing both profiles, select the primary directly without setting
-`OPENCODE_CONFIG`:
-
-```bash
-opencode --agent glm-orchestrator "$PROJECT_DIR"
-```
-
-The selected primary delegates to the matching profile-prefixed subagents.
+are installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
+location is reported for migration and is never deleted automatically. The
+independent GLM profile is retired. Its receipt-tracked files are removed by the
+Codex installer when they still match the recorded hashes; locally changed files
+are preserved and reported.
 
 For a complete Codex-profile refresh, use the unified setup below. To intentionally
 install only the Codex OpenCode definitions:
@@ -120,31 +85,24 @@ Run from the repository root. Use `--dry-run` before any authorized apply:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --dry-run
-bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile glm --dry-run
-bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile both --dry-run
 ```
 
 For an authorized installation or refresh:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --apply
-bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile glm --apply
 ```
 
 Inspect an existing installation without writing managed files:
 
 ```bash
-bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile both --check
+bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
 ```
 
-`--profile both` keeps Codex and GLM role names, native configuration, and
-managed receipt entries separate. GLM-only setup does not install Codex skill
-files or require Codex installation/authentication. It installs the common skill
-into OpenCode's skill directory and the GLM global native agents.
-
 Complete setup synchronizes the selected skill, profile, native roles/config,
-and OpenCode UI browser package, then performs the applicable local checks. It does not install
-software or credentials in dry-run/check modes and never invokes a paid model.
+and OpenCode UI browser package, then performs the applicable local checks. It
+does not install software or credentials in dry-run/check modes and never invokes
+a paid model.
 
 The shared inventory is
 `skills/plan-and-subagent/scripts/plan-and-subagent-install.json`. Managed
@@ -155,11 +113,12 @@ receipt-matching files update automatically, and other differences are conflicts
 Inspect them before using `--apply --force`; force cannot bypass invalid paths or
 symlink destinations.
 
-Files removed from the inventory, obsolete legacy targets, and user-owned files
-are reported and preserved, not deleted. The receipt records completed file
-hashes at `~/.local/share/plan-and-subagent/setup/receipt.json`; if a later
-runtime stage fails, completed writes remain recorded so the same setup can be
-resumed safely.
+Untracked files and obsolete legacy targets are reported and preserved. The one
+retired GLM profile is removed only when each file is receipt-tracked and still
+matches its recorded hash; changed files are preserved and block the apply. The
+receipt records completed file hashes at
+`~/.local/share/plan-and-subagent/setup/receipt.json`; if a later runtime stage
+fails, completed writes remain recorded so the same setup can be resumed safely.
 
 Exit codes distinguish outcomes:
 
@@ -190,7 +149,7 @@ component-only entry points over the same engine and inventory.
 
 ### Global instructions and profile switching
 
-The applicable global Codex instruction should designate the selected profile:
+The applicable global Codex instruction should designate this profile:
 
 ```markdown
 When running plan-and-subagent, read ~/.config/agents/profiles/codex/PROFILE.md
@@ -198,10 +157,9 @@ as the personal profile. Apply project instructions and explicit task choices
 over its defaults.
 ```
 
-This is a human-readable instruction, not automatic profile discovery. An
-explicit task may choose another profile. The GLM profile is selected by its
-explicit `--agent` command above. Neither method changes an
-already running session; start a new session after native role/configuration
+This is a human-readable instruction, not automatic profile discovery. Neither
+the instruction nor the installer changes an already running session; select
+GPT-6 Sol in Codex and start a new session after native role/configuration
 changes.
 
 Check each profile explicitly:
@@ -210,20 +168,13 @@ Check each profile explicitly:
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
 opencode agent list
 opencode debug config
-opencode debug agent glm-orchestrator
-opencode debug agent glm-implementer
-opencode debug agent glm-reviewer
-opencode debug agent glm-ui-ux
-opencode debug agent glm-mockup
 ```
 
-To migrate an existing Codex installation, run the Codex dry-run, inspect any
-`Obsolete managed file (preserved)` notices and conflicts, then apply only after
-reviewing them. Update the applicable global instruction to the new
-`profiles/codex/PROFILE.md` path manually; the installer never rewrites or
-deletes that instruction or the older `~/.opencode/agents/` files. To switch to
-GLM, install or check `--profile glm` and start a new OpenCode session with its
-explicit config; installing the GLM profile does not remove the Codex setup.
+To migrate an existing installation, run the Codex dry-run, inspect the planned
+GLM cleanup and any conflicts, then apply. Update the applicable global
+instruction to the `profiles/codex/PROFILE.md` path manually; the installer never
+rewrites that instruction or deletes files from the older `~/.opencode/agents/`
+location.
 
 ## OpenCode UI browser
 
@@ -266,7 +217,7 @@ pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser run check
 gh skill publish --dry-run
 ```
 
-These checks do not install the profile into the user's real home and do not
-invoke a paid model. Full installation tests use disposable destination
-overrides and simulated external commands. `gh skill publish --dry-run` validates
-skills discovered under `skills/*/SKILL.md`.
+These checks do not install the profile into the user's real home or invoke a
+paid model. Full installation tests use disposable destination overrides and
+simulated external commands. `gh skill publish --dry-run` validates skills
+discovered under `skills/*/SKILL.md`.

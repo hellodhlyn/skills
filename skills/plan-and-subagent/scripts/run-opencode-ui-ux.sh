@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run the Codex profile's read-only GLM UI/UX specialist and capture its report.
+# Run the Codex profile's read-only UI/UX specialist and capture its report.
 set -eu
 
 usage() {

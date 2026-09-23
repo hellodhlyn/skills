@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const manifestPath = path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json");
 const usage = `Usage: bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --check | --dry-run | --apply [options]
-  --profile codex|glm|both  Select the native profile (default: codex).
+  --profile codex  Select the native profile (default: codex).
   --component environment|opencode|ui-browser  Compatibility component-only selection.
   --check     Inspect installed files and local runtime readiness (no configuration writes).
   --dry-run   Show the entire file plan and required operations without applying them.
@@ -29,7 +29,7 @@ export function parseArguments(args) {
       options.mode = arg.slice(2);
     } else if (arg === "--profile") {
       options.profile = args[++index];
-      if (!["codex", "glm", "both"].includes(options.profile)) throw new Error("Unknown profile.");
+      if (options.profile !== "codex") throw new Error("Unknown profile.");
     } else if (arg === "--force") options.force = true;
     else if (arg === "--component") {
       if (options.component) throw new Error("Choose only one component.");
@@ -148,7 +148,7 @@ export function validateResolvedAgent(agent, expectation, roots) {
   if (expectation.readOnly) {
     for (const file of [
       path.join(roots.opencode, "skills/plan-and-subagent/references/validation.md"),
-      path.join(roots.environment, `profiles/${expectation.profile || "glm"}/PROFILE.md`),
+      path.join(roots.environment, `profiles/${expectation.profile || "codex"}/PROFILE.md`),
     ]) {
       if (effectivePermission(policies, "external_directory", file) !== "allow") problems.push(`external:${file}=not-allowed`);
     }
@@ -158,8 +158,6 @@ export function validateResolvedAgent(agent, expectation, roots) {
   }
   return problems;
 }
-
-export const validateResolvedGlmAgent = validateResolvedAgent;
 
 export function loadReceipt(file) {
   assertSafeDestination(file);
@@ -208,7 +206,27 @@ export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills
     }
   }
   const stale = new Set();
+  const removableTargets = new Map((manifest.removeProfileFiles || [])
+    .filter((entry) => selected.includes(entry.component))
+    .map((entry) => [joined(roots[entry.root], entry.target), entry]));
+  const removals = [];
+  const retirementConflicts = [];
+  const untrackedRetired = [];
   for (const [target, entry] of Object.entries(receipt.files)) {
+    const retirement = removableTargets.get(target);
+    if (retirement && entry.profile === retirement.profile && entry.component === retirement.component && !targets.has(target)) {
+      const info = stat(target);
+      if (!info) {
+        removals.push({ target, root: roots[retirement.root], expected: undefined, record: entry });
+      } else if (!info.isFile()) {
+        retirementConflicts.push(target);
+      } else {
+        const current = digest(target);
+        if (current === entry.hash) removals.push({ target, root: roots[retirement.root], expected: current, record: entry });
+        else retirementConflicts.push(target);
+      }
+      continue;
+    }
     if (selected.includes(entry.component) && !targets.has(target) && stat(target)) stale.add(target);
   }
   for (const entry of manifest.retired || []) {
@@ -217,7 +235,10 @@ export function buildPlan(manifest, repo, roots, receipt, selected, stagedSkills
       if (stat(target)) stale.add(target);
     }
   }
-  return { files: plan, stale: [...stale] };
+  for (const target of removableTargets.keys()) {
+    if (stat(target) && !Object.hasOwn(receipt.files, target)) untrackedRetired.push(target);
+  }
+  return { files: plan, stale: [...stale], removals, retirementConflicts, untrackedRetired };
 }
 
 function saveReceipt(file, receipt) {
@@ -234,11 +255,17 @@ function writeAtomic(file, contents, mode) {
 
 export function applyPlan(plan, receipt, receiptPath, force = false) {
   assertSafeDestination(receiptPath);
+  if (plan.retirementConflicts?.length) throw new Error(`Retired profile files have local changes and were preserved: ${plan.retirementConflicts.join(", ")}`);
   if (!force && plan.files.some((entry) => entry.action === "conflict")) throw new Error("Conflicts remain; inspect --dry-run before --apply --force.");
   for (const entry of plan.files) {
     assertSafeDestination(entry.target);
     const current = stat(entry.target) ? digest(entry.target) : undefined;
     if (current !== entry.current || digest(entry.source) !== entry.hash) throw new Error(`File changed during setup: ${entry.target}`);
+  }
+  for (const entry of plan.removals || []) {
+    assertSafeDestination(entry.target);
+    const current = stat(entry.target) ? digest(entry.target) : undefined;
+    if (current !== entry.expected) throw new Error(`Retired profile file changed during setup: ${entry.target}`);
   }
   saveReceipt(receiptPath, receipt);
   for (const entry of plan.files) {
@@ -248,6 +275,23 @@ export function applyPlan(plan, receipt, receiptPath, force = false) {
     if (entry.action !== "unchanged") writeAtomic(entry.target, fs.readFileSync(entry.source), 0o644);
     receipt.files[entry.target] = { component: entry.component, ...(entry.profile ? { profile: entry.profile } : {}), hash: entry.hash };
     saveReceipt(receiptPath, receipt);
+  }
+  for (const entry of plan.removals || []) {
+    if (entry.expected !== undefined) fs.unlinkSync(entry.target);
+    delete receipt.files[entry.target];
+    saveReceipt(receiptPath, receipt);
+    const root = entry.root;
+    if (root) {
+      let directory = path.dirname(entry.target);
+      while (directory !== root && within(root, directory)) {
+        try { fs.rmdirSync(directory); }
+        catch (error) {
+          if (!["ENOENT", "ENOTEMPTY", "EEXIST"].includes(error.code)) throw error;
+          break;
+        }
+        directory = path.dirname(directory);
+      }
+    }
   }
 }
 
@@ -315,11 +359,6 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
       checks.push({ name: "OpenCode reviewer discovery (Codex)", env: globalAgentEnv, pattern: /^reviewer(?:\s|$)/m });
       checks.push({ name: "OpenCode UI/UX discovery (Codex)", env: globalAgentEnv, pattern: /^codex-ui-ux(?:\s|$)/m });
     }
-    if (profiles.includes("glm")) checks.push({
-      name: "OpenCode agent discovery (GLM)",
-      env: globalAgentEnv,
-      pattern: /^glm-orchestrator(?:\s|$)/m,
-    });
     for (const check of checks) {
       const result = await command("opencode", ["agent", "list"], { env: check.env });
       const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
@@ -339,48 +378,6 @@ async function runtimeChecks(roots, profiles, activeComponents, report) {
       const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
       report("OpenCode UI browser discovery", result.code === 0 && /\bui-browser\b/.test(clean) ? "PASS" : "FAIL",
         result.code === 0 && /\bui-browser\b/.test(clean) ? "local browser MCP found; model invocation not tested" : result.stderr || result.stdout);
-    }
-  }
-  if (profiles.includes("glm") && activeComponents.has("opencode")) {
-    const config = path.join(roots.opencode, "profiles/glm/opencode.jsonc");
-    const installed = stat(config);
-    report("GLM native profile", installed ? "PASS" : "FAIL", installed ? `${config} is installed; model invocation not tested` : `Missing ${config}`);
-    if (installed) {
-      const env = {
-        ...process.env,
-        OPENCODE_CONFIG: config,
-        OPENCODE_CONFIG_DIR: roots.opencode,
-        AGENT_ENVIRONMENT_DIR: roots.environment,
-      };
-      const resolvedConfig = await command("opencode", ["debug", "config"], { env });
-      let configJson;
-      try { configJson = JSON.parse(resolvedConfig.stdout); } catch { /* Report the raw command failure below. */ }
-      report("GLM merged default agent", resolvedConfig.code === 0 && configJson?.default_agent === "glm-orchestrator" ? "PASS" : "FAIL",
-        resolvedConfig.code === 0 && configJson?.default_agent === "glm-orchestrator"
-          ? "default_agent=glm-orchestrator; model invocation not tested"
-          : resolvedConfig.stderr || resolvedConfig.stdout || "Resolved config was not valid JSON or selected another default agent.");
-
-      const expectations = [
-        { name: "glm-orchestrator", mode: "primary", provider: "zai-coding-plan", model: "glm-5.3-flash" },
-        { name: "glm-implementer", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash" },
-        { name: "glm-reviewer", mode: "subagent", provider: "deepseek", model: "deepseek-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "glm-ui-ux", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash", allowed: ["read", "glob", "grep", "lsp", "skill"], denied: ["edit", "write", "bash", "task", "webfetch", "websearch", "question"], skills: ["plan-and-subagent"], readOnly: true },
-        { name: "glm-mockup", mode: "subagent", provider: "zai-coding-plan", model: "glm-5.3-flash" },
-      ];
-      for (const expectation of expectations) {
-        const result = await command("opencode", ["debug", "agent", expectation.name], { env });
-        let agent;
-        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
-        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
-        report(`GLM merged agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "model and effective permissions match profile; model invocation not tested");
-      }
-      for (const expectation of expectations) {
-        const result = await command("opencode", ["debug", "agent", expectation.name], { env: globalAgentEnv });
-        let agent;
-        try { agent = JSON.parse(result.stdout); } catch { /* Report the raw command failure below. */ }
-        const problems = result.code === 0 ? validateResolvedAgent(agent, expectation, roots) : [result.stderr || result.stdout || "debug agent failed"];
-        report(`GLM global agent ${expectation.name}`, problems.length ? "FAIL" : "PASS", problems.length ? problems.join(", ") : "global agent model and effective permissions match profile; model invocation not tested");
-      }
     }
   }
   if (activeComponents.has("ui-browser")) {
@@ -410,7 +407,7 @@ export async function main(args) {
   const options = parseArguments(args);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const roots = resolveRoots();
-  const profiles = options.profile === "both" ? ["codex", "glm"] : [options.profile];
+  const profiles = [options.profile];
   const selected = options.component
     ? options.component === "environment" ? ["profile", "environment"]
       : [options.component]
@@ -442,18 +439,21 @@ export async function main(args) {
     const plannedLinks = missingLinks(plan.files, true, true);
     if (plannedLinks.length) throw new Error(`Linked resources are absent from the install plan:\n${plannedLinks.join("\n")}`);
     for (const entry of plan.files.filter((entry) => entry.action !== "unchanged")) console.log(`[${entry.action.toUpperCase()}] ${entry.component}: ${entry.target}`);
+    for (const entry of plan.removals) if (entry.expected !== undefined) console.log(`[REMOVE] ${entry.record.component}: ${entry.target}`);
+    for (const file of plan.retirementConflicts) report("Retired profile file (modified; preserved)", "FAIL", file);
+    for (const file of plan.untrackedRetired) report("Retired profile file (unmanaged; preserved)", "NOTICE", file);
     console.log(`Files: ${plan.files.length}; unchanged: ${plan.files.filter((entry) => entry.action === "unchanged").length}.`);
     for (const file of plan.stale) report("Obsolete managed file (preserved)", "NOTICE", file);
     if (options.mode === "dry-run") {
       if (activeComponents.has("ui-browser")) console.log("Apply: install locked OpenCode UI browser dependencies and Chromium, then package and browser checks.");
       console.log(`Selected profile(s): ${profiles.join(", ")}. No configuration or receipt was written.`);
-      return plan.files.some((entry) => entry.action === "conflict") ? 1 : 0;
+      return plan.files.some((entry) => entry.action === "conflict") || plan.retirementConflicts.length ? 1 : 0;
     }
     if (options.mode === "apply") {
       if (activeComponents.has("ui-browser")) await requireCommand("pnpm", ["--version"]);
       if (activeComponents.has("opencode")) await requireCommand("opencode", ["--version"]);
       applyPlan(plan, receipt, receiptPath, options.force);
-      report("Managed file writes", "PASS", `${plan.files.length} files synchronized and recorded in ${receiptPath}.`);
+      report("Managed file writes", "PASS", `${plan.files.length} files synchronized; ${plan.removals.filter((entry) => entry.expected !== undefined).length} retired profile files removed and recorded in ${receiptPath}.`);
       if (activeComponents.has("ui-browser")) {
         console.log("Installing locked OpenCode UI browser dependencies...");
         await requireCommand("pnpm", ["--dir", roots.browser, "install", "--frozen-lockfile", "--prod"], { timeout: 300_000 });
@@ -470,7 +470,7 @@ export async function main(args) {
     return exitCode;
   } catch (error) {
     console.error(`[FAIL] ${error.message}`);
-    console.error(`Setup is incomplete; later installation/readiness stages were not completed. See ${receiptPath} for recorded file writes, fix the reported issue and rerun. Unrelated/obsolete files were not removed.`);
+    console.error(`Setup is incomplete; later installation/readiness stages were not completed. See ${receiptPath} for recorded file changes, fix the reported issue and rerun. Modified or unmanaged retired-profile files are preserved.`);
     return 1;
   } finally {
     if (staging) fs.rmSync(staging, { recursive: true, force: true });

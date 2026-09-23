@@ -7,12 +7,10 @@ and native configuration.
 ## Execution paths
 
 - Codex profile: use `../scripts/run-opencode-review.sh` for independent code
-  review. Use `../scripts/run-opencode-ui-ux.sh` for the configured read-only
-  GLM UI/UX role during design and implementation review. These are separate
-  processes and reports: UI/UX work does not replace or consume external code
-  review rounds.
-- GLM profile: use OpenCode native primary/subagent execution. Do not invoke
-  `opencode run` from inside a GLM implementation or review subagent.
+  review. Use `../scripts/run-opencode-ui-ux.sh` for the Codex profile's
+  configured read-only UI/UX role during design and implementation review.
+  These are separate processes and reports: UI/UX work does not replace or
+  consume external code review rounds.
 
 The active profile must identify the actual OpenCode configuration root and
 agent definitions. Do not infer a provider or model from a display name. If a
@@ -28,7 +26,7 @@ web access, and every other write-capable path. A prompt claim or automatic
 approval flag is not read-only enforcement; apply the host's real permission
 mechanism to shell, MCP, and filesystem access as well.
 
-For OpenCode native profiles, read-only agents must begin with a catch-all
+For OpenCode-native read-only agents, begin with a catch-all
 `"*": "deny"` policy and then allow only the required read tools and the
 `plan-and-subagent` skill. Their `external_directory` policy must also begin
 with `"*": "deny"` and allow only the installed common-skill and profile
@@ -72,15 +70,6 @@ the review remains independent of the primary and implementation contexts.
 Nonzero execution, an empty result, a missing terminal status, or a model/agent
 mismatch is failed or inconclusive UI/UX evidence. Do not run the independent
 code-review runner in its place.
-
-## Native GLM path
-
-The selected native orchestrator starts the configured implementation subagent through
-OpenCode's native subagent tool. Corrections continue in that same child session
-using the supported session continuation mechanism. The independent reviewer
-always uses a fresh child context and its explicitly configured model. Record
-the agent names, model identities, session IDs, terminal states, and complete
-reports. A successful parent response is not proof that a child completed.
 
 ## Review result
 
