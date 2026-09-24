@@ -50,12 +50,11 @@ test("requires an explicit operation and rejects contradictory flags", () => {
 test("the Codex inventory installs GPT-6 roles and no independent GLM profile", (t) => {
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
-  const selected = ["skill", "skill-opencode", "profile", "codex", "opencode", "ui-browser"];
+  const selected = ["skill", "skill-opencode", "profile", "codex", "claude", "opencode", "ui-browser"];
   const codex = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex"]);
   assert.ok(codex.files.some((entry) => entry.target.endsWith("profiles/codex/PROFILE.md")));
   assert.ok(codex.files.some((entry) => entry.target.endsWith("agents/luna_implementer.toml")));
   assert.ok(codex.files.some((entry) => entry.target.endsWith("agents/reviewer.md")));
-  assert.ok(codex.files.some((entry) => entry.target.endsWith("agents/codex-ui-ux.md")));
   assert.equal(codex.files.some((entry) => entry.target.endsWith("agents/ui_ux_designer.toml")), false);
   assert.equal(codex.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")), false);
   assert.equal(manifest.profiles.includes("glm"), false);
@@ -66,29 +65,34 @@ test("the Codex inventory installs GPT-6 roles and no independent GLM profile", 
   assert.equal(fs.existsSync(path.join(repository, "profiles/glm")), false);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /GPT-6 Sol \(`gpt-6-sol`\)/);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_implementer.toml"), "utf8"), /model = "gpt-6-luna"/);
-  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_mockup.toml"), "utf8"), /model = "gpt-6-luna"/);
 });
 
-test("Codex profile preserves its read-only GLM UI/UX specialist", () => {
-  const agent = fs.readFileSync(path.join(repository, "profiles/codex/opencode/agents/codex-ui-ux.md"), "utf8");
-  assert.match(agent, /^mode: primary$/m);
-  assert.match(agent, /^model: zai-coding-plan\/glm-5\.3-flash$/m);
-  assert.match(agent, /^reasoningEffort: high$/m);
-  assert.match(agent, /^  "\*": deny$/m);
-  assert.match(agent, /^  edit: deny$/m);
-  assert.match(agent, /^  task: deny$/m);
-  assert.match(agent, /^  bash: deny$/m);
-  assert.match(agent, /^  ui_browser_\*: allow$/m);
-  assert.equal(fs.existsSync(path.join(repository, "profiles/codex/codex/agents/ui_ux_designer.toml")), false);
-  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/opencode.jsonc"), "utf8"), /"ui-browser"/);
-  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /external OpenCode\n  `codex-ui-ux` agent, pinned to `zai-coding-plan\/glm-5\.3-flash`/);
-  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/codex.md"), "utf8"), /\[OpenCode execution\]\(opencode\.md\)/);
-  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/opencode.md"), "utf8"), /run-opencode-ui-ux\.sh/);
-  const runner = fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"), "utf8");
-  assert.match(runner, /PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST/);
-  assert.match(runner, /ui_ux_agent=\$\{5:-codex-ui-ux\}/);
-  assert.match(runner, /ui_ux_variant=\$\{6:-high\}/);
-  assert.match(runner, /profiles\/codex\/opencode\.jsonc/);
+test("the Codex profile runs the shared Claude UI/UX roles and retires its GLM and GPT UI/UX roles", (t) => {
+  const f = fixture(t);
+  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
+  const selected = ["skill", "skill-opencode", "profile", "codex", "claude", "opencode", "ui-browser"];
+  const targets = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex"]).files.map((entry) => entry.target);
+  for (const name of ["claude-ui-ux-designer", "claude-ui-ux-reviewer", "claude-mockup"]) {
+    assert.ok(targets.includes(path.join(f.roots.claude, "agents", `${name}.md`)), name);
+  }
+  assert.equal(targets.some((target) => within(path.join(f.roots.claude, "skills"), target)), false);
+  assert.equal(targets.some((target) => within(path.join(f.roots.opencode, "skills"), target)), false);
+  for (const retired of ["agents/luna_mockup.toml", "agents/codex-ui-ux.md", "profiles/codex/opencode.jsonc", "skills/plan-and-subagent"]) {
+    assert.equal(targets.some((target) => target.endsWith(retired)), false, retired);
+    assert.ok(manifest.retired.some((entry) => entry.profile === "codex" && entry.target === retired), retired);
+  }
+  for (const removed of ["profiles/codex/codex/agents/luna_mockup.toml", "profiles/codex/opencode", "profiles/codex/opencode.jsonc", "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"]) {
+    assert.equal(fs.existsSync(path.join(repository, removed)), false, removed);
+  }
+  assert.deepEqual(manifest.checks.codex.opencodeAgents, ["reviewer"]);
+  assert.deepEqual(manifest.checks.codex.authentication.map((check) => check.argv), [["claude", "auth", "status"]]);
+  const profile = fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8");
+  for (const expected of ["claude-ui-ux-designer", "claude-ui-ux-reviewer", "claude-mockup", "scripts/run-claude-agent.sh", "SESSION_DIR/mockups/"]) {
+    assert.ok(profile.includes(expected), expected);
+  }
+  assert.doesNotMatch(profile, /codex-ui-ux|luna_mockup|visualize/);
+  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/codex.md"), "utf8"), /\[Claude CLI execution\]\(claude-cli\.md\)/);
+  assert.doesNotMatch(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/opencode.md"), "utf8"), /ui-ux/i);
 });
 
 test("the Claude inventory installs native Claude roles and shares the OpenCode reviewer", (t) => {
@@ -117,7 +121,7 @@ test("the Claude inventory installs native Claude roles and shares the OpenCode 
 });
 
 test("Claude subagents keep their model, effort, and tool boundaries", () => {
-  const read = (name) => fs.readFileSync(path.join(repository, "profiles/claude/claude/agents", `${name}.md`), "utf8");
+  const read = (name) => fs.readFileSync(path.join(repository, "profiles/shared/claude/agents", `${name}.md`), "utf8");
   const frontmatter = (text) => text.split("---")[1];
   const tools = (text) => frontmatter(text).match(/^tools: (.*)$/m)[1].split(",").map((tool) => tool.trim());
   const browserTools = ["load_request", "navigate", "viewport", "act", "capture", "audit"].map((tool) => `mcp__ui-browser__${tool}`);
@@ -388,8 +392,9 @@ else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_
 else if(args.includes('install') && process.env.SETUP_TEST_FAIL_INSTALL) {console.error('fixture dependency failure');process.exitCode=1;}
 else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.error('fixture browser failure');process.exitCode=1;}
 else if(args.includes('login') && process.env.SETUP_TEST_CODEX_LOGGED_OUT) {console.error('Not logged in');process.exitCode=1;}
+else if(args.includes('auth') && process.env.SETUP_TEST_CLAUDE_LOGGED_OUT) {console.error('Not logged in');process.exitCode=1;}
 `;
-  for (const name of ["gh", "opencode", "pnpm", "node", "codex"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
+  for (const name of ["gh", "opencode", "pnpm", "node", "codex", "claude"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
   const log = path.join(f.directory, "commands.jsonl");
   const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`,
     PLAN_AND_SUBAGENT_CODEX_DIR: f.roots.codex,
@@ -404,6 +409,7 @@ else if(args.includes('login') && process.env.SETUP_TEST_CODEX_LOGGED_OUT) {cons
   fs.writeFileSync(path.join(f.roots.codex, "AGENTS.md"), `Read ${path.join(f.roots.environment, "profiles/codex/PROFILE.md")} when running plan-and-subagent.`);
   fs.mkdirSync(f.roots.claude);
   fs.writeFileSync(path.join(f.roots.claude, "CLAUDE.md"), `Read ${path.join(f.roots.environment, "profiles/claude/PROFILE.md")} when running plan-and-subagent.`);
+  fs.writeFileSync(path.join(f.roots.claude, "settings.json"), JSON.stringify({ permissions: { allow: ["Bash(codex exec *)", "Read(~/.knowledges/**)", "Read(~/Workspace/bakb/**)"] } }));
   const run = (args, overrides = {}) => spawnSync(process.execPath, [cli, ...args], { env: { ...env, ...overrides }, encoding: "utf8", timeout: 15_000 });
   const calls = () => fs.existsSync(log) ? fs.readFileSync(log, "utf8").trim().split("\n").map(JSON.parse) : [];
   return { run, calls, env };
@@ -419,9 +425,12 @@ test("full dry-run writes no destinations; apply installs all components; repeat
   assert.ok(calls().every((call) => call[0] === "gh"));
   const apply = run(["--apply"]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
-  for (const file of [path.join(f.roots.codex, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.codex, "agents/luna_mockup.toml"), path.join(f.roots.environment, "profiles/codex/PROFILE.md"), path.join(f.roots.opencode, "agents/reviewer.md"), path.join(f.roots.opencode, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.browser, "server.mjs")]) {
+  for (const file of [path.join(f.roots.codex, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.codex, "agents/luna_implementer.toml"), path.join(f.roots.claude, "agents/claude-mockup.md"), path.join(f.roots.environment, "profiles/codex/PROFILE.md"), path.join(f.roots.opencode, "agents/reviewer.md"), path.join(f.roots.browser, "server.mjs")]) {
     assert.ok(fs.existsSync(file), file);
   }
+  assert.equal(fs.existsSync(path.join(f.roots.opencode, "skills")), false);
+  assert.equal(fs.existsSync(path.join(f.roots.claude, "skills")), false);
+  assert.match(apply.stdout, /\[PASS\] Claude Code login/);
   assert.ok(calls().some((call) => call.includes("chromium")));
   const repeated = run(["--apply"]);
   assert.equal(repeated.status, 0, repeated.stderr);
@@ -485,14 +494,14 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   const codexBefore = fs.readFileSync(codexSkill, "utf8");
   const dry = run(["--dry-run", "--profile", "claude"]);
   assert.equal(dry.status, 0, dry.stdout + dry.stderr);
-  assert.equal(fs.existsSync(path.join(f.roots.claude, "agents")), false);
+  assert.equal(fs.existsSync(path.join(f.roots.claude, "skills")), false);
   const apply = run(["--apply", "--profile", "claude"]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
   for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"), path.join(f.roots.environment, "profiles/claude/codex/implementer.md")]) {
     assert.ok(fs.existsSync(file), file);
   }
   assert.doesNotMatch(apply.stdout, /Obsolete managed file/);
-  assert.doesNotMatch(apply.stdout, /\[(UPDATE|CONFLICT)\].*reviewer\.md/);
+  assert.doesNotMatch(apply.stdout, /\[(UPDATE|CONFLICT)\].*(reviewer|claude-mockup)\.md/);
   assert.match(apply.stdout, /\[PASS\] OpenCode agent discovery: reviewer/);
   assert.doesNotMatch(apply.stdout, /codex-ui-ux/);
   assert.match(apply.stdout, /\[PASS\] Codex CLI login/);
@@ -501,6 +510,7 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   assert.ok(calls().some((call) => call[0] === "gh" && call.includes("claude-code")));
   const receipt = loadReceipt(f.receiptPath);
   assert.deepEqual(receipt.files[path.join(f.roots.opencode, "agents/reviewer.md")].profiles, ["codex", "claude"]);
+  assert.deepEqual(receipt.files[path.join(f.roots.claude, "agents/claude-mockup.md")].profiles, ["codex", "claude"]);
   assert.equal(run(["--check"]).status, 0);
 });
 
@@ -532,4 +542,146 @@ test("Claude profile reports missing Codex login and designation as user actions
   assert.match(result.stdout, /\[ACTION_REQUIRED\] Codex CLI login/);
   assert.match(result.stdout, /\[ACTION_REQUIRED\] Global profile designation/);
   assert.equal(fs.readFileSync(path.join(f.roots.claude, "CLAUDE.md"), "utf8"), "Other instructions\n");
+});
+
+test("Claude profile reports missing knowledge read permissions without editing settings", (t) => {
+  const f = fixture(t);
+  const { run } = fakeCommands(f);
+  const settings = path.join(f.roots.claude, "settings.json");
+  const original = JSON.stringify({ permissions: { allow: ["Read(~/.knowledges/**)"] } });
+  fs.writeFileSync(settings, original);
+  const result = run(["--apply", "--profile", "claude"]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout, /\[ACTION_REQUIRED\] Knowledge read permissions: Add Read\(~\/Workspace\/bakb\/\*\*\) to permissions\.allow/);
+  assert.equal(fs.readFileSync(settings, "utf8"), original);
+  fs.rmSync(settings);
+  assert.match(run(["--check", "--profile", "claude"]).stdout, /\[ACTION_REQUIRED\] Knowledge read permissions: .*file is missing/);
+  assert.doesNotMatch(run(["--check"]).stdout, /Knowledge read permissions/);
+});
+
+test("personal knowledge sources stay in the profile layer", () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
+  const knowledge = fs.readFileSync(path.join(repository, "profiles/shared/KNOWLEDGE.md"), "utf8");
+  for (const rule of manifest.checks.claude.readPermissions.rules) assert.ok(knowledge.includes(rule), rule);
+  for (const profile of ["codex", "claude"]) {
+    assert.match(fs.readFileSync(path.join(repository, "profiles", profile, "PROFILE.md"), "utf8"), /\]\(\.\.\/shared\/KNOWLEDGE\.md\)/);
+  }
+  const skill = path.join(repository, "skills/plan-and-subagent");
+  const documents = fs.readdirSync(skill, { recursive: true }).filter((file) => !file.includes("node_modules") && /\.(md|sh|mjs)$/.test(file) && !file.includes("test/"));
+  for (const file of documents) {
+    assert.doesNotMatch(fs.readFileSync(path.join(skill, file), "utf8"), /\.knowledges|bakb/i, file);
+  }
+});
+
+test("Codex profile reports a missing Claude Code login as a user action", (t) => {
+  const f = fixture(t);
+  const { run } = fakeCommands(f);
+  const result = run(["--apply"], { SETUP_TEST_CLAUDE_LOGGED_OUT: "1" });
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout, /\[PASS\] Claude Code CLI for UI\/UX roles/);
+  assert.match(result.stdout, /\[ACTION_REQUIRED\] Claude Code login/);
+});
+
+test("an existing Codex installation reports its retired UI/UX files without deleting them", (t) => {
+  const f = fixture(t);
+  const { run } = fakeCommands(f);
+  const legacy = [
+    path.join(f.roots.codex, "agents/luna_mockup.toml"),
+    path.join(f.roots.opencode, "agents/codex-ui-ux.md"),
+    path.join(f.roots.opencode, "profiles/codex/opencode.jsonc"),
+    path.join(f.roots.opencode, "skills/plan-and-subagent/SKILL.md"),
+  ];
+  fs.mkdirSync(f.roots.state, { recursive: true });
+  const receipt = { version: 1, files: {} };
+  for (const file of legacy) {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, "legacy");
+    receipt.files[file] = { component: file.includes("/skills/") ? "skill-opencode" : file.includes("luna_") ? "codex" : "opencode", profile: "codex", hash: createHash("sha256").update("legacy").digest("hex") };
+  }
+  fs.writeFileSync(f.receiptPath, JSON.stringify(receipt));
+  const result = run(["--apply"]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of legacy) {
+    assert.ok(result.stdout.includes(`[NOTICE] Obsolete managed file (preserved): ${file}`), file);
+    assert.equal(fs.readFileSync(file, "utf8"), "legacy");
+  }
+});
+
+test("the Claude runner scopes permissions, captures the report, and rejects mismatched sessions", (t) => {
+  const f = fixture(t);
+  const bin = path.join(f.directory, "bin");
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, "claude"), `#!${process.execPath}
+import * as fs from 'node:fs';
+const args=process.argv.slice(2);
+const prompt=fs.readFileSync(0,'utf8');
+fs.writeFileSync(process.env.RUNNER_TEST_LOG, JSON.stringify({args, cwd: process.cwd(), prompt}));
+const resumed=args.includes('--resume');
+console.log(JSON.stringify({type:'result', subtype: process.env.RUNNER_TEST_ERROR ? 'error_during_execution' : 'success', is_error: Boolean(process.env.RUNNER_TEST_ERROR),
+  result:'design report', session_id: resumed ? (process.env.RUNNER_TEST_SESSION || args[args.indexOf('--resume')+1]) : 'session-1',
+  modelUsage:{'claude-sonnet-5':{}}}));
+`, { mode: 0o755 });
+  const runner = path.join(repository, "skills/plan-and-subagent/scripts/run-claude-agent.sh");
+  const log = path.join(f.directory, "claude.json");
+  const workdir = path.join(f.directory, "product");
+  const session = path.join(f.directory, "session");
+  const mockups = path.join(session, "mockups");
+  for (const directory of [workdir, mockups]) fs.mkdirSync(directory, { recursive: true });
+  const runDir = (name) => {
+    const directory = path.join(session, "reviews/uiux", name);
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, "prompt.md"), "handoff");
+    return directory;
+  };
+  const run = (args, env = {}) => spawnSync("sh", [runner, ...args], { env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RUNNER_TEST_LOG: log, ...env }, encoding: "utf8" });
+  const read = (directory, name) => fs.readFileSync(path.join(directory, name), "utf8").trim();
+
+  const design = runDir("run-1");
+  let result = run(["start", workdir, session, design, "claude-ui-ux-designer"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(design, "result.md"), "design report");
+  assert.equal(read(design, "session-id"), "session-1");
+  assert.equal(read(design, "models"), "claude-sonnet-5");
+  assert.equal(read(design, "exit-code"), "0");
+  let call = JSON.parse(fs.readFileSync(log, "utf8"));
+  assert.equal(call.cwd, fs.realpathSync(workdir));
+  assert.equal(call.prompt, "handoff");
+  assert.deepEqual(call.args.slice(0, 7), ["-p", "--agent", "claude-ui-ux-designer", "--output-format", "json", "--permission-mode", "dontAsk"]);
+  assert.deepEqual(call.args.slice(call.args.indexOf("--add-dir") + 1, call.args.indexOf("--add-dir") + 3),
+    [path.join(repository, "skills/plan-and-subagent"), fs.realpathSync(session)]);
+  assert.equal(call.args.some((arg) => arg.startsWith("Edit(") || arg.includes("bypass") || arg === "--bare"), false);
+
+  const mockup = runDir("run-2");
+  result = run(["start", workdir, session, mockup, "claude-mockup", mockups]);
+  assert.equal(result.status, 0, result.stderr);
+  call = JSON.parse(fs.readFileSync(log, "utf8"));
+  assert.ok(call.args.includes(`Edit(/${fs.realpathSync(mockups)}/**)`));
+
+  const correction = runDir("run-3");
+  assert.equal(run(["resume", workdir, session, correction, "claude-mockup", "session-1", mockups]).status, 0);
+  assert.deepEqual(JSON.parse(fs.readFileSync(log, "utf8")).args.slice(-2), ["--resume", "session-1"]);
+  const mismatch = runDir("run-4");
+  assert.equal(run(["resume", workdir, session, mismatch, "claude-mockup", "session-1"], { RUNNER_TEST_SESSION: "other" }).status, 3);
+  assert.match(read(mismatch, "stderr.log"), /does not match/);
+  const failed = runDir("run-5");
+  assert.equal(run(["start", workdir, session, failed, "claude-ui-ux-reviewer"], { RUNNER_TEST_ERROR: "1" }).status, 3);
+  assert.equal(read(failed, "exit-code"), "3");
+
+  assert.equal(run(["start", workdir, session, design, "claude-ui-ux-designer"]).status, 2);
+  assert.equal(run(["start", workdir, session, runDir("run-6"), "claude-mockup", session]).status, 2);
+  assert.equal(run(["start", workdir, session, runDir("run-7"), "claude-mockup", workdir]).status, 2);
+  const knowledge = path.join(f.directory, "knowledge");
+  fs.mkdirSync(knowledge);
+  const withKnowledge = runDir("run-8");
+  assert.equal(run(["start", "--read-dir", knowledge, workdir, session, withKnowledge, "claude-ui-ux-designer"]).status, 0);
+  call = JSON.parse(fs.readFileSync(log, "utf8"));
+  assert.deepEqual(call.args.slice(call.args.indexOf("--add-dir") + 1, call.args.indexOf("--allowedTools")),
+    [path.join(repository, "skills/plan-and-subagent"), fs.realpathSync(session), fs.realpathSync(knowledge)]);
+  assert.equal(call.args.some((arg) => arg.startsWith("Edit(")), false);
+  assert.equal(run(["start", "--read-dir", "relative", workdir, session, runDir("run-9"), "claude-ui-ux-designer"]).status, 2);
+  assert.equal(run(["start", "--read-dir", path.join(f.directory, "missing"), workdir, session, runDir("run-10"), "claude-ui-ux-designer"]).status, 2);
+  const outside = path.join(f.directory, "outside");
+  fs.mkdirSync(outside);
+  fs.writeFileSync(path.join(outside, "prompt.md"), "handoff");
+  assert.equal(run(["start", workdir, session, outside, "claude-ui-ux-designer"]).status, 2);
 });

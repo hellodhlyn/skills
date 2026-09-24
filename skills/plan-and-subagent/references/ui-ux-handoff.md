@@ -4,7 +4,10 @@
 작업하며 primary에게만 advisory evidence를 제공합니다.
 
 설계 및 구현 후 검토 시 [설계 지침](ui-ux-design.md), [도메인 지침](ui-ux-domain.md)의
-경로와 관련 지식 출처를 함께 전달하고 읽도록 요청합니다. Primary도 같은 지침을
+경로와 관련 지식 출처를 함께 전달하고 읽도록 요청합니다. 지식 출처는
+`KNOWLEDGE_SOURCES`로 명시합니다: profile과 project instructions가 지정한 지식
+인덱스의 절대 경로와 읽기 전용 지식 경로입니다. 지정된 출처가 없으면 `NONE`으로
+적습니다. Primary도 같은 지침을
 적용하며, 재검토에는 수용된 finding과 관련된 근거만 전달합니다.
 
 ## 승인 전 설계 제안

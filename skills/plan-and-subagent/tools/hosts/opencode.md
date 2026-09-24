@@ -4,15 +4,11 @@ This is the common OpenCode procedure. The skill supplies the initial and
 re-review contracts; the selected profile supplies agent names, models, variants,
 and native configuration.
 
-## Execution paths
+## Execution path
 
-- Independent code review: use `../../scripts/run-opencode-review.sh` when the
-  profile binds the reviewer to an OpenCode agent.
-- UI/UX: use `../../scripts/run-opencode-ui-ux.sh` only when the profile binds
-  its read-only UI/UX role to an OpenCode agent.
-
-These are separate processes and reports: UI/UX work does not replace or
-consume external code review rounds.
+Use `../../scripts/run-opencode-review.sh` when the profile binds the
+independent code reviewer to an OpenCode agent. UI/UX work is a separate
+process and report; it does not replace or consume external code review rounds.
 
 The active profile must identify the actual OpenCode configuration root and
 agent definitions. Do not infer a provider or model from a display name. If a
@@ -22,8 +18,8 @@ report the execution as failed or blocked rather than substituting another one.
 ## Independent review permissions
 
 The reviewer may inspect relevant project files, applicable `AGENTS.md` and
-`CLAUDE.md`, task diffs, validation evidence, and `~/.knowledges/INDEX.md` with
-relevant documents. Its configured permissions must deny edits, child tasks,
+`CLAUDE.md`, task diffs, validation evidence, and the designated knowledge
+index with relevant documents. Its configured permissions must deny edits, child tasks,
 web access, and every other write-capable path. A prompt claim or automatic
 approval flag is not read-only enforcement; apply the host's real permission
 mechanism to shell, MCP, and filesystem access as well.
@@ -51,31 +47,6 @@ sh "$RUNNER" "$WORKDIR" "$REVIEW_DIR/prompt.md" "$REVIEW_DIR/result.md" "$REVIEW
 The optional agent and variant arguments are supplied by the profile. Preserve
 the complete process result, including output, process identity, and numeric
 exit status. Do not read an empty or in-progress result file as a review.
-
-## OpenCode UI/UX runner
-
-For each applicable design proposal, conformance review, or focused recheck,
-create a fresh `reviews/uiux/` report directory. Write the exact applicable
-handoff preamble, user purpose, approved contract when available, evidence, and
-scope to `prompt.md`, then invoke the runner with the profile's agent, variant,
-and OpenCode configuration:
-
-```bash
-sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" "$UI_UX_AGENT" "$UI_UX_VARIANT" "$REPORT_DIR/browser-request.json"
-```
-
-Set `PLAN_AND_SUBAGENT_OPENCODE_PROFILE_CONFIG` to the profile's OpenCode
-configuration path when it differs from the Codex profile default.
-
-Preserve the terminal process result and model identity in `execution-N.md`.
-The configured agent is read-only for product code. When the browser request is
-applicable, it may use only its scoped local `ui-browser` MCP to create evidence
-artifacts; it must not decide material product meaning. A fresh external context is
-intentional: the prompt carries the approved design and current evidence, so
-the review remains independent of the primary and implementation contexts.
-Nonzero execution, an empty result, a missing terminal status, or a model/agent
-mismatch is failed or inconclusive UI/UX evidence. Do not run the independent
-code-review runner in its place.
 
 ## Review result
 

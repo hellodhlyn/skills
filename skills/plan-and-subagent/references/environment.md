@@ -34,6 +34,12 @@ role definitions, and explicit start commands in the profile's native settings.
 | Native bindings | Each stage's role, model/provider, permission boundary, and actual harness configuration |
 | Start and status | Explicit profile selection, session start/continuation, and observable completion/status commands |
 | Runtime resources | Installation destinations and profile-specific values passed to shared executors |
+| Knowledge sources | Personal knowledge index and read-only knowledge roots, and how delegated roles obtain read access to them |
+
+Knowledge locations are personal environment values. The skill defines only
+how they are passed: project instructions may add or override sources, and the
+primary records the combined `KNOWLEDGE_SOURCES` in `session.md` and in each
+handoff that needs them.
 
 Choose agents by role or definition reference. Keep model and reasoning values in
 native runtime settings rather than duplicating them in prose. Tool-specific

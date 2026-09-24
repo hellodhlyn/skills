@@ -16,9 +16,11 @@ Existing-product investigation for design evidence remains part of planning.
 Determine whether domain-specific meanings, relationships, grouping, or hierarchy
 could affect the proposed interface. When they do:
 
-- Consult `~/.knowledges/INDEX.md` and follow its index to relevant domain
-  documentation before proposing the UI/UX. Follow a project- or environment-
-  designated knowledge index when different.
+- Consult the designated knowledge index and follow it to relevant domain
+  documentation before proposing the UI/UX. The profile designates the
+  personal index and read-only knowledge roots; project instructions may add
+  or override sources. The primary passes the combined result as
+  `KNOWLEDGE_SOURCES` in each handoff.
 - Establish which concepts belong together, which are independent, which are
   primary or secondary, and which distinctions matter for the user's task.
   Do not infer these relationships solely from field names, types, API shapes,
@@ -32,6 +34,8 @@ could affect the proposed interface. When they do:
   implementation, or user-provided facts conflict, re-verify and distinguish
   confirmed facts from assumptions. Do not silently choose a source or treat
   the existing UI as proof of intended meaning.
+- If a relevant source lies outside the readable knowledge roots, report it as
+  `UNVERIFIED` with its path instead of inferring its content.
 - If the index is absent or relevant knowledge is insufficient, state the gap
   and use other verified project evidence or user clarification. For an unresolved
   important UX decision, explain the ambiguity and concrete options to the user

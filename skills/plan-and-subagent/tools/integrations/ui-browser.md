@@ -15,13 +15,11 @@ For a local mockup file, set `allowedFileRoot` to the directory holding the
 mockup instead of listing an origin. The request is evidence configuration, not
 an approval grant.
 
-Bind the request in exactly one way:
-
-- OpenCode UI/UX role: pass its path as the final optional argument to
-  `run-opencode-ui-ux.sh`; the runner exposes the server to that process only.
-- Claude Code subagent: pass its absolute path in the prompt; the subagent calls
-  `load_request` first. The artifact directory must be inside the request file's
-  directory, and the server refuses a second request in the same run.
+Pass the request's absolute path in the role's prompt. The role calls
+`load_request` before any other browser action, whether it runs as a native
+Claude Code subagent or through the Claude runner. The artifact directory must
+be inside the request file's directory, and the server refuses a second request
+in the same run.
 
 The agent may navigate only declared origins or files under the declared root,
 use only declared condition IDs, and must mark unavailable evidence

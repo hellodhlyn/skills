@@ -2,8 +2,9 @@
   "profiles": ["codex", "claude"],
   "checks": {
     "codex": {
-      "opencodeAgents": ["reviewer", "codex-ui-ux"],
-      "opencodeMcpConfig": "profiles/codex/opencode.jsonc",
+      "opencodeAgents": ["reviewer"],
+      "commands": [{"name": "Claude Code CLI for UI/UX roles", "argv": ["claude", "--version"]}],
+      "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}],
       "designation": {"root": "codex", "files": ["AGENTS.override.md", "AGENTS.md"]},
       "session": "Start a new Codex session after role updates; current-session discovery cannot be verified by this installer."
     },
@@ -12,6 +13,7 @@
       "commands": [{"name": "Codex CLI for the implementer", "argv": ["codex", "--version"]}],
       "authentication": [{"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "claude", "files": ["CLAUDE.md"]},
+      "readPermissions": {"root": "claude", "file": "settings.json", "rules": ["Read(~/.knowledges/**)", "Read(~/Workspace/bakb/**)"]},
       "session": "Start a new Claude Code session after subagent updates; current-session discovery cannot be verified by this installer."
     }
   },
@@ -27,19 +29,17 @@
   "entries": [
     {"component": "skill", "profile": "codex", "root": "codex", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent", "agent": "codex"},
     {"component": "skill", "profile": "claude", "root": "claude", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent", "agent": "claude-code"},
-    {"component": "skill-opencode", "profiles": ["codex"], "root": "opencode", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent"},
     {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/codex/PROFILE.md", "target": "profiles/codex/PROFILE.md"},
     {"component": "profile", "profile": "claude", "root": "environment", "source": "profiles/claude/PROFILE.md", "target": "profiles/claude/PROFILE.md"},
     {"component": "profile", "profile": "claude", "root": "environment", "source": "profiles/claude/codex", "target": "profiles/claude/codex"},
+    {"component": "profile", "profiles": ["codex", "claude"], "root": "environment", "source": "profiles/shared/KNOWLEDGE.md", "target": "profiles/shared/KNOWLEDGE.md"},
     {"component": "codex", "profile": "codex", "root": "codex", "source": "profiles/codex/codex/agents", "target": "agents"},
-    {"component": "claude", "profile": "claude", "root": "claude", "source": "profiles/claude/claude/agents", "target": "agents"},
-    {"component": "opencode", "profile": "codex", "root": "opencode", "source": "profiles/codex/opencode/agents", "target": "agents"},
+    {"component": "claude", "profiles": ["codex", "claude"], "root": "claude", "source": "profiles/shared/claude/agents", "target": "agents"},
     {"component": "opencode", "profiles": ["codex", "claude"], "root": "opencode", "source": "profiles/shared/opencode/agents", "target": "agents"},
     {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/package.json", "target": "package.json"},
     {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/pnpm-lock.yaml", "target": "pnpm-lock.yaml"},
     {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/server.mjs", "target": "server.mjs"},
-    {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/src", "target": "src"},
-    {"component": "opencode", "profile": "codex", "root": "opencode", "source": "profiles/codex/opencode.jsonc", "target": "profiles/codex/opencode.jsonc"}
+    {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/src", "target": "src"}
   ],
   "retired": [
     {"component": "environment", "root": "environment", "target": "plan-and-subagent.md"},
@@ -47,6 +47,10 @@
     {"component": "environment", "root": "environment", "target": "plan-and-subagent/agents/luna_ui_verifier.toml"},
     {"component": "codex", "profile": "codex", "root": "codex", "target": "agents/luna_ui_verifier.toml"},
     {"component": "codex", "profile": "codex", "root": "codex", "target": "agents/ui_ux_designer.toml"},
+    {"component": "codex", "profile": "codex", "root": "codex", "target": "agents/luna_mockup.toml"},
+    {"component": "opencode", "profile": "codex", "root": "opencode", "target": "agents/codex-ui-ux.md"},
+    {"component": "opencode", "profile": "codex", "root": "opencode", "target": "profiles/codex/opencode.jsonc"},
+    {"component": "skill-opencode", "profile": "codex", "root": "opencode", "target": "skills/plan-and-subagent"},
     {"component": "opencode", "root": "opencode", "target": "agents/advisor.md"},
     {"component": "opencode", "root": "legacyOpencode", "target": "agents/advisor.md"},
     {"component": "opencode", "root": "legacyOpencode", "target": "agents/reviewer.md"}

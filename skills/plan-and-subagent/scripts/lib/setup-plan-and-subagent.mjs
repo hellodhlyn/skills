@@ -382,21 +382,6 @@ async function runtimeChecks(manifest, roots, profiles, activeComponents, report
       report(`OpenCode agent discovery: ${agent}`, found ? "PASS" : "FAIL", found ? "configured agent found; model invocation not tested" : result.code === 0 ? "agent not listed" : result.stderr || result.stdout);
     }
   }
-  for (const check of checks.filter((candidate) => candidate.opencodeMcpConfig)) {
-    if (!activeComponents.has("ui-browser")) continue;
-    const config = path.join(roots.opencode, check.opencodeMcpConfig);
-    const server = path.join(roots.browser, "server.mjs");
-    report("OpenCode UI browser configuration", stat(config) && stat(server) ? "PASS" : "FAIL",
-      stat(config) && stat(server) ? "profile config and local MCP server are installed" : `Missing ${!stat(config) ? config : server}`);
-    if (stat(config) && stat(server)) {
-      const result = await command("opencode", ["mcp", "list"], {
-        env: { ...process.env, OPENCODE_CONFIG_DIR: roots.opencode, OPENCODE_CONFIG: config, PLAN_AND_SUBAGENT_UI_BROWSER_DIR: roots.browser },
-      });
-      const clean = result.stdout.replace(/\x1b\[[0-9;]*m/g, "");
-      report("OpenCode UI browser discovery", result.code === 0 && /\bui-browser\b/.test(clean) ? "PASS" : "FAIL",
-        result.code === 0 && /\bui-browser\b/.test(clean) ? "local browser MCP found; model invocation not tested" : result.stderr || result.stdout);
-    }
-  }
   if (activeComponents.has("ui-browser")) {
     const check = await command("pnpm", ["--dir", roots.browser, "run", "check"]);
     report("UI browser package", check.code === 0 ? "PASS" : "FAIL", check.code === 0 ? "package checks passed" : check.stderr || check.stdout);
@@ -425,6 +410,17 @@ async function runtimeChecks(manifest, roots, profiles, activeComponents, report
       report("Global profile designation", contents.includes(expected) ? "PASS" : "ACTION_REQUIRED", contents.includes(expected)
         ? `Profile path found in ${active}; effective project/task overrides require session inspection.`
         : `Designate ${expected} in ${active || instructions.at(-1)}. It was not edited.`);
+    }
+    if (check.readPermissions) {
+      const settings = path.join(roots[check.readPermissions.root], check.readPermissions.file);
+      let allowed = [];
+      let problem;
+      try { allowed = JSON.parse(fs.readFileSync(settings, "utf8")).permissions?.allow || []; }
+      catch (error) { problem = error.code === "ENOENT" ? "file is missing" : `unreadable (${error.message})`; }
+      const missing = check.readPermissions.rules.filter((rule) => !allowed.includes(rule));
+      report("Knowledge read permissions", !problem && !missing.length ? "PASS" : "ACTION_REQUIRED", !problem && !missing.length
+        ? `${settings} pre-approves the profile's knowledge roots`
+        : `Add ${missing.join(", ")} to permissions.allow in ${settings}${problem ? ` (${problem})` : ""}. It was not edited.`);
     }
     if (check.session) report("Session", "NOTICE", check.session);
   }

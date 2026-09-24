@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import AxeBuilder from "@axe-core/playwright";
@@ -7,13 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { chromium } from "playwright";
 import { z } from "zod";
 
-import { assertAllowedPageUrl, assertPathWithin, loadRequestFile, validateRequest } from "./src/request.mjs";
-
-function configuredRequest() {
-  const requestPath = process.env.PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST;
-  if (!requestPath) return undefined;
-  return validateRequest(JSON.parse(readFileSync(requestPath, "utf8")));
-}
+import { assertAllowedPageUrl, assertPathWithin, loadRequestFile } from "./src/request.mjs";
 
 const server = new McpServer({ name: "plan-and-subagent-ui-browser", version: "0.1.0" });
 let request;
@@ -27,8 +21,6 @@ function bindRequest(active) {
   viewports = new Map(active.viewports.map((viewport) => [viewport.name, viewport]));
 }
 
-const configured = configuredRequest();
-if (configured) bindRequest(configured);
 const consoleEntries = [];
 const pageErrors = [];
 let browser;
@@ -37,7 +29,7 @@ let page;
 let artifactNumber = 0;
 
 function requireRequest() {
-  if (!request) throw new Error("Browser evidence requires a request: call load_request first, or run through the UI/UX runner.");
+  if (!request) throw new Error("Browser evidence requires a request: call load_request first.");
   return request;
 }
 
@@ -104,7 +96,6 @@ server.registerTool("load_request", {
   description: "Bind this browser session to the primary's browser request file. Call once before any other browser tool.",
   inputSchema: { requestPath: z.string() },
 }, async ({ requestPath }) => {
-  if (configured) throw new Error("This browser session is already bound by the UI/UX runner.");
   if (requestFile) throw new Error(`This browser session is already bound to ${requestFile}; start a fresh session for another request.`);
   const loaded = loadRequestFile(requestPath);
   requestFile = loaded.file;

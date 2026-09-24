@@ -33,9 +33,16 @@ providers.
 - Independent code review: the shared external OpenCode `reviewer` agent, run
   with `scripts/run-opencode-review.sh` and its default agent and variant.
 
-The three native subagents are defined under this profile's `claude/agents/`.
-Each gets the local `ui-browser` MCP as a server scoped to that subagent; the
-primary session does not receive the browser tools.
+The three native subagents are shared with the Codex profile under the
+repository's `profiles/shared/claude/agents/`. Each gets the local `ui-browser`
+MCP as a server scoped to that subagent; the primary session does not receive
+the browser tools.
+
+## Knowledge sources
+
+Use the personal index and read-only roots in
+[shared knowledge sources](../shared/KNOWLEDGE.md). Native subagents read them
+through the `permissions.allow` rules it lists.
 
 ## Visualization and display
 
@@ -56,9 +63,11 @@ report directory that will hold their artifacts.
 - Common skill: `~/.claude/skills/plan-and-subagent/`
 - Native subagents: `~/.claude/agents/`
 - Profile document and implementer instructions: `~/.config/agents/profiles/claude/`
+- Shared knowledge sources: `~/.config/agents/profiles/shared/KNOWLEDGE.md`
 - Shared OpenCode reviewer: `~/.config/opencode/agents/reviewer.md`
 - UI browser runtime: `~/.local/share/plan-and-subagent/opencode-ui-browser/`
 
 The repository installer owns these targets through one receipt and one
-conflict-safe inventory. It never edits `CLAUDE.md` or credentials. Start a new
-Claude Code session after installing or changing subagent definitions.
+conflict-safe inventory. It never edits `CLAUDE.md`, `settings.json`, or
+credentials. Start a new Claude Code session after installing or changing
+subagent definitions.

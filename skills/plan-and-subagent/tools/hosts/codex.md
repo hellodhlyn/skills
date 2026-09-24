@@ -28,14 +28,13 @@ a material contract change, interrupt the agent before revising the contract;
 resume only after the revised understanding check passes. Small corrections that
 preserve the approved contract may be sent without interruption.
 
-When the profile binds UI/UX work to an external OpenCode agent, follow the
-external-role procedure in [OpenCode execution](opencode.md): create a fresh
-bounded report directory, write the exact design or review prompt and supplied
-evidence, then run its UI/UX runner. Record the configured agent, variant,
-process identity, terminal status, and report. Do not replace it with a native
-Codex role or infer a fallback model. For applicable mockups, use a distinct
-native mockup identity and keep its ownership limited to the assigned
-visualization artifacts. Route product fixes to the implementer.
+When the profile binds UI/UX or mockup work to Claude Code subagent
+definitions, follow [Claude CLI execution](claude-cli.md): create a fresh run
+directory, write the exact design, review, or mockup prompt and supplied
+evidence, then run the Claude runner. Record the agent, session ID, models,
+terminal status, and report. Do not replace it with a native Codex role or
+infer a fallback model. Keep the mockup role's writes limited to its assigned
+directory. Route product fixes to the implementer.
 
 ## Completion
 

@@ -59,6 +59,12 @@ absolute paths to the applicable skill references it must read. Keep the
 returned agent identity for in-scope corrections through SendMessage; each new
 browser request still requires a fresh subagent.
 
+Subagents read outside the session's working directories under the primary
+session's permissions. The profile states how its knowledge roots are
+pre-approved for reading; if they are not, a knowledge read may stop at a
+permission prompt or be refused, and the role reports that source as
+`UNVERIFIED`.
+
 When browser evidence applies, write the browser request described in
 [UI browser evidence](../integrations/ui-browser.md) before starting the
 subagent and pass its absolute path in the prompt. The subagent must bind it
