@@ -45,9 +45,10 @@ brief and a repeated understanding check. Run long invocations with
 polling. A nonzero exit, missing `thread-id`, or empty `result.md` is a failed
 attempt, not an implementation report.
 
-To interrupt active work for a material contract change, stop the background
-task, record the interruption, resolve the decision, then send the revised
-contract and understanding check through `resume` to the same `IMPLEMENTER`.
+For a material contract change, stop the task only if continuing would violate
+the revised contract; otherwise wait. Then resolve the decision and send the
+revised contract and understanding check through `resume` to the same
+`IMPLEMENTER`.
 Small contract-preserving corrections are sent as a later `resume` after the
 current run ends.
 

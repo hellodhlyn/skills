@@ -18,6 +18,15 @@ The common skill owns the contracts and pipeline, but does not hard-code a
 personal model or provider. Maintaining this skill does not itself invoke this
 workflow. Read references and tool procedures only at the indicated stage.
 
+## Wait for delegated work
+
+Wait for each internal subagent or external runner's terminal result, repeating
+bounded waits as needed. Slowness, silence, and partial output are not hangs.
+Interrupt only for a confirmed hang, blocking failure, explicit cancellation,
+or work that would violate the approved contract; record why before restarting.
+Do not announce elapsed time or routine status checks. Report material findings,
+blockers, decisions needed, and completed results; answer status requests briefly.
+
 ## Follow the stage contract
 
 Use the [stage checkpoint](references/planning.md#stage-checkpoint) before

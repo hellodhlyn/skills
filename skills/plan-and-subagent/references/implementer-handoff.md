@@ -15,8 +15,9 @@ for unresolved non-material gaps within the configured understanding-check limit
 
 Retain the session for corrections. If it becomes unavailable, use the same
 configured role with the complete brief and current state and repeat the check;
-do not silently substitute a role. For material changes, interrupt active work,
-resolve the decision and renewed agreement, then repeat the check before resuming.
+do not silently substitute a role. For material changes, interrupt only if
+continuing would violate the revised contract; otherwise wait for completion.
+Resolve the decision and renewed agreement, then recheck before resuming.
 Send small contract-preserving corrections to the same session without restarting
 planning. Follow the environment's wait procedure, preserve execution metadata,
 and record concise understanding and attempt outcomes in the journal.

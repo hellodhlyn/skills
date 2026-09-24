@@ -24,9 +24,9 @@ paths. The implementer must not spawn further agents.
 
 Send later instructions through the host's follow-up mechanism to the same
 identity. Send the implementation preamble only after understanding passes. For
-a material contract change, interrupt the agent before revising the contract;
-resume only after the revised understanding check passes. Small corrections that
-preserve the approved contract may be sent without interruption.
+a material contract change, interrupt only if continuing would violate the
+revised contract; otherwise wait. Resume after the revised understanding check.
+Send small contract-preserving corrections without interruption.
 
 When the profile binds UI/UX or mockup work to Claude Code subagent
 definitions, follow [Claude CLI execution](claude-cli.md): create a fresh run
@@ -38,8 +38,6 @@ directory. Route product fixes to the implementer.
 
 ## Completion
 
-Use the host's agent status and wait capability, with waits no longer than 60
-seconds. A message or partial report does not prove completion. Confirm terminal
-completion or a reported blocker before accepting evidence, and retain the
-identity through corrections and narrow follow-up checks. Never silently replace
-the role or model.
+Use the host's status and wait capability, with each wait at most 60 seconds;
+repeat until terminal completion or a blocker. Partial reports are not final.
+Retain the identity through corrections; never silently replace the role or model.
