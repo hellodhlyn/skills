@@ -28,7 +28,9 @@ pre-approved:
   `KNOWLEDGE_SOURCES`, and no other directory;
 - the role's scoped `ui-browser` tools;
 - edits inside `WRITE_DIR`, a subdirectory of `SESSION_DIR`. Pass it only for
-  the mockup role.
+  the designer's mockup direction; the mockup subagent that the designer starts
+  inherits it, and the designer's tool allowlist keeps the designer itself from
+  editing.
 
 The runner needs network access and writes Claude Code session state outside
 the workdir. When the primary host sandboxes commands, run it with the host's
@@ -44,9 +46,24 @@ evidence applies, write the request described in
 [UI browser evidence](../integrations/ui-browser.md) inside the run directory
 and pass its absolute path; the role calls `load_request` first.
 
+Use the runner inside the installed skill the session loaded, and give skill
+reference paths under that same directory; the runner grants reads only to the
+skill directory it runs from. Never copy a document from outside the granted
+directories into `SESSION_DIR` or the prompt to make it readable. When the role
+reports that a required document is unreadable, correct the handoff path or
+report the gap to the user.
+
 Start a fresh session for each design proposal, conformance review, focused
-recheck, and new browser request. Use `resume` with the recorded `session-id`
-only for in-scope corrections to the same artifact, such as mockup revisions.
+recheck, and new browser request the role loads itself. Use `resume` with the
+recorded `session-id` only for in-scope corrections to the same artifact.
+
+Do not run the mockup role through the runner. Send each mockup direction,
+including user-requested revisions and approved-reference captures, to the
+designer's recorded session through `resume` with `SESSION_DIR/mockups/` as
+`WRITE_DIR`. Running as the main thread, the designer is limited to starting
+the mockup role by its definition. A headless session does not wait for
+background subagents, so the designer starts it in the foreground. The runner's
+`models` file then lists both the designer's and the mockup role's models.
 
 ## Completion
 

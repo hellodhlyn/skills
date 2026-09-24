@@ -33,12 +33,13 @@ choices that the mockup exposes, then include the confirmed result in the brief.
 When the mockup applies:
 
 1. Follow [delegated UI execution](ui-execution.md) and the environment procedure.
+   The UI/UX designer that wrote the proposal directs the mockup executor.
    Confirm the profile's visualization capability is available; the mockup
    executor reads its guidance in full before creating the visual. Missing
    visualization capability blocks only this preview; report it rather than
    silently substituting project code or another artifact.
 2. Use the verified product structure, design-system evidence, realistic
-   content, and specialist recommendation already gathered by the primary.
+   content, and the designer's proposal already gathered for the brief.
    Do not start a separate project search while rendering the mockup.
 3. Show the smallest surface that resolves the decision. Use a contained mockup
    unless the application shell, page-level hierarchy, or navigation is itself
@@ -60,8 +61,8 @@ When the mockup applies:
 ## Approved visual references
 
 After the user confirms the direction and no further mockup revision is
-pending, have the same mockup executor capture screenshots of the confirmed
-alternative only, one per state and viewport the contract relies on. Store them
+pending, have the designer direct a mockup executor to capture screenshots of
+the confirmed alternative only, one per state and viewport the contract relies on. Store them
 under `SESSION_DIR/mockups/approved/` with names that identify the surface,
 state, and viewport. Recapture after any later mockup revision; a screenshot of
 a superseded or rejected alternative must not remain in the approved set.

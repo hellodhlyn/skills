@@ -21,15 +21,17 @@ providers.
   brief whose difficulty justifies it and record the choice. The Codex session
   runs in the `workspace-write` sandbox and is retained by thread ID for
   understanding checks, implementation, and corrections.
-- UI/UX design proposal: native subagent `claude-ui-ux-designer` (Claude Opus
-  5.5, `high`). It is read-only and returns advisory evidence.
+- UI/UX design proposal and mockup direction: native subagent
+  `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It is read-only, returns
+  advisory evidence, and starts `claude-mockup` for each mockup direction.
 - UI/UX conformance review, focused recheck, and implemented UI browser
   evidence: native subagent `claude-ui-ux-reviewer` (Claude Opus 5.5,
   `medium`). It is read-only except for browser evidence artifacts and judges
   that evidence against the user purpose and approved contract in the same
   context.
-- Mockups: native subagent `claude-mockup` (Claude Sonnet 5, `medium`). It owns
-  only the assigned mockup files.
+- Mockups: native subagent `claude-mockup` (Claude Sonnet 5, `medium`), started
+  by the designer rather than the primary. It owns only the assigned mockup
+  files.
 - Independent code review: the shared external OpenCode `reviewer` agent, run
   with `scripts/run-opencode-review.sh` and its default agent and variant.
 

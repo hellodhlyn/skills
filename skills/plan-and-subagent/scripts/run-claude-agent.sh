@@ -133,7 +133,11 @@ if (output.session_id) fs.writeFileSync(`${runDir}/session-id`, `${output.sessio
 const models = Object.keys(output.modelUsage || {});
 if (models.length) fs.writeFileSync(`${runDir}/models`, `${models.join("\n")}\n`);
 if (typeof output.result === "string" && output.result.trim()) fs.writeFileSync(`${runDir}/result.md`, output.result);
-if (output.is_error || output.subtype !== "success") fail(`Claude reported ${output.subtype || "an error"}.`);
+if (output.is_error || output.subtype !== "success") {
+  const status = output.api_error_status ? ` (API status ${output.api_error_status})` : "";
+  const detail = typeof output.result === "string" && output.result.trim() ? `: ${output.result.trim()}` : "";
+  fail(`Claude reported an error${status}${detail || ` (${output.subtype || "no detail"})`}.`);
+}
 else if (!output.session_id) fail("Claude completed without reporting a session ID.");
 else if (requested && output.session_id !== requested) fail(`resumed session ${output.session_id} does not match requested session ${requested}.`);
 else if (!fs.existsSync(`${runDir}/result.md`)) fail("Claude completed without a final message.");

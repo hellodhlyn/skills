@@ -58,6 +58,39 @@ Primary는 근거를 확인하고 중요한 선택을 사용자에게 요청합�
 목업 권고는 advisory evidence이며, primary가
 [브리핑 목업 지침](ui-ux-mockups.md)에 따라 최종 적용 여부와 범위를 판단합니다.
 
+## 목업 지시
+
+목업이 적용되면 제안을 작성한 같은 설계자에게 이어서 보냅니다. 설계자의 제안을
+primary가 다시 요약하지 않고, 다음만 전달합니다: 적용 판단과 목업 범위, 렌더링 전에
+사용자와 정한 결정, 목업 제작자에게 넘길 browser request 절대 경로와 쓰기
+디렉터리, [브리핑 목업 지침](ui-ux-mockups.md)과 [UI 실행 위임](ui-execution.md),
+profile의 시각화 지침 경로(목업 제작자 정의에 이미 반영돼 있으면 생략). 사용자 피드백 반영이나 승인본 캡처처럼 새 browser
+request가 필요하면 같은 설계자에게 새 request와 함께 이 지시를 다시 보냅니다.
+
+```text
+Direct the briefing mockup for your proposal. Do not write files yourself and do
+not load the browser request yourself. Start only the mockup executor role named
+in this handoff, in the foreground, and never any other agent. Write its handoff
+yourself: your proposal's structure, hierarchy, composition, interaction, states,
+and rationale, amended by the resolved decisions supplied here; the supplied
+product and design-system evidence; the scope and alternatives to render; the
+browser request path and write directory unchanged; and the guidance paths it
+must read in full. Tell it not to spawn agents. Do not settle an open decision
+the primary has not resolved; have alternatives rendered only where supplied.
+
+Inspect the returned screenshots yourself. Send corrections to the same executor
+while they stay within this request and your proposal. Do not start another
+executor for this request.
+
+Return:
+MOCKUP_EXECUTOR: executor identity and terminal status
+ARTIFACTS: mockup and screenshot paths with covered states and viewports
+FIDELITY: MATCHES or DIVERGES from your intent, per state, with evidence and any
+  correction you could not complete
+EXECUTOR_REPORT: the executor's checks, results, and limitations
+DECISION_REQUIRED: material choices the mockup exposed, or NONE
+```
+
 ## 구현 후 설계 준수 및 사용자 목적 검토
 
 [결과 확인 지침](implementation-feedback.md)에 따라 확인이 필요한 경우에는

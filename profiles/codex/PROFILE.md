@@ -15,19 +15,21 @@ providers.
   reasoning preference in Codex itself.
 - Implementation uses `luna_implementer` on GPT-6 Luna (`gpt-6-luna`). Its
   native Codex definition is under this profile's `codex/agents/`.
-- UI/UX design proposal: Claude Code subagent definition
-  `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It is read-only and returns
-  advisory evidence.
+- UI/UX design proposal and mockup direction: Claude Code subagent definition
+  `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It is read-only, returns
+  advisory evidence, and starts `claude-mockup` for each mockup direction.
 - UI/UX conformance review, focused recheck, and implemented UI browser
   evidence: `claude-ui-ux-reviewer` (Claude Opus 5.5, `medium`). It is read-only
   except for browser evidence artifacts and judges that evidence against the
   user purpose and approved contract in the same context.
-- Mockups: `claude-mockup` (Claude Sonnet 5, `medium`). It owns only the
-  assigned mockup files; pass `SESSION_DIR/mockups/` as its write directory.
-- The three Claude roles run through `scripts/run-claude-agent.sh`. Their
-  definitions are shared with the Claude profile under the repository's
-  `profiles/shared/claude/agents/`; each gets the local `ui-browser` MCP as a
-  server scoped to that role.
+- Mockups: `claude-mockup` (Claude Sonnet 5, `medium`), started by the designer
+  rather than the runner. It owns only the assigned mockup files; pass
+  `SESSION_DIR/mockups/` as the write directory when resuming the designer with
+  a mockup direction.
+- The designer and reviewer run through `scripts/run-claude-agent.sh`. The three
+  Claude role definitions are shared with the Claude profile under the
+  repository's `profiles/shared/claude/agents/`; each gets the local
+  `ui-browser` MCP as a server scoped to that role.
 - Independent code review uses the separate external OpenCode `reviewer` agent,
   shared with other profiles under the repository's
   `profiles/shared/opencode/agents/`. Consequential architecture advice uses the

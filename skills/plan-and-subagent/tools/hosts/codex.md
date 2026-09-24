@@ -36,10 +36,11 @@ Send small contract-preserving corrections without interruption.
 
 When the profile binds UI/UX or mockup work to Claude Code subagent
 definitions, follow [Claude CLI execution](claude-cli.md): create a fresh run
-directory, write the exact design, review, or mockup prompt and supplied
-evidence, then run the Claude runner. Record the agent, session ID, models,
-terminal status, and report. Do not replace it with a native Codex role or
-infer a fallback model. Keep the mockup role's writes limited to its assigned
+directory, write the exact design, review, or mockup direction prompt and
+supplied evidence, then run the Claude runner. Mockup direction resumes the
+designer, which starts the mockup role itself. Record the agent, session ID,
+models, terminal status, and report. Do not replace it with a native Codex role
+or infer a fallback model. Keep the mockup role's writes limited to its assigned
 directory. Route product fixes to the implementer.
 
 ## Completion

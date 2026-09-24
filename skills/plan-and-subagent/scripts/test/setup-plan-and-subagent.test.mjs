@@ -125,10 +125,10 @@ test("Claude subagents keep their model, effort, and tool boundaries", () => {
   const frontmatter = (text) => text.split("---")[1];
   const tools = (text) => frontmatter(text).match(/^tools: (.*)$/m)[1].split(",").map((tool) => tool.trim());
   const browserTools = ["load_request", "navigate", "viewport", "act", "capture", "audit"].map((tool) => `mcp__ui-browser__${tool}`);
-  for (const [name, model, effort, writes] of [
-    ["claude-ui-ux-designer", "claude-opus-5-5", "high", false],
-    ["claude-ui-ux-reviewer", "claude-opus-5-5", "medium", false],
-    ["claude-mockup", "claude-sonnet-5", "medium", true],
+  for (const [name, model, effort, writes, delegation] of [
+    ["claude-ui-ux-designer", "claude-opus-5-5", "high", false, ["Agent(claude-mockup)", "SendMessage"]],
+    ["claude-ui-ux-reviewer", "claude-opus-5-5", "medium", false, []],
+    ["claude-mockup", "claude-sonnet-5", "medium", true, []],
   ]) {
     const text = read(name);
     assert.match(frontmatter(text), new RegExp(`^name: ${name}$`, "m"));
@@ -140,6 +140,7 @@ test("Claude subagents keep their model, effort, and tool boundaries", () => {
     assert.deepEqual(allowed.filter((tool) => tool.startsWith("mcp__")), browserTools);
     for (const forbidden of ["Bash", "Agent", "WebFetch", "WebSearch", "NotebookEdit"]) assert.equal(allowed.includes(forbidden), false, `${name}: ${forbidden}`);
     assert.equal(allowed.includes("Write") || allowed.includes("Edit"), writes, name);
+    assert.deepEqual(allowed.filter((tool) => tool.startsWith("Agent") || tool === "SendMessage"), delegation, name);
   }
   const profile = fs.readFileSync(path.join(repository, "profiles/claude/PROFILE.md"), "utf8");
   assert.match(profile, /GPT-6 Luna \(`gpt-6-luna`\)/);

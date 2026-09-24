@@ -15,7 +15,10 @@ listed before dependent work. Never silently replace a missing role with the
 primary, `general-purpose`, or another model.
 
 Native subagent definitions omit the Agent tool, so delegated roles cannot spawn
-further agents. Still state that restriction in each handoff.
+further agents, except that the UI/UX designer may start the mockup role. A
+subagent definition cannot restrict which agent types it starts, so that limit
+rests on the designer definition and its handoff. State the restriction in
+each handoff.
 
 Roles that the profile binds to an external CLI (for example a Codex
 implementer or an OpenCode reviewer) run through their runner script with the
@@ -59,11 +62,18 @@ current run ends.
 
 ## Native UI/UX and mockup roles
 
-Start a fresh subagent for each design proposal, conformance review, focused
-recheck, and mockup production. Give it the self-contained handoff, including
-absolute paths to the applicable skill references it must read. Keep the
-returned agent identity for in-scope corrections through SendMessage; each new
-browser request still requires a fresh subagent.
+Start a fresh subagent for each design proposal, conformance review, and
+focused recheck. Give it the self-contained handoff, including absolute paths
+to the applicable skill references it must read. Keep the returned agent
+identity for in-scope corrections through SendMessage; each new browser request
+still requires a fresh subagent that loads it.
+
+Do not start the mockup role directly. Send the mockup direction to the retained
+designer through SendMessage. The designer loads no new request itself; it
+starts a fresh mockup subagent in the foreground for each request the primary
+supplies and continues that subagent through SendMessage for corrections under
+the same request. If the designer is unavailable, start a fresh designer with
+its report path, the resolved decisions, and the mockup direction.
 
 Subagents read outside the session's working directories under the primary
 session's permissions. The profile states how its knowledge roots are
