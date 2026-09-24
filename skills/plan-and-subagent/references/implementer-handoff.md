@@ -13,6 +13,13 @@ understanding-check preamble. Inspect every returned field and resolve blockers
 before sending the implementation preamble to the same session. Repeat checks
 for unresolved non-material gaps within the configured understanding-check limit.
 
+When the brief lists [approved visual references](ui-ux-mockups.md#approved-visual-references),
+attach every listed image to the first understanding-check message through the
+host's image input, as the environment procedure describes, and keep the
+absolute paths in the brief. If the host cannot attach images, the brief's paths
+remain and the implementer must open them itself. Resend the images only when
+the approved set changes or a new implementer session starts.
+
 Retain the session for corrections. If it becomes unavailable, use the same
 configured role with the complete brief and current state and repeat the check;
 do not silently substitute a role. For material changes, interrupt only if
@@ -42,6 +49,11 @@ QUALITY: how you will satisfy the brief's code-quality section — what you will
   extend or reuse, what you will delete, and any overlap the brief missed
 UX_ALIGNMENT: when the brief contains a UI/UX contract, how the implementation
   and validation will satisfy it; otherwise N/A
+VISUAL_REFERENCES: for each approved visual reference the brief lists, whether
+  you viewed the image itself and what it shows that the written contract does
+  not state; any conflict between image and text; N/A when none is listed.
+  A listed image you cannot view is a BLOCKER. The written contract governs,
+  and representative content or details it does not name are not requirements
 ASSUMPTIONS: concrete assumptions that could affect behavior or scope, or NONE
 RISKS: material correctness, compatibility, or divergence risks, or NONE
 VALIDATION: map each completion condition ID to its focused check and expected result;
@@ -80,6 +92,10 @@ for contract-preserving corrections.
 
 When the brief contains a UI/UX contract, implement it without inventing answers
 to unresolved decisions and report the visual or interaction evidence you checked.
+Use its approved visual references to preserve composition, hierarchy, density,
+spacing, and emphasis. The written contract governs; do not copy representative
+content or add details it does not name. Report an image-text conflict as a
+DEVIATION instead of choosing one.
 
 If new evidence would require changing the approved approach, ownership, or an
 important product, architecture, data-model, UX, or domain-semantic decision,

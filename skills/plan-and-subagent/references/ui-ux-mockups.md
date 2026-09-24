@@ -54,6 +54,26 @@ When the mockup applies:
    `decisions.md`, then express the outcome precisely in the brief's `UI/UX
    contract`. Do not hand the visualization source to the implementer as a
    substitute for the contract.
+7. Capture approved visual references as described below and list them in the
+   brief's `UI/UX contract`.
+
+## Approved visual references
+
+After the user confirms the direction and no further mockup revision is
+pending, have the same mockup executor capture screenshots of the confirmed
+alternative only, one per state and viewport the contract relies on. Store them
+under `SESSION_DIR/mockups/approved/` with names that identify the surface,
+state, and viewport. Recapture after any later mockup revision; a screenshot of
+a superseded or rejected alternative must not remain in the approved set.
+
+In the brief, list each reference's absolute path, the state and viewport it
+shows, and what it illustrates, such as composition, hierarchy, density,
+spacing, or emphasis. State that the written contract governs, that
+representative content and details the contract does not name are not
+requirements, and that a conflict between image and text is reported rather
+than resolved by the implementer. The listed references are part of the brief
+the user approves in Step 3. When no mockup was used, write that no approved
+visual reference exists.
 
 The mockup represents a proposal. Never cite it as evidence of existing product
 behavior, completed implementation, accessibility conformance, or acceptance.

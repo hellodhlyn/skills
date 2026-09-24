@@ -19,6 +19,8 @@ SESSION_DIR/
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
   decisions.md               # material decisions, approvals, and scope changes
+  mockups/
+    approved/                # screenshots of the confirmed mockup states listed in the brief
   feedback/
     iteration-N.md           # presented result/code state, feedback, affected corrections
   reviews/
@@ -145,6 +147,9 @@ language to user and project instructions; the example labels are not fixed keys
 구체적인 화면 구성과 상호작용, 중요한 설계 이유와 절충을 기록.
 변경에 관련된 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
 근거와 확인된 방향, 목적에서 도출한 관찰 가능한 검증 기준, 미결정 사항을 포함>
+<승인된 시각 참조: 목업을 사용했다면 스크린샷 절대 경로, 상태와 viewport,
+보여주는 요소; 글로 된 계약이 우선하고 이미지에만 있는 요소는 요구사항이 아님을
+명시. 목업이 없으면 없음>
 <도메인 지침에 따라 지식 출처 → 설계에 영향을 준 개념 관계 → 화면 표현 →
 관찰 가능한 검증을 연결하고, 해당하지 않으면 간단한 사유를 기록>
 
@@ -181,9 +186,11 @@ button DOM tag. Name the existing pattern when the user asks to match one.
 Leave mechanics open where the user has not constrained the result.
 
 When a briefing mockup is used, persist its applicability rationale and the
-user-confirmed decisions, not its HTML or presentation mechanics. The mockup is
-not a project deliverable and does not replace a precise UI/UX contract or
-post-implementation visual and interaction evidence.
+user-confirmed decisions, not its HTML or presentation mechanics. Also keep the
+[approved visual references](ui-ux-mockups.md#approved-visual-references) the
+brief lists. The mockup is not a project deliverable, and neither it nor its
+screenshots replace a precise UI/UX contract or post-implementation visual and
+interaction evidence.
 
 Keep optional follow-up ideas outside the completion criteria. See
 [validation and review](validation.md) for the evidence ledger and completion gate.

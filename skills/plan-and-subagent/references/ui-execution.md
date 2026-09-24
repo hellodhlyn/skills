@@ -48,6 +48,17 @@ mockup artifacts; it does not start the product implementer or authorize product
 edits. The primary checks fidelity to the intended direction from the returned
 artifact and evidence without repeating the rendering/debugging loop.
 
+After the user confirms the direction, have the mockup role capture the
+[approved visual references](ui-ux-mockups.md#approved-visual-references) for
+the named states and viewports. Write a `mockup` phase browser request in
+`SESSION_DIR/mockups/` whose artifact directory is `SESSION_DIR/mockups/approved/`,
+and start a fresh run when the environment procedure requires one per browser
+request. Capture labels identify surface, state, and viewport. The role returns
+each path with its state and viewport. The primary opens each screenshot
+to confirm it shows the confirmed alternative before listing it in the brief.
+These references go to the implementer through the
+[implementer handoff](implementer-handoff.md), not through executor exchanges.
+
 ## Implemented UI verification
 
 Supply [environment and scenario checks](validation.md#environment-and-user-scenarios)

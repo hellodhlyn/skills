@@ -22,6 +22,12 @@ profile instructions, and understanding-check preamble. Use `fork_turns: none`,
 retain the returned identity as `IMPLEMENTER`, and assign only the approved
 paths. The implementer must not spawn further agents.
 
+When the brief lists approved visual references, attach each image as an image
+input item of that `spawn_agent` message rather than only naming its path. If
+the host's `spawn_agent` does not accept image items, send the paths and require
+the implementer to open each one with its image-viewing tool; its
+`VISUAL_REFERENCES` answer must confirm that it viewed every listed image.
+
 Send later instructions through the host's follow-up mechanism to the same
 identity. Send the implementation preamble only after understanding passes. For
 a material contract change, interrupt only if continuing would violate the

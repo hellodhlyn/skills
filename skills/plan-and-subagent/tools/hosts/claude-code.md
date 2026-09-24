@@ -30,10 +30,15 @@ write the complete prompt to `prompt.md` first.
 
 ```bash
 # Understanding check or first implementation message
-sh "$CODEX_RUNNER" start "$WORKDIR" "$INSTRUCTIONS" "$RUN_DIR" "$MODEL" "$EFFORT"
+sh "$CODEX_RUNNER" start [--image "$IMAGE"]... "$WORKDIR" "$INSTRUCTIONS" "$RUN_DIR" "$MODEL" "$EFFORT"
 # Every later message to the same implementer
-sh "$CODEX_RUNNER" resume "$WORKDIR" "$RUN_DIR" "$MODEL" "$EFFORT" "$IMPLEMENTER"
+sh "$CODEX_RUNNER" resume [--image "$IMAGE"]... "$WORKDIR" "$RUN_DIR" "$MODEL" "$EFFORT" "$IMPLEMENTER"
 ```
+
+Pass one `--image` per approved visual reference the brief lists on the `start`
+that sends the understanding check, and again on a `resume` only when the
+approved set changes. The runner attaches them to the Codex prompt and records
+them in `images`.
 
 The runner reads `$RUN_DIR/prompt.md` and writes `events.jsonl`, `result.md`,
 `stderr.log`, `thread-id`, and `exit-code`. `start` prepends the instruction

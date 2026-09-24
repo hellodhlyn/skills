@@ -1,19 +1,39 @@
 #!/bin/sh
 # Run or continue a profile's Codex CLI implementer and capture its report.
 # The profile supplies the model, effort, and instruction file; <run-dir> must
-# already contain prompt.md. Outputs: events.jsonl, result.md, stderr.log,
-# thread-id, and exit-code.
+# already contain prompt.md. Each --image attaches an approved visual reference
+# to the prompt. Outputs: events.jsonl, result.md, stderr.log, thread-id,
+# exit-code, and images when any image is attached.
 set -eu
 
 usage() {
-  echo "Usage: $0 start <workdir> <instructions-file> <run-dir> <model> <effort>" >&2
-  echo "       $0 resume <workdir> <run-dir> <model> <effort> <thread-id>" >&2
+  echo "Usage: $0 start [--image <file>]... <workdir> <instructions-file> <run-dir> <model> <effort>" >&2
+  echo "       $0 resume [--image <file>]... <workdir> <run-dir> <model> <effort> <thread-id>" >&2
   exit 2
 }
 
 [ "$#" -ge 1 ] || usage
 mode=$1
 shift
+images=
+while [ "$#" -gt 0 ] && [ "$1" = --image ]; do
+  [ "$#" -ge 2 ] || usage
+  case "$2" in
+    *,* | *"
+"*)
+      echo "ERROR: image path must not contain a comma or newline: $2" >&2
+      exit 2
+      ;;
+  esac
+  if [ ! -s "$2" ]; then
+    echo "ERROR: image file does not exist or is empty: $2" >&2
+    exit 2
+  fi
+  image=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
+  images="$images$image
+"
+  shift 2
+done
 case "$mode" in
   start)
     [ "$#" -eq 5 ] || usage
@@ -51,21 +71,31 @@ if [ ! -s "$prompt_file" ]; then
   exit 2
 fi
 
-for output in events.jsonl result.md stderr.log thread-id exit-code; do
+for output in events.jsonl result.md stderr.log thread-id exit-code images; do
   if [ -e "$run_dir/$output" ]; then
     echo "ERROR: run directory already contains $output; use a fresh run directory: $run_dir" >&2
     exit 2
   fi
 done
 
+# Image options precede every other codex option so that no later argument is
+# read as an additional image value.
+set --
+if [ -n "$images" ]; then
+  printf '%s' "$images" > "$run_dir/images"
+  while IFS= read -r image; do
+    set -- "$@" -i "$image"
+  done < "$run_dir/images"
+fi
+
 status=0
 if [ "$mode" = start ]; then
   { cat "$instructions"; printf '\n\n---\n\n'; cat "$prompt_file"; } |
-    codex exec --json -C "$workdir" -m "$model" -c "model_reasoning_effort=\"$effort\"" \
+    codex exec "$@" --json -C "$workdir" -m "$model" -c "model_reasoning_effort=\"$effort\"" \
       -s workspace-write -o "$run_dir/result.md" - \
       > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" || status=$?
 else
-  (cd "$workdir" && codex exec resume --json -m "$model" -c "model_reasoning_effort=\"$effort\"" \
+  (cd "$workdir" && codex exec resume "$@" --json -m "$model" -c "model_reasoning_effort=\"$effort\"" \
       -c 'sandbox_mode="workspace-write"' -o "$run_dir/result.md" "$thread_id" - < "$prompt_file") \
     > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" || status=$?
 fi
