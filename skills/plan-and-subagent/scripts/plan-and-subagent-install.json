@@ -27,6 +27,7 @@
     {"component": "environment", "root": "environment", "target": "plan-and-subagent/agents/luna_ui_verifier.toml"},
     {"component": "codex", "root": "codex", "target": "agents/luna_ui_verifier.toml"},
     {"component": "codex", "root": "codex", "target": "agents/ui_ux_designer.toml"},
+    {"component": "opencode", "root": "opencode", "target": "agents/advisor.md"},
     {"component": "opencode", "root": "legacyOpencode", "target": "agents/advisor.md"},
     {"component": "opencode", "root": "legacyOpencode", "target": "agents/reviewer.md"}
   ]

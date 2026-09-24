@@ -1,4 +1,4 @@
 interface:
   display_name: "Advisor"
-  short_description: "OpenCode architecture advisor"
-  default_prompt: "Use $advisor to compare these architecture options and recommend one."
+  short_description: "Independent Claude architecture advice"
+  default_prompt: "Use $advisor to investigate this architecture question in the target repository and recommend a path."

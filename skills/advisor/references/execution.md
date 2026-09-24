@@ -1,31 +1,74 @@
 # Execution and recovery
 
-Read before starting an advisor run. Prepare a sanitized prompt file with a
-file-writing tool. Resolve absolute paths and shell-quote each path; never
-interpolate prompt contents into shell code.
+The runner starts one fresh Claude Agent SDK query for each request. Pass the
+repository or worktree explicitly; do not pass caller conversation history or a
+list of files to inspect.
 
 ```bash
-bash '/absolute/skill/root/scripts/advisor.sh' '/absolute/new-run-directory' < '/absolute/prompt.md'
+bash '/absolute/skill/root/scripts/advisor.sh' '/absolute/repository-or-worktree' <<'PROMPT'
+Problem: <decision or complex question>
+Background and constraints: <only what Claude cannot discover in the repository>
+Please investigate the repository and provide an independent recommendation.
+PROMPT
 ```
 
-The optional directory must not exist and its parent must exist. Without it,
-the runner creates a unique directory under `${TMPDIR:-/tmp}`. Record the
-announced absolute path immediately; use a durable parent when recovery must
-survive temporary-directory cleanup. Existing runs are never overwritten.
+## Runtime and authentication
 
-Each run contains `prompt.md` (the complete submitted prompt), `run.md` (workdir
-and model), `result.md`, `stderr.log`, and, only after the CLI exits, an atomically
-written `exit_code`. These are execution artifacts, not a reasoning transcript.
-Keep them local and out of commits and PRs.
+- Requires Node.js 18 or later, npm, and `CLAUDE_CODE_OAUTH_TOKEN` from a Claude
+  subscription. Create the token with the official Claude Code CLI command
+  `claude setup-token`, then provide it to the process that invokes the skill.
+  This is the documented Claude.ai OAuth method for SDK and automated
+  environments. The runner does not read API keys or OpenCode profile
+  credentials and does not fall back to another authentication method.
+- The token is supplied through the process environment and is not written to
+  the repository or run artifacts. If authentication expires or is rejected,
+  the error is reported and the user can create a new token with
+  `claude setup-token`.
+- On first invocation, the runner installs the pinned official package
+  `@anthropic-ai/claude-agent-sdk@0.3.278` from the public npm registry into
+  `${XDG_CACHE_HOME:-$HOME/.cache}/codex-advisor/`. Later calls reuse that cache.
+  It does not install dependencies into the inspected repository.
+- The runner pins `claude-opus-5-5` with `medium` effort as a quality and usage
+  compromise. It does not accept model, effort, or provider overrides and does
+  not retry through another model or runtime. Calls consume the subscription's
+  Claude Code usage allowance; medium effort can use less than max, but does not
+  guarantee a fixed per-call usage amount.
+- The SDK receives the target as an explicit `cwd`, a fresh one-shot prompt, and
+  no session to resume. User/project settings, MCP servers, prompt history, and
+  automatic memory are disabled. Applicable repository guidance can be read
+  directly as repository evidence.
+- Only `Read`, `Glob`, `Grep`, and `Bash` tools are available. The runner requires
+  Claude Code's OS sandbox, denies writes to the target directory, blocks
+  network access from commands, prevents the OAuth token and API keys from
+  reaching sandboxed commands, and disables unsandboxed retries. If the sandbox
+  is unsupported or unavailable,
+  the run fails instead of continuing without it. Commands that need to write
+  inside the repository, access the network, or read outside the target may fail;
+  the advisor should report that limitation rather than weaken isolation.
 
-## Preserve both execution layers
+## Artifacts and status
 
-For environments exposing `functions.exec` and `tools.exec_command`, forward
-the complete structured result, not only `result.output`:
+Each invocation creates a private directory under the operating system's
+temporary directory and prints its absolute path to stderr. The caller's prompt
+is not saved. On completion it contains:
+
+- `result.md` only after a successful structured result.
+- `metadata.json` with the selected model and effort, explicit working directory,
+  terminal result state, duration, token usage, per-model usage, and estimated
+  cost when returned by the SDK.
+- `exit_code`, written after SDK completion.
+
+The estimated cost is SDK metadata, not authoritative billing data. Keep the
+artifacts local and out of commits and pull requests.
+
+## Preserve process state
+
+For environments exposing `functions.exec` and `tools.exec_command`, forward the
+complete structured result rather than only `result.output`:
 
 ```javascript
 const result = await tools.exec_command({
-  cmd: "bash '/absolute/skill/root/scripts/advisor.sh' '/absolute/new-run-directory' < '/absolute/prompt.md'",
+  cmd: "bash '/absolute/skill/root/scripts/advisor.sh' '/absolute/project/root' <<'PROMPT'\nProblem: Compare the current design with the proposed alternative.\nBackground: <constraints>\nPlease inspect the repository and advise.\nPROMPT",
   workdir: "/absolute/project/root",
   yield_time_ms: 1000,
   max_output_tokens: 5000
@@ -33,44 +76,18 @@ const result = await tools.exec_command({
 text(result); // preserves output, session_id, and exit_code
 ```
 
-Set `sandbox_permissions: "require_escalated"` only when required, with a short
-factual justification such as `[topic] advisor execution for architecture review`.
-If the wrapper yields `Script running with cell ID ...`, resume that cell using
-`functions.wait` to recover the nested tool result. The wrapper's `Script
-completed` message does not establish the advisor process's state.
+If the wrapper yields `Script running with cell ID ...`, resume that cell with
+`functions.wait`. When the nested result has `session_id` but no numeric
+`exit_code`, poll that exact session with `tools.write_stdin` until it completes.
+Keep each wait to 60 seconds or less and keep the caller informed. A wrapper's
+`Script completed` message does not establish the nested advisor's process state.
 
-When the nested result has a `session_id` and no numeric `exit_code`, poll that
-exact session, again preserving the entire result:
-
-```javascript
-const result = await tools.write_stdin({
-  session_id: observedSessionId,
-  chars: "",
-  yield_time_ms: 1000,
-  max_output_tokens: 5000
-});
-text(result);
-```
-
-Continue until terminal status; wait at most 60 seconds per call and keep the
-user informed. Never terminate just because the run is slow. On another host,
-use its equivalent process handle and terminal-status API.
-
-## Interpret state, then substance
-
-- No terminal status: still running, or unknown if metadata was lost. Recover
-  the original tool session first. Never call this an advisor failure or start
-  another run merely because output is missing.
-- If the original session cannot be recovered, the recorded run's `exit_code`
-  can establish CLI completion. Without either terminal evidence, report a
-  tracking problem and preserve the run for recovery; do not claim completion.
-- Non-zero terminal status: execution failed. Inspect `stderr.log`, report the
-  actual failure, and do not present partial output as completed advice. Missing
-  CLI or authentication requires fixing that prerequisite, not model substitution.
-- Zero terminal status: read the complete `result.md`, even if tool output was
-  truncated. Separately evaluate all five sections against the advice contract.
-  Missing or unsupported content is incomplete advice, not a process failure.
-- `Decision deferred` with reasons and the minimum missing evidence is a valid
-  advisory outcome. Record it as a deferred decision, never as an approved design.
-
-Retries must be explicit, after terminal confirmation, and use a fresh directory.
+- No terminal status means the run is still active or its state is unknown.
+  Recover the original process before retrying.
+- A non-zero exit is a failed run. Report the SDK/authentication/sandbox error
+  from stderr or `metadata.json`; never use partial advice or another runtime.
+- Exit code 0 is necessary but not sufficient. Read the complete `result.md` and
+  assess whether its evidence supports the recommendation. Missing or unsupported
+  content is incomplete advice, not a successful recommendation.
+- `Decision deferred` is a valid outcome when the report identifies the missing
+  evidence and smallest next check.

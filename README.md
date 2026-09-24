@@ -18,8 +18,9 @@ skills/advisor/            # standalone advisor skill
 runtimes/planagent/        # independent Pi workflow runtime; CLI: planagent / plana
 ```
 
-For the existing skills, the common skill owns the pipeline and contracts. Native model, provider,
-permission, role, and start settings belong to the selected profile.
+For `plan-and-subagent`, the common skill owns the pipeline and contracts while
+native role settings belong to the selected profile. The standalone `advisor`
+skill runs its own fixed Claude Agent SDK configuration.
 
 [Planagent](runtimes/planagent/README.md) is a separate runtime package. Its
 configuration, role definitions, dependencies, and installation are independent
@@ -34,7 +35,7 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 - Personal environment installers: Node.js 22.19 or later
 - Planagent runtime: Node.js 24+, Git, and authenticated Pi providers
 - OpenCode CLI for OpenCode-backed roles
-- For the `advisor` skill: a working `opencode` CLI with an advisor agent in the active profile
+- For the `advisor` skill: Node.js 18 or later, npm, Claude Code CLI, and `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`
 - For the OpenCode UI browser: pnpm and Playwright Chromium
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
 
@@ -46,16 +47,17 @@ No installer mode invokes a paid model, changes credentials, or edits global
 ### Codex
 
 The Codex profile uses GPT-6 Sol (`gpt-6-sol`) for the primary session and GPT-6
-Luna (`gpt-6-luna`) for implementation and mockup work. Read-only UI/UX review,
-architecture advice, and independent code review use the configured external
-OpenCode agents, including the Codex profile's GLM UI/UX specialist. Definitions
-are sourced from `profiles/codex/`. Start a new Codex session after changing
-native role definitions.
+Luna (`gpt-6-luna`) for implementation and mockup work. Read-only UI/UX review
+and independent code review use configured external OpenCode agents, including
+the Codex profile's GLM UI/UX specialist. Consequential architecture advice uses
+the standalone Claude Agent SDK-backed `advisor` skill. Definitions are sourced
+from `profiles/codex/`. Start a new Codex session after changing native role
+definitions.
 
 ## OpenCode agents
 
-The Codex profile's external `codex-ui-ux`, `advisor`, and `reviewer` definitions
-are installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
+The Codex profile's external `codex-ui-ux` and `reviewer` definitions are
+installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
 location is reported for migration and is never deleted automatically. The
 independent GLM profile is retired. Its receipt-tracked files are removed by the
 Codex installer when they still match the recorded hashes; locally changed files
@@ -186,15 +188,25 @@ state. The browser server has no model or credential configuration.
 
 ## Standalone advisor
 
+The standalone skill runs the Claude Agent SDK directly, using
+`claude-opus-5-5` at `medium` effort. On first use, it installs the pinned SDK
+in the user cache; it does not install into the inspected repository. Generate
+the official subscription OAuth token with `claude setup-token` and provide it
+as `CLAUDE_CODE_OAUTH_TOKEN`. Calls use the Claude Code subscription allowance;
+medium effort is the default compromise for complex advice and usage. API keys
+and OpenCode profile credentials are not used.
+
 Install the standalone skill with `gh skill` when authorized:
 
 ```bash
 gh skill install hellodhlyn/skills advisor --agent codex --scope user
 ```
 
-The advisor's model and reasoning effort are resolved from the active OpenCode
-agent definition. Set `ADVISOR_MODEL` only for an explicit model override; the
-script has no hidden model fallback.
+Each call receives only the problem, relevant background and constraints, and
+the advice sought. The advisor explores the explicit repository/worktree itself.
+Its tool set is read-only, and its OS sandbox denies target-repository writes and
+command network access. Sandbox and authentication failures stop the run without
+fallback.
 
 ## Preview and local development
 

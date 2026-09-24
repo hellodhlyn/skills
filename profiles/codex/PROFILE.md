@@ -18,8 +18,10 @@ explicit task choices take precedence.
   and the implementer's native Codex definitions are under this profile's
   `codex/agents/`.
 - Independent code review uses the separate external OpenCode `reviewer` agent.
-  The OpenCode definitions for `codex-ui-ux`, `reviewer`, and the standalone
-  `advisor` are under this profile's `opencode/agents/`.
+  The OpenCode definitions for `codex-ui-ux` and `reviewer` are under this
+  profile's `opencode/agents/`. Consequential architecture advice uses the
+  standalone Claude Agent SDK-backed `advisor` skill, independent of this
+  profile.
 - Implemented UI verification is a capability of `codex-ui-ux`. Its local
   OpenCode `ui-browser` MCP collects scoped screenshots, accessibility, layout,
   console, and interaction evidence; the same agent judges that evidence against
@@ -33,7 +35,7 @@ Codex or OpenCode session; select the profile before starting a new session.
 
 - Codex native implementer and mockup definitions: `~/.codex/agents/`
 - Profile document: `~/.config/agents/profiles/codex/PROFILE.md`
-- OpenCode UI/UX, advisor, and reviewer definitions: `~/.config/opencode/agents/`
+- OpenCode UI/UX and reviewer definitions: `~/.config/opencode/agents/`
 - Shared OpenCode skill: `~/.config/opencode/skills/plan-and-subagent/`
 - OpenCode UI browser runtime: `~/.local/share/plan-and-subagent/opencode-ui-browser/`
 

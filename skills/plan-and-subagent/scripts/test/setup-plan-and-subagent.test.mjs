@@ -54,6 +54,9 @@ test("the Codex inventory installs GPT-6 roles and no independent GLM profile", 
   assert.equal(codex.files.some((entry) => entry.target.endsWith("profiles/glm/opencode.jsonc")), false);
   assert.equal(manifest.profiles.includes("glm"), false);
   assert.equal(manifest.removeProfileFiles.filter((entry) => entry.profile === "glm").length, 7);
+  assert.ok(manifest.retired.some((entry) => entry.component === "opencode"
+    && entry.root === "opencode" && entry.target === "agents/advisor.md"));
+  assert.equal(fs.existsSync(path.join(repository, "profiles/codex/opencode/agents/advisor.md")), false);
   assert.equal(fs.existsSync(path.join(repository, "profiles/glm")), false);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /GPT-6 Sol \(`gpt-6-sol`\)/);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_implementer.toml"), "utf8"), /model = "gpt-6-luna"/);
