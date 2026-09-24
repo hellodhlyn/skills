@@ -32,8 +32,8 @@ higher-priority instructions.
 ## 1. Resolve the environment and establish the task
 
 Read [environment resolution](references/environment.md) and the designated
-profile. The profile connects each stage to native Codex, OpenCode, GitHub,
-and Linear capabilities; it does not replace this skill's contracts. Resolve
+profile. The profile connects each stage to its native host (such as Codex or
+Claude Code), OpenCode, GitHub, and Linear capabilities; it does not replace this skill's contracts. Resolve
 required capabilities before dependent work; missing configuration blocks only
 that work. Use [planning artifacts](references/planning.md) to record the
 request, baseline, pre-existing changes, and effective environment.

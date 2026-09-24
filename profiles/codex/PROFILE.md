@@ -16,10 +16,10 @@ explicit task choices take precedence.
   it is read-only and returns advisory evidence.
 - `luna_mockup` uses GPT-6 Luna and owns only applicable mockup artifacts. Its
   and the implementer's native Codex definitions are under this profile's
-  `codex/agents/`.
-- Independent code review uses the separate external OpenCode `reviewer` agent.
-  The OpenCode definitions for `codex-ui-ux` and `reviewer` are under this
-  profile's `opencode/agents/`. Consequential architecture advice uses the
+  `codex/agents/`. Its visualization capability is the Codex `visualize` skill.
+- Independent code review uses the separate external OpenCode `reviewer` agent,
+  shared with other profiles under the repository's `profiles/shared/opencode/agents/`.
+  The OpenCode `codex-ui-ux` definition is under this profile's `opencode/agents/`. Consequential architecture advice uses the
   standalone Claude Agent SDK-backed `advisor` skill, independent of this
   profile.
 - Implemented UI verification is a capability of `codex-ui-ux`. Its local
@@ -27,8 +27,9 @@ explicit task choices take precedence.
   console, and interaction evidence; the same agent judges that evidence against
   the user purpose and approved contract.
 
-Use the common `tools/` documents for invocation, continuation, permissions,
-and completion evidence. A profile document does not change an already-running
+Use the common `tools/hosts/codex.md`, `tools/hosts/opencode.md`, and
+`tools/integrations/` documents for invocation, continuation, permissions, and
+completion evidence. A profile document does not change an already-running
 Codex or OpenCode session; select the profile before starting a new session.
 
 ## Installation targets

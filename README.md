@@ -10,10 +10,13 @@ The repository is the source of truth. Install skills into Codex or other suppor
 skills/plan-and-subagent/
   SKILL.md                 # common pipeline and contracts
   references/              # stage contracts and evidence rules
-  tools/                   # Codex/OpenCode/UI-browser/GitHub/Linear procedures
+  tools/hosts/             # Codex, Claude Code, and OpenCode execution procedures
+  tools/integrations/      # GitHub, Linear, and UI-browser procedures
   scripts/                 # installer, runners, tests, and UI-browser MCP
 profiles/
   codex/                   # Codex and its OpenCode specialist configuration
+  claude/                  # Claude Code subagents and Codex CLI implementer instructions
+  shared/                  # definitions shared by profiles (OpenCode reviewer)
 skills/advisor/            # standalone advisor skill
 runtimes/planagent/        # independent Pi workflow runtime; CLI: planagent / plana
 ```
@@ -54,16 +57,31 @@ the standalone Claude Agent SDK-backed `advisor` skill. Definitions are sourced
 from `profiles/codex/`. Start a new Codex session after changing native role
 definitions.
 
+### Claude
+
+The Claude profile uses Claude Opus 5.5 (`claude-opus-5-5`) for the primary
+Claude Code session, at `medium` effort by default. Implementation runs on GPT-6
+Luna (`gpt-6-luna`, `xhigh`) through the Codex CLI with
+`scripts/run-codex-exec.sh`, which retains the implementer's thread for
+corrections. UI/UX design (`claude-ui-ux-designer`, Opus 5.5 `high`),
+conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
+`medium`), and mockups (`claude-mockup`, Sonnet 5 `medium`) are native Claude
+Code subagents with a subagent-scoped `ui-browser` MCP. Independent code review
+uses the shared OpenCode `reviewer`. Definitions are sourced from
+`profiles/claude/`. Start a new Claude Code session after changing subagent
+definitions.
+
 ## OpenCode agents
 
-The Codex profile's external `codex-ui-ux` and `reviewer` definitions are
-installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
+The Codex profile's external `codex-ui-ux` definition and the shared `reviewer`
+definition (GLM-5.3-flash, `max`; used by both profiles) are installed under
+`~/.config/opencode/agents/`; the older `~/.opencode/agents/`
 location is reported for migration and is never deleted automatically. The
 independent GLM profile is retired. Its receipt-tracked files are removed by the
 Codex installer when they still match the recorded hashes; locally changed files
 are preserved and reported.
 
-For a complete Codex-profile refresh, use the unified setup below. To intentionally
+For a complete profile refresh, use the unified setup below. To intentionally
 install only the Codex OpenCode definitions:
 
 ```bash
@@ -101,8 +119,12 @@ Inspect an existing installation without writing managed files:
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
 ```
 
+Use `--profile claude` instead of `--profile codex` for the Claude profile.
+The two profiles can be installed side by side; each run manages only the
+selected profile's files and the shared ones.
+
 Complete setup synchronizes the selected skill, profile, native roles/config,
-and OpenCode UI browser package, then performs the applicable local checks. It
+and UI browser package, then performs the applicable local checks. It
 does not install software or credentials in dry-run/check modes and never invokes
 a paid model.
 
@@ -139,12 +161,13 @@ must not be reported as a fully ready environment.
 | Component | Default | Override |
 | --- | --- | --- |
 | Codex skill and roles | `$CODEX_HOME` or `~/.codex` | `PLAN_AND_SUBAGENT_CODEX_DIR` |
+| Claude Code skill and subagents | `$CLAUDE_CONFIG_DIR` or `~/.claude` | `PLAN_AND_SUBAGENT_CLAUDE_DIR` |
 | Profile documents | `~/.config/agents` | `AGENT_ENVIRONMENT_DIR` |
 | OpenCode config and skill | `~/.config/opencode` | `OPENCODE_CONFIG_DIR` |
-| OpenCode UI browser runtime | `~/.local/share/plan-and-subagent/opencode-ui-browser` | `PLAN_AND_SUBAGENT_UI_BROWSER_DIR` |
+| UI browser runtime | `~/.local/share/plan-and-subagent/opencode-ui-browser` | `PLAN_AND_SUBAGENT_UI_BROWSER_DIR` |
 | Installation receipt | `~/.local/share/plan-and-subagent/setup` | `PLAN_AND_SUBAGENT_SETUP_DIR` |
 
-Use absolute paths and set all five overrides for disposable full-install tests.
+Use absolute paths and set all six overrides for disposable full-install tests.
 Do not run concurrent installers against the same destinations. The existing
 `install-agent-environment.sh` and `install-opencode-agents.sh` wrappers remain
 component-only entry points over the same engine and inventory.
@@ -159,6 +182,11 @@ as the personal profile. Apply project instructions and explicit task choices
 over its defaults.
 ```
 
+For the Claude profile, put the same instruction with
+`~/.config/agents/profiles/claude/PROFILE.md` in `~/.claude/CLAUDE.md`. Keep
+Codex and Claude global instructions as separate files, not a symlink, so each
+host designates its own profile.
+
 This is a human-readable instruction, not automatic profile discovery. Neither
 the instruction nor the installer changes an already running session; select
 GPT-6 Sol in Codex and start a new session after native role/configuration
@@ -168,6 +196,7 @@ Check each profile explicitly:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
+bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile claude --check
 opencode agent list
 opencode debug config
 ```
@@ -178,13 +207,17 @@ instruction to the `profiles/codex/PROFILE.md` path manually; the installer neve
 rewrites that instruction or deletes files from the older `~/.opencode/agents/`
 location.
 
-## OpenCode UI browser
+## UI browser
 
-The Codex profile installs a local OpenCode MCP server for browser evidence.
-Only `codex-ui-ux` receives its tools. A per-run request confines navigation to
-declared origins and condition IDs, records the artifact directory and state
-change authorization, and binds screenshots and audits to the inspected code
-state. The browser server has no model or credential configuration.
+Both profiles install one local MCP server for browser evidence. In the Codex
+profile only `codex-ui-ux` receives its tools, and the OpenCode runner binds the
+per-run request through the environment. In the Claude profile each UI/UX and
+mockup subagent starts its own scoped server and binds the request with
+`load_request`; the primary session does not receive the browser tools. A request
+confines navigation to declared origins (or, for mockups, files under a declared
+root) and condition IDs, records the artifact directory and state change
+authorization, and binds screenshots and audits to the inspected code state. The
+browser server has no model or credential configuration.
 
 ## Standalone advisor
 

@@ -38,7 +38,7 @@ iterations to bypass a review limit.
 Inspect the complete task diff and every materially changed file. Confirm that
 unrelated and user-owned work was preserved. Independently run the required
 acceptance checks when safe and in scope; an implementer's report is not proof.
-For UI browser checks, use the configured OpenCode UI/UX role and evidence
+For UI browser checks, use the profile's configured UI/UX role and evidence
 acceptance procedure in [delegated UI execution](ui-execution.md) instead of
 repeating execution in the primary. This exception delegates execution, not
 final validation judgment or the primary's engineering review.

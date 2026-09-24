@@ -9,7 +9,7 @@ specialist retains design, user-purpose, and semantic review when applicable.
 ## Ownership and handoff
 
 Use a mockup identity separate from the product implementer. The configured UI/UX
-role may collect browser evidence and evaluate it in one OpenCode context; record
+role may collect browser evidence and evaluate it in one context; record
 its runtime, model, session/process identity, browser request, and browser context.
 The mockup executor may write only assigned visualization artifacts; the UI/UX role
 may write only assigned evidence artifacts and must not fix product code. Neither
@@ -36,7 +36,7 @@ mechanism; an executor's summary is not a user-visible preview or user approval.
 ## Mockup production
 
 Supply [briefing mockups](ui-ux-mockups.md) and require the executor to read the
-available `visualize` skill in full. It builds and checks the smallest agreed
+profile's visualization guidance in full. It builds and checks the smallest agreed
 proposal from supplied product evidence, including rendering and relevant local
 interactions. It must not invent unresolved behavior or search the project again
 to choose a design. Return artifact/display paths, covered states, checks and

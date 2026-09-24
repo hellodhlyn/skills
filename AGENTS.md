@@ -8,7 +8,7 @@
   only `gh skill install`.
 - The installer runs final checks. Use `--check` for a later inspection. Report
   file synchronization, local runtime/browser checks, authentication, and the
-  need for a new Codex session separately. A missing credential or failed check
+  need for a new Codex or Claude Code session separately. A missing credential or failed check
   is not a ready environment. A passed local check is not a tested model call.
 - Inspect conflicts before using `--apply --force`. Never overwrite unrelated
   files, remove obsolete definitions automatically, copy credentials, or rewrite

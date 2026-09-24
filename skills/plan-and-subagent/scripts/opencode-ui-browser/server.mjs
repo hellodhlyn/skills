@@ -7,7 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { chromium } from "playwright";
 import { z } from "zod";
 
-import { assertAllowedPageUrl, assertPathWithin, validateRequest } from "./src/request.mjs";
+import { assertAllowedPageUrl, assertPathWithin, loadRequestFile, validateRequest } from "./src/request.mjs";
 
 function configuredRequest() {
   const requestPath = process.env.PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST;
@@ -15,10 +15,20 @@ function configuredRequest() {
   return validateRequest(JSON.parse(readFileSync(requestPath, "utf8")));
 }
 
-const request = configuredRequest();
 const server = new McpServer({ name: "plan-and-subagent-ui-browser", version: "0.1.0" });
-const conditions = new Set(request?.conditions.map((condition) => condition.id));
-const viewports = new Map(request?.viewports.map((viewport) => [viewport.name, viewport]));
+let request;
+let requestFile;
+let conditions = new Set();
+let viewports = new Map();
+
+function bindRequest(active) {
+  request = active;
+  conditions = new Set(active.conditions.map((condition) => condition.id));
+  viewports = new Map(active.viewports.map((viewport) => [viewport.name, viewport]));
+}
+
+const configured = configuredRequest();
+if (configured) bindRequest(configured);
 const consoleEntries = [];
 const pageErrors = [];
 let browser;
@@ -27,7 +37,7 @@ let page;
 let artifactNumber = 0;
 
 function requireRequest() {
-  if (!request) throw new Error("Browser evidence requires PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST from the UI/UX runner.");
+  if (!request) throw new Error("Browser evidence requires a request: call load_request first, or run through the UI/UX runner.");
   return request;
 }
 
@@ -57,7 +67,7 @@ async function ensurePage() {
   });
   await context.route("**/*", async (route) => {
     if (route.request().isNavigationRequest()) {
-      try { assertAllowedPageUrl(active.allowedOrigins, route.request().url()); }
+      try { assertAllowedPageUrl(active, route.request().url()); }
       catch { await route.abort("blockedbyclient"); return; }
     }
     await route.continue();
@@ -73,7 +83,7 @@ async function ensurePage() {
 async function currentPage() {
   const active = requireRequest();
   const current = await ensurePage();
-  if (current.url() !== "about:blank") assertAllowedPageUrl(active.allowedOrigins, current.url());
+  if (current.url() !== "about:blank") assertAllowedPageUrl(active, current.url());
   return current;
 }
 
@@ -90,16 +100,28 @@ function result(text) {
   return { content: [{ type: "text", text }] };
 }
 
+server.registerTool("load_request", {
+  description: "Bind this browser session to the primary's browser request file. Call once before any other browser tool.",
+  inputSchema: { requestPath: z.string() },
+}, async ({ requestPath }) => {
+  if (configured) throw new Error("This browser session is already bound by the UI/UX runner.");
+  if (requestFile) throw new Error(`This browser session is already bound to ${requestFile}; start a fresh session for another request.`);
+  const loaded = loadRequestFile(requestPath);
+  requestFile = loaded.file;
+  bindRequest(loaded.request);
+  return result(`Bound ${loaded.file}\nPhase: ${request.phase}\nCode state: ${request.codeState}\nURL: ${request.url}\nConditions: ${[...conditions].join(", ")}\nViewports: ${[...viewports.keys()].join(", ")}\nState changes authorized: ${request.stateChangesAuthorized}`);
+});
+
 server.registerTool("navigate", {
   description: "Open an allowed top-level URL for an assigned UI verification condition.",
   inputSchema: { conditionId: z.string(), url: z.string() },
 }, async ({ conditionId, url }) => {
   requireCondition(conditionId);
   const active = requireRequest();
-  const target = assertAllowedPageUrl(active.allowedOrigins, url);
+  const target = assertAllowedPageUrl(active, url);
   const current = await ensurePage();
   await current.goto(target, { waitUntil: "domcontentloaded" });
-  assertAllowedPageUrl(active.allowedOrigins, current.url());
+  assertAllowedPageUrl(active, current.url());
   return result(`Opened ${current.url()} for ${conditionId}`);
 });
 
@@ -137,7 +159,7 @@ server.registerTool("act", {
     if (params.action === "hover") await target.hover();
   }
   await current.waitForTimeout(150);
-  assertAllowedPageUrl(active.allowedOrigins, current.url());
+  assertAllowedPageUrl(active, current.url());
   return result(`${params.action} completed for ${params.conditionId}`);
 });
 

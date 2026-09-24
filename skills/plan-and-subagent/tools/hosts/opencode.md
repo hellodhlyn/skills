@@ -6,11 +6,13 @@ and native configuration.
 
 ## Execution paths
 
-- Codex profile: use `../scripts/run-opencode-review.sh` for independent code
-  review. Use `../scripts/run-opencode-ui-ux.sh` for the Codex profile's
-  configured read-only UI/UX role during design and implementation review.
-  These are separate processes and reports: UI/UX work does not replace or
-  consume external code review rounds.
+- Independent code review: use `../../scripts/run-opencode-review.sh` when the
+  profile binds the reviewer to an OpenCode agent.
+- UI/UX: use `../../scripts/run-opencode-ui-ux.sh` only when the profile binds
+  its read-only UI/UX role to an OpenCode agent.
+
+These are separate processes and reports: UI/UX work does not replace or
+consume external code review rounds.
 
 The active profile must identify the actual OpenCode configuration root and
 agent definitions. Do not infer a provider or model from a display name. If a
@@ -50,16 +52,20 @@ The optional agent and variant arguments are supplied by the profile. Preserve
 the complete process result, including output, process identity, and numeric
 exit status. Do not read an empty or in-progress result file as a review.
 
-## Codex-profile UI/UX runner
+## OpenCode UI/UX runner
 
 For each applicable design proposal, conformance review, or focused recheck,
 create a fresh `reviews/uiux/` report directory. Write the exact applicable
 handoff preamble, user purpose, approved contract when available, evidence, and
-scope to `prompt.md`, then invoke:
+scope to `prompt.md`, then invoke the runner with the profile's agent, variant,
+and OpenCode configuration:
 
 ```bash
-sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" codex-ui-ux high "$REPORT_DIR/browser-request.json"
+sh "$UI_UX_RUNNER" "$WORKDIR" "$REPORT_DIR/prompt.md" "$REPORT_DIR/result.md" "$REPORT_DIR/stderr.log" "$UI_UX_AGENT" "$UI_UX_VARIANT" "$REPORT_DIR/browser-request.json"
 ```
+
+Set `PLAN_AND_SUBAGENT_OPENCODE_PROFILE_CONFIG` to the profile's OpenCode
+configuration path when it differs from the Codex profile default.
 
 Preserve the terminal process result and model identity in `execution-N.md`.
 The configured agent is read-only for product code. When the browser request is

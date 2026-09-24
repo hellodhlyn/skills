@@ -11,12 +11,17 @@ import { applyPlan, assertSafeDestination, buildPlan, command, effectivePermissi
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cli = path.join(repository, "skills/plan-and-subagent/scripts/lib/setup-plan-and-subagent.mjs");
 
+function within(root, file) {
+  const relative = path.relative(root, file);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 function fixture(t) {
   const directory = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agent-setup-test-")));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const repo = path.join(directory, "repo");
   fs.mkdirSync(repo);
-  const roots = Object.fromEntries(["codex", "environment", "opencode", "legacyOpencode", "browser", "state"].map((name) => [name, path.join(directory, name)]));
+  const roots = Object.fromEntries(["codex", "claude", "environment", "opencode", "legacyOpencode", "browser", "state"].map((name) => [name, path.join(directory, name)]));
   const receiptPath = path.join(roots.state, "receipt.json");
   const receipt = loadReceipt(receiptPath);
   const manifest = { entries: [
@@ -35,6 +40,7 @@ test("requires an explicit operation and rejects contradictory flags", () => {
   }
   assert.equal(parseArguments(["--apply", "--force"]).force, true);
   assert.equal(parseArguments(["--dry-run", "--profile", "codex"]).profile, "codex");
+  assert.equal(parseArguments(["--dry-run", "--profile", "claude"]).profile, "claude");
   assert.throws(() => parseArguments(["--dry-run", "--profile", "glm"]));
   assert.throws(() => parseArguments(["--dry-run", "--profile", "both"]));
   assert.throws(() => parseArguments(["--dry-run", "--profile", "unknown"]));
@@ -76,9 +82,65 @@ test("Codex profile preserves its read-only GLM UI/UX specialist", () => {
   assert.equal(fs.existsSync(path.join(repository, "profiles/codex/codex/agents/ui_ux_designer.toml")), false);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/opencode.jsonc"), "utf8"), /"ui-browser"/);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /external OpenCode\n  `codex-ui-ux` agent, pinned to `zai-coding-plan\/glm-5\.3-flash`/);
-  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/codex.md"), "utf8"), /run-opencode-ui-ux\.sh/);
-  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/opencode.md"), "utf8"), /codex-ui-ux high/);
-  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"), "utf8"), /PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST/);
+  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/codex.md"), "utf8"), /\[OpenCode execution\]\(opencode\.md\)/);
+  assert.match(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/tools/hosts/opencode.md"), "utf8"), /run-opencode-ui-ux\.sh/);
+  const runner = fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"), "utf8");
+  assert.match(runner, /PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST/);
+  assert.match(runner, /ui_ux_agent=\$\{5:-codex-ui-ux\}/);
+  assert.match(runner, /ui_ux_variant=\$\{6:-high\}/);
+  assert.match(runner, /profiles\/codex\/opencode\.jsonc/);
+});
+
+test("the Claude inventory installs native Claude roles and shares the OpenCode reviewer", (t) => {
+  const f = fixture(t);
+  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
+  const selected = ["skill", "skill-opencode", "profile", "codex", "claude", "opencode", "ui-browser"];
+  const claude = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["claude"]);
+  const targets = claude.files.map((entry) => entry.target);
+  for (const expected of [
+    path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"),
+    path.join(f.roots.claude, "skills/plan-and-subagent/tools/hosts/claude-code.md"),
+    path.join(f.roots.claude, "agents/claude-ui-ux-designer.md"),
+    path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"),
+    path.join(f.roots.claude, "agents/claude-mockup.md"),
+    path.join(f.roots.environment, "profiles/claude/PROFILE.md"),
+    path.join(f.roots.environment, "profiles/claude/codex/implementer.md"),
+    path.join(f.roots.opencode, "agents/reviewer.md"),
+    path.join(f.roots.browser, "server.mjs"),
+  ]) assert.ok(targets.includes(expected), expected);
+  assert.equal(targets.some((target) => within(f.roots.codex, target)), false);
+  assert.equal(targets.some((target) => target.endsWith("agents/codex-ui-ux.md") || target.endsWith("profiles/codex/opencode.jsonc")), false);
+  assert.equal(targets.some((target) => within(path.join(f.roots.opencode, "skills"), target)), false);
+  assert.deepEqual(missingLinks(claude.files, true, true), []);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/shared/opencode/agents/reviewer.md"), "utf8"), /^model: zai-coding-plan\/glm-5\.3-flash$/m);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/shared/opencode/agents/reviewer.md"), "utf8"), /^reasoningEffort: max$/m);
+});
+
+test("Claude subagents keep their model, effort, and tool boundaries", () => {
+  const read = (name) => fs.readFileSync(path.join(repository, "profiles/claude/claude/agents", `${name}.md`), "utf8");
+  const frontmatter = (text) => text.split("---")[1];
+  const tools = (text) => frontmatter(text).match(/^tools: (.*)$/m)[1].split(",").map((tool) => tool.trim());
+  const browserTools = ["load_request", "navigate", "viewport", "act", "capture", "audit"].map((tool) => `mcp__ui-browser__${tool}`);
+  for (const [name, model, effort, writes] of [
+    ["claude-ui-ux-designer", "claude-opus-5-5", "high", false],
+    ["claude-ui-ux-reviewer", "claude-opus-5-5", "medium", false],
+    ["claude-mockup", "claude-sonnet-5", "medium", true],
+  ]) {
+    const text = read(name);
+    assert.match(frontmatter(text), new RegExp(`^name: ${name}$`, "m"));
+    assert.match(frontmatter(text), new RegExp(`^model: ${model}$`, "m"));
+    assert.match(frontmatter(text), new RegExp(`^effort: ${effort}$`, "m"));
+    assert.match(frontmatter(text), /^  - ui-browser:$/m);
+    assert.match(frontmatter(text), /opencode-ui-browser\}?\/server\.mjs/);
+    const allowed = tools(text);
+    assert.deepEqual(allowed.filter((tool) => tool.startsWith("mcp__")), browserTools);
+    for (const forbidden of ["Bash", "Agent", "WebFetch", "WebSearch", "NotebookEdit"]) assert.equal(allowed.includes(forbidden), false, `${name}: ${forbidden}`);
+    assert.equal(allowed.includes("Write") || allowed.includes("Edit"), writes, name);
+  }
+  const profile = fs.readFileSync(path.join(repository, "profiles/claude/PROFILE.md"), "utf8");
+  assert.match(profile, /GPT-6 Luna \(`gpt-6-luna`\)/);
+  assert.match(profile, /effort `xhigh`/);
+  assert.match(profile, /\[codex\/implementer\.md\]\(codex\/implementer\.md\)/);
 });
 
 test("read-only permission evaluation denies unknown tools while allowing installed contracts", (t) => {
@@ -325,11 +387,13 @@ else if(args.includes('mcp') && args.includes('list')) {console.log('ui-browser 
 else if(args.includes('agent')) {const directory=path.join(process.env.OPENCODE_CONFIG_DIR,'agents'); if(fs.existsSync(directory)) {for(const file of fs.readdirSync(directory).filter((name)=>name.endsWith('.md')).sort()) console.log(file.slice(0,-3)+' (primary)');} else {console.log('reviewer (primary)');}}
 else if(args.includes('install') && process.env.SETUP_TEST_FAIL_INSTALL) {console.error('fixture dependency failure');process.exitCode=1;}
 else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.error('fixture browser failure');process.exitCode=1;}
+else if(args.includes('login') && process.env.SETUP_TEST_CODEX_LOGGED_OUT) {console.error('Not logged in');process.exitCode=1;}
 `;
-  for (const name of ["gh", "opencode", "pnpm", "node"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
+  for (const name of ["gh", "opencode", "pnpm", "node", "codex"]) fs.writeFileSync(path.join(bin, name), program, { mode: 0o755 });
   const log = path.join(f.directory, "commands.jsonl");
   const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`,
     PLAN_AND_SUBAGENT_CODEX_DIR: f.roots.codex,
+    PLAN_AND_SUBAGENT_CLAUDE_DIR: f.roots.claude,
     AGENT_ENVIRONMENT_DIR: f.roots.environment, OPENCODE_CONFIG_DIR: f.roots.opencode,
     OPENCODE_LEGACY_CONFIG_DIR: f.roots.legacyOpencode,
     PLAN_AND_SUBAGENT_UI_BROWSER_DIR: f.roots.browser,
@@ -338,6 +402,8 @@ else if(args.includes('-e') && process.env.SETUP_TEST_FAIL_BROWSER) {console.err
   };
   fs.mkdirSync(f.roots.codex);
   fs.writeFileSync(path.join(f.roots.codex, "AGENTS.md"), `Read ${path.join(f.roots.environment, "profiles/codex/PROFILE.md")} when running plan-and-subagent.`);
+  fs.mkdirSync(f.roots.claude);
+  fs.writeFileSync(path.join(f.roots.claude, "CLAUDE.md"), `Read ${path.join(f.roots.environment, "profiles/claude/PROFILE.md")} when running plan-and-subagent.`);
   const run = (args, overrides = {}) => spawnSync(process.execPath, [cli, ...args], { env: { ...env, ...overrides }, encoding: "utf8", timeout: 15_000 });
   const calls = () => fs.existsSync(log) ? fs.readFileSync(log, "utf8").trim().split("\n").map(JSON.parse) : [];
   return { run, calls, env };
@@ -382,8 +448,8 @@ test("browser failure is not hidden by passing package checks", (t) => {
   const { run } = fakeCommands(f);
   const failed = run(["--apply"], { SETUP_TEST_FAIL_BROWSER: "1" });
   assert.equal(failed.status, 1);
-  assert.match(failed.stdout, /\[PASS\] OpenCode UI browser package/);
-  assert.match(failed.stdout, /\[FAIL\] OpenCode UI browser Chromium/);
+  assert.match(failed.stdout, /\[PASS\] UI browser package/);
+  assert.match(failed.stdout, /\[FAIL\] UI browser Chromium/);
 });
 
 test("global instruction omission is reported without rewriting it; overrides take precedence", (t) => {
@@ -408,4 +474,62 @@ test("component installer uses shared inventory and does not claim full readines
   assert.ok(fs.existsSync(path.join(f.roots.environment, "profiles/codex/PROFILE.md")));
   assert.equal(fs.existsSync(path.join(f.roots.codex, "agents")), false);
   assert.match(result.stdout, /Component-only result/);
+});
+
+test("Claude profile installs beside Codex without touching or misreporting Codex files", (t) => {
+  const f = fixture(t);
+  const { run, calls } = fakeCommands(f);
+  const codex = run(["--apply"]);
+  assert.equal(codex.status, 0, codex.stdout + codex.stderr);
+  const codexSkill = path.join(f.roots.codex, "skills/plan-and-subagent/SKILL.md");
+  const codexBefore = fs.readFileSync(codexSkill, "utf8");
+  const dry = run(["--dry-run", "--profile", "claude"]);
+  assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+  assert.equal(fs.existsSync(path.join(f.roots.claude, "agents")), false);
+  const apply = run(["--apply", "--profile", "claude"]);
+  assert.equal(apply.status, 0, apply.stdout + apply.stderr);
+  for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"), path.join(f.roots.environment, "profiles/claude/codex/implementer.md")]) {
+    assert.ok(fs.existsSync(file), file);
+  }
+  assert.doesNotMatch(apply.stdout, /Obsolete managed file/);
+  assert.doesNotMatch(apply.stdout, /\[(UPDATE|CONFLICT)\].*reviewer\.md/);
+  assert.match(apply.stdout, /\[PASS\] OpenCode agent discovery: reviewer/);
+  assert.doesNotMatch(apply.stdout, /codex-ui-ux/);
+  assert.match(apply.stdout, /\[PASS\] Codex CLI login/);
+  assert.match(apply.stdout, /\[PASS\] Global profile designation: Profile path found in .*CLAUDE\.md/);
+  assert.equal(fs.readFileSync(codexSkill, "utf8"), codexBefore);
+  assert.ok(calls().some((call) => call[0] === "gh" && call.includes("claude-code")));
+  const receipt = loadReceipt(f.receiptPath);
+  assert.deepEqual(receipt.files[path.join(f.roots.opencode, "agents/reviewer.md")].profiles, ["codex", "claude"]);
+  assert.equal(run(["--check"]).status, 0);
+});
+
+test("older receipts without profile ownership are not reported as obsolete for another profile", (t) => {
+  const f = fixture(t);
+  f.manifest.entries = [
+    { component: "environment", profiles: ["codex"], root: "environment", source: "a.md", target: "codex-only/a.md" },
+    { component: "environment", profile: "claude", root: "environment", source: "b.md", target: "claude/b.md" },
+  ];
+  const codexFile = path.join(f.roots.environment, "codex-only/a.md");
+  const unknownFile = path.join(f.roots.environment, "unknown.md");
+  fs.mkdirSync(path.dirname(codexFile), { recursive: true });
+  for (const file of [codexFile, unknownFile]) {
+    fs.writeFileSync(file, "installed");
+    f.receipt.files[file] = { component: "environment", hash: createHash("sha256").update("installed").digest("hex") };
+  }
+  const claude = buildPlan(f.manifest, f.repo, f.roots, f.receipt, ["environment"], new Map(), ["claude"]);
+  assert.deepEqual(claude.stale, [unknownFile]);
+  const codex = buildPlan(f.manifest, f.repo, f.roots, f.receipt, ["environment"], new Map(), ["codex"]);
+  assert.deepEqual(codex.stale, [unknownFile]);
+});
+
+test("Claude profile reports missing Codex login and designation as user actions", (t) => {
+  const f = fixture(t);
+  const { run } = fakeCommands(f);
+  fs.writeFileSync(path.join(f.roots.claude, "CLAUDE.md"), "Other instructions\n");
+  const result = run(["--apply", "--profile", "claude"], { SETUP_TEST_CODEX_LOGGED_OUT: "1" });
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout, /\[ACTION_REQUIRED\] Codex CLI login/);
+  assert.match(result.stdout, /\[ACTION_REQUIRED\] Global profile designation/);
+  assert.equal(fs.readFileSync(path.join(f.roots.claude, "CLAUDE.md"), "utf8"), "Other instructions\n");
 });

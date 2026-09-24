@@ -33,10 +33,10 @@ choices that the mockup exposes, then include the confirmed result in the brief.
 When the mockup applies:
 
 1. Follow [delegated UI execution](ui-execution.md) and the environment procedure.
-   Confirm the `visualize` skill is available; the mockup executor reads it in full
-   before creating the visual. Missing visualization capability blocks only this
-   preview; report it rather than silently substituting project code or another
-   artifact.
+   Confirm the profile's visualization capability is available; the mockup
+   executor reads its guidance in full before creating the visual. Missing
+   visualization capability blocks only this preview; report it rather than
+   silently substituting project code or another artifact.
 2. Use the verified product structure, design-system evidence, realistic
    content, and specialist recommendation already gathered by the primary.
    Do not start a separate project search while rendering the mockup.

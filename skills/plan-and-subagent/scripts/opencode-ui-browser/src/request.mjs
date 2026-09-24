@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const phases = new Set(["preview", "final", "recheck"]);
+const phases = new Set(["design", "mockup", "preview", "final", "recheck"]);
 
 function text(value, field) {
   if (typeof value !== "string" || value.trim() === "") throw new Error(`${field} must be a non-empty string`);
@@ -32,9 +34,14 @@ export function assertPathWithin(parent, candidate, field = "path") {
   return target;
 }
 
-export function assertAllowedPageUrl(allowedOrigins, value) {
+export function assertAllowedPageUrl(boundary, value) {
   const target = new URL(value);
-  if (!allowedOrigins.includes(target.origin)) throw new Error(`top-level navigation left allowed origins: ${target.origin}`);
+  if (target.protocol === "file:") {
+    if (!boundary.allowedFileRoot) throw new Error("top-level navigation to a local file is not allowed by this request");
+    assertPathWithin(boundary.allowedFileRoot, fileURLToPath(target), "local file");
+    return target.href;
+  }
+  if (!boundary.allowedOrigins.includes(target.origin)) throw new Error(`top-level navigation left allowed origins: ${target.origin}`);
   return target.href;
 }
 
@@ -42,9 +49,13 @@ export function validateRequest(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("request must be an object");
   const phase = text(input.phase, "phase");
   if (!phases.has(phase)) throw new Error(`phase must be one of: ${[...phases].join(", ")}`);
-  const allowedOrigins = array(input.allowedOrigins, "allowedOrigins").map(origin);
+  const allowedFileRoot = input.allowedFileRoot === undefined ? undefined : absolute(input.allowedFileRoot, "allowedFileRoot");
+  const allowedOrigins = allowedFileRoot && (input.allowedOrigins === undefined || (Array.isArray(input.allowedOrigins) && input.allowedOrigins.length === 0))
+    ? []
+    : array(input.allowedOrigins, "allowedOrigins").map(origin);
   const url = new URL(text(input.url, "url"));
-  if (!allowedOrigins.includes(url.origin)) throw new Error("url origin must be listed in allowedOrigins");
+  if (url.protocol === "file:") assertAllowedPageUrl({ allowedOrigins, allowedFileRoot }, url.href);
+  else if (!allowedOrigins.includes(url.origin)) throw new Error("url origin must be listed in allowedOrigins");
   if (!Array.isArray(input.conditions) || input.conditions.length === 0) throw new Error("conditions must be a non-empty array");
   const conditions = input.conditions.map((condition, index) => ({
     id: text(condition?.id, `conditions[${index}].id`),
@@ -67,9 +78,17 @@ export function validateRequest(input) {
     codeState: text(input.codeState, "codeState"),
     url: url.href,
     allowedOrigins,
+    allowedFileRoot,
     conditions,
     viewports,
     stateChangesAuthorized: input.stateChangesAuthorized === true,
     storageStatePath: input.storageStatePath === undefined ? undefined : absolute(input.storageStatePath, "storageStatePath"),
   };
+}
+
+export function loadRequestFile(requestPath) {
+  const file = absolute(requestPath, "requestPath");
+  const request = validateRequest(JSON.parse(readFileSync(file, "utf8")));
+  assertPathWithin(path.dirname(file), request.artifactDir, "artifactDir");
+  return { file, request };
 }

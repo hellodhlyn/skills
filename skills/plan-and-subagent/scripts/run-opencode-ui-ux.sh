@@ -1,5 +1,6 @@
 #!/bin/sh
-# Run the Codex profile's read-only UI/UX specialist and capture its report.
+# Run a profile's read-only OpenCode UI/UX specialist and capture its report.
+# PLAN_AND_SUBAGENT_OPENCODE_PROFILE_CONFIG selects the profile's OpenCode config.
 set -eu
 
 usage() {
@@ -41,10 +42,10 @@ mkdir -p "$(dirname "$result_file")" "$(dirname "$stderr_log_file")"
 prompt=$(cat "$prompt_file")
 opencode_config_dir=${OPENCODE_CONFIG_DIR:-"$HOME/.config/opencode"}
 browser_dir=${PLAN_AND_SUBAGENT_UI_BROWSER_DIR:-"$HOME/.local/share/plan-and-subagent/opencode-ui-browser"}
-profile_config="$opencode_config_dir/profiles/codex/opencode.jsonc"
+profile_config=${PLAN_AND_SUBAGENT_OPENCODE_PROFILE_CONFIG:-"$opencode_config_dir/profiles/codex/opencode.jsonc"}
 
 if [ ! -f "$profile_config" ]; then
-  echo "ERROR: Codex OpenCode profile config is missing: $profile_config" >&2
+  echo "ERROR: OpenCode profile config is missing: $profile_config" >&2
   exit 2
 fi
 

@@ -37,7 +37,8 @@ role definitions, and explicit start commands in the profile's native settings.
 
 Choose agents by role or definition reference. Keep model and reasoning values in
 native runtime settings rather than duplicating them in prose. Tool-specific
-process APIs belong to the common `tools/` documents; provider/model values and
+process APIs belong to the common `tools/hosts/` and `tools/integrations/`
+documents; provider/model values and
 permissions belong to the selected native profile. Do not turn an
 environment-specific executor into a mandatory dependency of the portable skill.
 

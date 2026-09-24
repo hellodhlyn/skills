@@ -1,22 +1,18 @@
-# Codex execution
+# Codex host execution
 
-This is the common Codex invocation procedure. The selected profile supplies
-the role names and native definitions.
+Read when the selected profile runs its primary session in Codex. The profile
+supplies the role names and native definitions.
 
 ## Roles
 
 The profile must identify the implementation, UI/UX, and mockup roles and their
-native or external definitions. The Codex profile uses native Codex roles for
-implementation and mockups, and its configured external OpenCode UI/UX role for
-design and conformance review. Install them separately from the portable skill;
-start a new session to discover changed native roles. The OpenCode UI/UX role
-collects browser evidence through its scoped `ui-browser` MCP when a browser
-request is supplied. Never replace a different installed definition without
-explicit authorization.
+native or external definitions. Install them separately from the portable skill;
+start a new session to discover changed native roles. Never replace a different
+installed definition without explicit authorization.
 
 The role definition owns its model and reasoning effort. Confirm the role is
 available and do not pass model or reasoning overrides to `spawn_agent`. Never
-invoke `codex exec` for the Codex profile.
+invoke `codex exec` for a role the profile binds to a native Codex agent.
 
 ## Start and continue
 
@@ -32,14 +28,14 @@ a material contract change, interrupt the agent before revising the contract;
 resume only after the revised understanding check passes. Small corrections that
 preserve the approved contract may be sent without interruption.
 
-For Codex-profile UI/UX work, follow the external-role procedure in
-`opencode.md`: create a fresh bounded report directory, write the exact design
-or review prompt and supplied evidence, then run `run-opencode-ui-ux.sh`. Record
-the configured agent, variant, process identity, terminal status, and report.
-Do not replace it with a native Codex role or infer a fallback model. For
-applicable mockups, use a distinct native mockup identity and keep its ownership
-limited to the assigned visualization artifacts. Route product fixes to the
-implementer.
+When the profile binds UI/UX work to an external OpenCode agent, follow the
+external-role procedure in [OpenCode execution](opencode.md): create a fresh
+bounded report directory, write the exact design or review prompt and supplied
+evidence, then run its UI/UX runner. Record the configured agent, variant,
+process identity, terminal status, and report. Do not replace it with a native
+Codex role or infer a fallback model. For applicable mockups, use a distinct
+native mockup identity and keep its ownership limited to the assigned
+visualization artifacts. Route product fixes to the implementer.
 
 ## Completion
 
