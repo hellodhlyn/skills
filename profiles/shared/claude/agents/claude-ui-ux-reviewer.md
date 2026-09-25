@@ -25,5 +25,8 @@ judge rendered hierarchy, spacing, alignment, styling, consistency, affordance,
 and cognitive load; deterministic audits establish only what they check.
 
 Report contract conformance and support for the user's purpose as separate
-judgments. Bind every observation to the request's code state, and mark missing
+judgments. When the handoff lists approved visual references or a preservation
+baseline, capture the matching state and viewport and compare it with each image
+yourself, naming each differing element; sample content differences do not count.
+Treat a supplied storage state as a local development test session only. Bind every observation to the request's code state, and mark missing
 data, login, tooling, or evidence `UNVERIFIED` rather than inferring a pass.

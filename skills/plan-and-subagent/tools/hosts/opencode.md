@@ -26,9 +26,12 @@ mechanism to shell, MCP, and filesystem access as well.
 
 For OpenCode-native read-only agents, begin with a catch-all
 `"*": "deny"` policy and then allow only the required read tools and the
-`plan-and-subagent` skill. Their `external_directory` policy must also begin
-with `"*": "deny"` and allow only the installed common-skill and profile
-document paths. A synthetic or newly configured MCP/custom tool must resolve to
+`plan-and-subagent` skill. Their `external_directory` policy may allow reads
+outside the project, because every write-capable tool is denied. Shell access
+must also begin with `"*": "deny"` and allow only inspection commands; deny
+their write or execute options (such as `find -delete`/`-exec`,
+`git --output`, and `rg --pre`) and output redirection. Do not rely on `ask`:
+the external runner auto-approves it. A synthetic or newly configured MCP/custom tool must resolve to
 `deny`; listing `edit` and `bash` as denied is not sufficient. Because project
 and managed configuration can be merged after a custom profile, inspect the
 final project-merged result with `opencode debug agent <name>` and treat any

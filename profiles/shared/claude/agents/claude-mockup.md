@@ -26,6 +26,12 @@ avoid gradients, glassmorphism, glow, decorative blobs, emoji decoration,
 identical shadowed card grids, centered hero layouts, and new palettes or
 typefaces.
 
+Mark each principal element with `data-component="<Name>"` using the product
+component the designer's handoff names for it, or `data-component="NEW"` where
+the handoff gives it a new visual form. Report an element the handoff leaves
+unnamed instead of guessing. When capturing approved references, read the
+rendered marks and return each reference's component map.
+
 Check rendering and the applicable local interactions through the browser
 request named in the handoff: call `load_request` first, then capture each
 covered state. Return file paths, covered states, checks with observed results,

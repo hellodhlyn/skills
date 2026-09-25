@@ -50,10 +50,17 @@ QUALITY: how you will satisfy the brief's code-quality section — what you will
 UX_ALIGNMENT: when the brief contains a UI/UX contract, how the implementation
   and validation will satisfy it; otherwise N/A
 VISUAL_REFERENCES: for each approved visual reference the brief lists, whether
-  you viewed the image itself and what it shows that the written contract does
-  not state; any conflict between image and text; N/A when none is listed.
-  A listed image you cannot view is a BLOCKER. The written contract governs,
-  and representative content or details it does not name are not requirements
+  you viewed the image itself; for each element in its component map, the
+  component you will use and whether its current rendered form matches the
+  image; any conflict between image and text; N/A when none is listed.
+  A listed image you cannot view is a BLOCKER. References govern composition,
+  hierarchy, density, spacing, emphasis, and visual form; the written contract
+  governs data, behavior, states, meaning, and copy. Sample content is not a
+  requirement
+PRESERVATION: for each surface the brief lists as preserved, how the planned
+  edits leave it unchanged; any planned change to page layout, shared
+  components, or existing surfaces the contract does not name; N/A when the
+  brief lists none
 ASSUMPTIONS: concrete assumptions that could affect behavior or scope, or NONE
 RISKS: material correctness, compatibility, or divergence risks, or NONE
 VALIDATION: map each completion condition ID to its focused check and expected result;
@@ -92,10 +99,15 @@ for contract-preserving corrections.
 
 When the brief contains a UI/UX contract, implement it without inventing answers
 to unresolved decisions and report the visual or interaction evidence you checked.
-Use its approved visual references to preserve composition, hierarchy, density,
-spacing, and emphasis. The written contract governs; do not copy representative
-content or add details it does not name. Report an image-text conflict as a
-DEVIATION instead of choosing one.
+Match its approved visual references in composition, hierarchy, density,
+spacing, emphasis, and each element's visual form, using the component its map
+names. Do not replace a mapped or `NEW` element with an existing component that
+renders differently; report that conflict, and any image-text conflict, as a
+DEVIATION instead of choosing. Do not copy sample content.
+Leave preserved surfaces, page layout, and shared components the contract does
+not name unchanged; a needed change there is a DEVIATION.
+For a correction ticket, change only its target within its allowed change and
+report any other edit the ticket would require before making it.
 
 If new evidence would require changing the approved approach, ownership, or an
 important product, architecture, data-model, UX, or domain-semantic decision,

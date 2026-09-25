@@ -47,6 +47,9 @@ MOCKUP_RECOMMENDATION: SHOW or SKIP, with the material user decision or
 MOCKUP_SCOPE: the smallest surface and representative states to preview, or N/A
 MOCKUP_ALTERNATIVES: only implementation-significant alternatives worth comparing,
   or NONE
+PRESERVED_SURFACES: when the change can alter page layout, shared components, or
+  the arrangement of existing surfaces, the existing surfaces and viewports that
+  must stay unchanged; otherwise N/A
 OPEN_DECISIONS: unresolved material choices or NONE
 RISKS: concrete task-scoped usability, accessibility, or consistency risks or NONE
 ```
@@ -72,7 +75,9 @@ Direct the briefing mockup for your proposal. Do not write files yourself and do
 not load the browser request yourself. Start only the mockup executor role named
 in this handoff, in the foreground, and never any other agent. Write its handoff
 yourself: your proposal's structure, hierarchy, composition, interaction, states,
-and rationale, amended by the resolved decisions supplied here; the supplied
+and rationale, amended by the resolved decisions supplied here; the product
+component for each principal element, or NEW where your proposal gives it a
+visual form no existing component renders; the supplied
 product and design-system evidence; the scope and alternatives to render; the
 browser request path and write directory unchanged; and the guidance paths it
 must read in full. Tell it not to spawn agents. Do not settle an open decision
@@ -84,11 +89,36 @@ executor for this request.
 
 Return:
 MOCKUP_EXECUTOR: executor identity and terminal status
-ARTIFACTS: mockup and screenshot paths with covered states and viewports
+ARTIFACTS: mockup and screenshot paths with covered states and viewports, and
+  for approved-reference captures each reference's component map
 FIDELITY: MATCHES or DIVERGES from your intent, per state, with evidence and any
   correction you could not complete
 EXECUTOR_REPORT: the executor's checks, results, and limitations
 DECISION_REQUIRED: material choices the mockup exposed, or NONE
+```
+
+## 결과 피드백 수정 명세
+
+[결과 확인 지침](implementation-feedback.md#route-visual-corrections)에 따라 시각적
+판단이 필요한 수정 요청이나 브라우저 finding은 설계를 담당한 같은 설계자에게
+보냅니다. 사용자 원문, 대상 화면의 현재 스크린샷 경로, 승인된 시각 참조, 관련
+finding을 전달합니다. 결과는 구현자에게 보낼 수정 티켓의 허용 변경이 됩니다.
+
+```text
+Specify the smallest visual correction for the supplied user request or finding.
+Work read-only: do not edit files, spawn agents, or create a mockup unless this
+handoff also assigns a mockup direction. Keep the user's wording as the goal and
+stay consistent with the approved visual references and contract. Change only
+what the request needs; a degree word such as "reduce" means a measured change,
+not removal.
+
+Return:
+TARGET: the element and surface to change
+CHANGE: concrete values or component choices for the correction
+UNCHANGED: nearby elements, layout, and shared components that must not change
+VERIFY: the viewport and state that will show the correction
+DECISION_REQUIRED: when only a layout change or component swap would satisfy
+  the request, the options and their impact for the user; otherwise NONE
 ```
 
 ## 구현 후 설계 준수 및 사용자 목적 검토
@@ -114,12 +144,17 @@ redesign the feature, audit unrelated UI, or treat unsupported taste as a defect
 Apply the supplied domain guidance's semantic UX verification to the rendered
 interface, using the contract's domain evidence and relevant knowledge sources.
 
-Report two separate judgments in this same review:
+Report these separate judgments in this same review:
 - CONTRACT_CONFORMANCE: for every contract item, CONFORMANT, DEVIATION, or
   UNVERIFIED with concise location and evidence.
 - PURPOSE_SUPPORT: PASS, FAIL, or UNVERIFIED against the user purpose and its
   observable criteria, with evidence and limits. Assess relevant usability and
   visual design quality; contract conformance alone cannot establish this result.
+- REFERENCE_FIDELITY: when approved visual references are listed, MATCH,
+  DEVIATION, or UNVERIFIED per reference at its state and viewport, naming each
+  differing element of its component map; otherwise N/A.
+- PRESERVATION: when preserved surfaces and a baseline are listed, UNCHANGED or
+  CHANGED per surface against the baseline; otherwise N/A.
 
 For each deviation or purpose-support failure, give its trigger or usage context,
 evidence, user impact, and smallest correction direction. Distinguish an

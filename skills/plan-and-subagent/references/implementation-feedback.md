@@ -36,7 +36,11 @@ Before presenting a non-UI result, the primary checks obvious omissions against
 the brief. For a UI result, delegate the preview's omission, environment, and
 scenario checks through [delegated UI execution](ui-execution.md). The primary
 checks the resulting evidence against the brief without routinely repeating
-browser execution. This does not start formal review or broad validation. For UI
+browser execution. That preview includes the reference fidelity and
+preservation checks in [implemented UI verification](ui-execution.md#implemented-ui-verification).
+Fix a known reference deviation before presenting. When a reference state or
+preserved surface remains `UNVERIFIED`, say so first when presenting; never
+imply it matches. This does not start formal review or broad validation. For UI
 work, show the actual screen and relevant interactions with a usable
 preview or reproduction path. For other features, show representative inputs,
 outputs, or an executable scenario. A static screenshot cannot establish an
@@ -61,8 +65,29 @@ scoped delegation is satisfied, and affected validation and review are current.
 Do not apply this pause to work for which result confirmation is not required.
 
 A correction request authorizes its in-scope implementation, not acceptance of
-the corrected result. Apply it in the same implementer session, check the affected
-behavior, and show the updated result. Reuse unchanged planning and design work;
+the corrected result. Apply it in the same implementer session through a
+correction ticket (below), check the affected behavior, and show the updated result.
+
+### Route visual corrections
+
+Send each UI correction as a ticket: the user's words verbatim, the target
+element and surface, the allowed change, and what must stay unchanged. Do not
+paraphrase the request in place of the original wording.
+
+The primary may fill in the allowed change itself only when the user stated the
+exact value, copy, or removal (for example `gap-x-2` to `gap-x-1`, or deleting a
+named label). Any correction that needs a layout, composition, sizing,
+spacing, or styling choice, including degree words such as "reduce" or
+"slightly", and any browser finding whose fix needs such a choice, goes first
+to the retained UI/UX designer. The designer returns the concrete change and the
+elements it must not affect; when a layout or component swap is the only fix,
+it returns `DECISION_REQUIRED` for the user instead. The primary does not write
+mockups, visual directions, or its own design alternative, and does not override
+the designer's visual choice without the user's decision. When the designer is
+unavailable, report the block rather than substituting primary judgment.
+
+When presenting a corrected result, state who set each visual change: the
+user's exact instruction, the designer's report path, or a recorded user decision. Reuse unchanged planning and design work;
 repeat the understanding check only when the contract materially changes or the
 implementer session must be replaced. Resolve new material choices before editing.
 

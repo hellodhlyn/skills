@@ -159,9 +159,16 @@ test("read-only permission evaluation denies unknown tools while allowing instal
     { permission: "lsp", action: "allow", pattern: "*" },
     { permission: "skill", action: "deny", pattern: "*" },
     { permission: "skill", action: "allow", pattern: "plan-and-subagent" },
-    { permission: "external_directory", action: "deny", pattern: "*" },
-    { permission: "external_directory", action: "allow", pattern: `${f.roots.opencode}/skills/plan-and-subagent/**` },
-    { permission: "external_directory", action: "allow", pattern: `${f.roots.environment}/profiles/codex/**` },
+    { permission: "external_directory", action: "allow", pattern: "*" },
+    { permission: "bash", action: "deny", pattern: "*" },
+    { permission: "bash", action: "allow", pattern: "cat *" },
+    { permission: "bash", action: "allow", pattern: "find *" },
+    { permission: "bash", action: "allow", pattern: "git diff *" },
+    { permission: "bash", action: "allow", pattern: "rg *" },
+    { permission: "bash", action: "deny", pattern: "rg *--pre*" },
+    { permission: "bash", action: "deny", pattern: "find *-delete*" },
+    { permission: "bash", action: "deny", pattern: "git * --output*" },
+    { permission: "bash", action: "deny", pattern: "*>*" },
   ];
   const agent = {
     name: "reviewer",
@@ -172,6 +179,10 @@ test("read-only permission evaluation denies unknown tools while allowing instal
   assert.equal(effectivePermission(policies, "mcp_test_write", "*"), "deny");
   assert.equal(effectivePermission(policies, "skill", "plan-and-subagent"), "allow");
   assert.equal(effectivePermission(policies, "skill", "unapproved-skill"), "deny");
+  assert.equal(effectivePermission(policies, "bash", "git diff main...HEAD"), "allow");
+  assert.equal(effectivePermission(policies, "external_directory", "/outside/project/file"), "allow");
+  const writable = policies.filter((policy) => policy.pattern !== "*>*");
+  assert.match(validateResolvedAgent({ ...agent, permission: writable }, { name: "reviewer", mode: "subagent", provider: "opencode-go", model: "glm-5.3-flash", readOnly: true }, f.roots).join(), /bash:cat a > b=not-denied/);
   assert.deepEqual(validateResolvedAgent(agent, {
     name: "reviewer",
     mode: "subagent",

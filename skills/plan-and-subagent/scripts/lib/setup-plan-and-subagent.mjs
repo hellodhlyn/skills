@@ -155,8 +155,9 @@ export function validateResolvedAgent(agent, expectation, roots) {
     ]) {
       if (effectivePermission(policies, "external_directory", file) !== "allow") problems.push(`external:${file}=not-allowed`);
     }
-    const untrusted = path.join(path.dirname(roots.opencode), "plan-and-subagent-untrusted", "secret.txt");
-    if (effectivePermission(policies, "external_directory", untrusted) !== "deny") problems.push(`external:${untrusted}=not-denied`);
+    for (const command of ["rm -rf .", "sed -i s/a/b/ file", "cat a > b", "find . -delete", "git diff --output=patch", "rg --pre sh x"]) {
+      if (effectivePermission(policies, "bash", command) !== "deny") problems.push(`bash:${command}=not-denied`);
+    }
     if (effectivePermission(policies, "mcp_test_write", "*") !== "deny") problems.push("mcp_test_write=not-denied");
   }
   return problems;

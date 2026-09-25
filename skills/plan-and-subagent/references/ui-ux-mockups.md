@@ -41,6 +41,11 @@ When the mockup applies:
 2. Use the verified product structure, design-system evidence, realistic
    content, and the designer's proposal already gathered for the brief.
    Do not start a separate project search while rendering the mockup.
+   The executor marks each principal element with the product component the
+   designer's handoff names for it, `data-component="<Name>"`, or
+   `data-component="NEW"` when the proposal gives it a visual form no existing
+   component renders. This is a transcription of the handoff, not a new design
+   task; an element without a named component is reported, not guessed.
 3. Show the smallest surface that resolves the decision. Use a contained mockup
    unless the application shell, page-level hierarchy, or navigation is itself
    changing. Use representative content to expose the proposed information
@@ -67,12 +72,18 @@ under `SESSION_DIR/mockups/approved/` with names that identify the surface,
 state, and viewport. Recapture after any later mockup revision; a screenshot of
 a superseded or rejected alternative must not remain in the approved set.
 
+With each capture, the executor reads the rendered `data-component` marks and
+returns the reference's component map: element, component name or `NEW`.
+
 In the brief, list each reference's absolute path, the state and viewport it
-shows, and what it illustrates, such as composition, hierarchy, density,
-spacing, or emphasis. State that the written contract governs, that
-representative content and details the contract does not name are not
-requirements, and that a conflict between image and text is reported rather
-than resolved by the implementer. The listed references are part of the brief
+shows, what it illustrates, and its component map. State the split authority:
+the references govern composition, hierarchy, density, spacing, emphasis, and
+each element's visual form, including the mapped component; the written
+contract governs data, behavior, states, meaning, and copy. Sample values,
+names, and placeholder images are not requirements. A conflict between image
+and text, or an existing component whose rendered form differs from the
+reference, is reported as a deviation rather than resolved by the implementer;
+substituting a differently shaped existing component is not reuse. The listed references are part of the brief
 the user approves in Step 3. When no mockup was used, write that no approved
 visual reference exists.
 

@@ -15,6 +15,12 @@ For a local mockup file, set `allowedFileRoot` to the directory holding the
 mockup instead of listing an origin. The request is evidence configuration, not
 an approval grant.
 
+A storage state is only a temporary local development test session created with
+the project's own procedure, as described under
+[authenticated states](../../references/ui-execution.md#authenticated-states).
+State in the role's prompt that it is a local test session for the declared
+local origin, not a production credential, and delete it when the run ends.
+
 Pass the request's absolute path in the role's prompt. The role calls
 `load_request` before any other browser action, whether it runs as a native
 Claude Code subagent or through the Claude runner. The artifact directory must

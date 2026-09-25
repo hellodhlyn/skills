@@ -16,7 +16,9 @@ may write only assigned evidence artifacts and must not fix product code. Neithe
 may decide material product/UX questions. Only the UI/UX design role may start
 an agent, and only the mockup executor, as described under mockup production. Missing roles or
 browser/visualization capabilities block only dependent work; report the gap without
-silently substituting the primary or another model.
+silently substituting the primary or another model. The primary never writes a
+mockup or visual design itself, including when a user asks for a redesign;
+it routes that work to the designer.
 
 Start with a fresh context and a self-contained, bounded handoff:
 
@@ -75,7 +77,7 @@ After the user confirms the direction, have the designer direct a capture of the
 the named states and viewports. Write a `mockup` phase browser request in
 `SESSION_DIR/mockups/` whose artifact directory is `SESSION_DIR/mockups/approved/`.
 Capture labels identify surface, state, and viewport. The designer returns
-each path with its state and viewport. The primary opens each screenshot
+each path with its state, viewport, and component map. The primary opens each screenshot
 to confirm it shows the confirmed alternative before listing it in the brief.
 These references go to the implementer through the
 [implementer handoff](implementer-handoff.md), not through executor exchanges.
@@ -89,6 +91,38 @@ the contract's visual, responsive, keyboard, focus, and interaction scenarios as
 applicable. Do not operate the same browser tab concurrently; retain the verifier's
 tab/session identity and give it exclusive use while checking. Saving, deleting,
 or other state changes require the task's applicable authorization.
+
+### Reference fidelity
+
+When the brief lists approved visual references, capture the implemented
+surface at each reference's state and viewport and judge it against the image:
+`MATCH` or `DEVIATION` per reference, naming each differing element in its
+component map (composition, hierarchy, density, spacing, emphasis, or visual
+form). Sample content differences are not deviations. Reproduce the reference
+state with real or local test data; a state that cannot be reproduced is
+`UNVERIFIED`, never a match. Fidelity is judged in both preview and final
+verification.
+
+### Preservation baseline
+
+When a change can alter page layout, shared components, or the arrangement of
+existing surfaces, the brief lists the preserved surfaces. Before product edits,
+capture them at the base code state under `SESSION_DIR/baseline/` at the named
+viewports, through the designer's proposal run or a reviewer request bound to
+that code state. Each preview, recheck, and final verification compares those
+surfaces with the baseline and reports any unrequested change as a deviation.
+Other tasks need no baseline.
+
+### Authenticated states
+
+When project instructions define a procedure for a local test login session,
+the primary creates the session with that procedure and passes only its
+temporary storage state path in the verifier's browser request. The verifier's handoff
+states that it is a local development test session for the local server
+only, not a production credential. Never print or record its contents; delete the
+file when the run ends. If that path is refused, stop and report it rather than
+switching runtimes, tools, or verification methods. Without such a procedure,
+states that need login remain `UNVERIFIED`.
 
 Preview work checks representative behavior and omissions only. It does not start
 formal conformance review, broad validation, or bypass required user feedback.
@@ -109,6 +143,8 @@ Return a concise evidence report with:
 - phase, inspected code state, URL/environment, viewport and relevant session context;
 - each assigned condition ID, expected and observed behavior, reproduction steps,
   artifact references, and `PASS`, `FAIL`, or `UNVERIFIED`;
+- when applicable, each reference's fidelity result and each preserved surface's
+  baseline comparison, with paired screenshot paths;
 - concrete deviations with trigger, user impact, and smallest correction direction;
 - unresolved semantic/material choices as `DECISION_REQUIRED`;
 - execution completion or blocker, and missing evidence.
