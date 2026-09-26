@@ -34,5 +34,14 @@ use only declared condition IDs, and must mark unavailable evidence
 The browser tools provide navigation, viewport selection, scoped interaction,
 screenshots with accessibility snapshots, and deterministic overflow, axe,
 console, and page-error audits. Preserve artifact paths and bind them to the
-checked code state. The agent report must still distinguish observed evidence,
+checked code state.
+
+Every tool call resends the agent's whole context, and returned screenshots stay
+in it for the rest of the run. Cover one state with a single `capture` call that
+takes the state's `url`, `viewport`, ordered `actions`, and `audit: true`, instead
+of separate navigate, viewport, act, capture, and audit calls. The accessibility
+snapshot is saved beside the screenshot and returned inline only with
+`accessibility: "inline"`; read the file when a judgment needs it. `components:
+true` returns the visible `data-component` marks. Pass `includeImage: false` for
+a capture whose image the agent will not judge in this run. The agent report must still distinguish observed evidence,
 contract conformance, and user-purpose support.

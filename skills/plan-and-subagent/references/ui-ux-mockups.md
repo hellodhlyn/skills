@@ -72,7 +72,8 @@ under `SESSION_DIR/mockups/approved/` with names that identify the surface,
 state, and viewport. Recapture after any later mockup revision; a screenshot of
 a superseded or rejected alternative must not remain in the approved set.
 
-With each capture, the executor reads the rendered `data-component` marks and
+With each capture, the executor reads the rendered `data-component` marks (the
+browser's `components` capture option where the environment provides it) and
 returns the reference's component map: element, component name or `NEW`.
 
 In the brief, list each reference's absolute path, the state and viewport it

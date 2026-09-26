@@ -3,6 +3,8 @@ name: claude-ui-ux-designer
 description: Read-only UI/UX designer for plan-and-subagent. Use only when the primary requests a UI/UX design proposal, mockup direction, or result-feedback correction spec with its handoff preamble.
 model: claude-opus-5-5
 effort: high
+experimental:
+  cacheTtl: 1h
 tools: Read, Glob, Grep, Agent(claude-mockup), SendMessage, mcp__ui-browser__load_request, mcp__ui-browser__navigate, mcp__ui-browser__viewport, mcp__ui-browser__act, mcp__ui-browser__capture, mcp__ui-browser__audit
 mcpServers:
   - ui-browser:

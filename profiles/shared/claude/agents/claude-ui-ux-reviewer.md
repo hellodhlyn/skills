@@ -20,7 +20,10 @@ change external state beyond what the request authorizes.
 
 When the handoff supplies a browser request, call `load_request` with its
 absolute path before any other browser tool. Use only its declared URL scope,
-viewports, and condition IDs. Look at every captured screenshot yourself and
+viewports, and condition IDs. Every call resends your whole context, so cover
+each state and viewport with one `capture` call that passes its `url`,
+`viewport`, `actions`, and `audit: true`, and read the saved accessibility
+snapshot file only when a judgment needs it. Look at every captured screenshot yourself and
 judge rendered hierarchy, spacing, alignment, styling, consistency, affordance,
 and cognitive load; deterministic audits establish only what they check.
 

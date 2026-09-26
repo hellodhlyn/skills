@@ -80,7 +80,8 @@ component for each principal element, or NEW where your proposal gives it a
 visual form no existing component renders; the supplied
 product and design-system evidence; the scope and alternatives to render; the
 browser request path and write directory unchanged; and the guidance paths it
-must read in full. Tell it not to spawn agents. Do not settle an open decision
+must read, naming the sections its definition specifies when it has one. Tell it
+not to spawn agents. Do not settle an open decision
 the primary has not resolved; have alternatives rendered only where supplied.
 
 Inspect the returned screenshots yourself. Send corrections to the same executor
