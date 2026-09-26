@@ -26,6 +26,17 @@ Interrupt only for a confirmed hang, blocking failure, explicit cancellation,
 or work that would violate the approved contract; record why before restarting.
 Do not announce elapsed time or routine status checks. Report material findings,
 blockers, decisions needed, and completed results; answer status requests briefly.
+An unchanged wait result calls for another wait, not a progress paragraph or a
+final response. Do not repeatedly describe what you will verify after completion.
+If higher-priority host instructions require periodic updates, keep each to one
+short sentence at the required cadence and continue waiting in the same turn.
+
+Waiting on an agent is not waiting on the user. Keep the turn active while
+required delegated work is running, then proceed to the next authorized stage.
+End the turn only at an applicable user-input gate, completed delivery, explicit
+user stop, or a concrete blocker that cannot be resolved within authorization.
+Before ending, account for every active delegation; slowness or a wait timeout
+alone does not establish a blocker.
 
 ## Follow the stage contract
 
