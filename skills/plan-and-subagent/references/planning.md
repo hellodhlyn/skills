@@ -16,6 +16,7 @@ secrets and unrelated personal/customer data, and note the redaction.
 ```text
 SESSION_DIR/
   session.md                 # profile/settings sources, workdir, baseline/code state, issue context, pre-existing paths, creation time
+  status.json                # optional schema 1 checkpoint for the local session dashboard
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
   decisions.md               # material decisions, approvals, and scope changes
@@ -42,6 +43,37 @@ SESSION_DIR/
         triage.md            # accepted/rejected findings and conclusion
   final_summary.md
 ```
+
+### Status file
+
+`status.json` is an optional, machine-readable companion to `session.md` for the
+local session dashboard. It is a derived, read-only display aid; its presence or
+contents are not evidence of user approval, implementation approval, or task
+completion. If it is absent or invalid, the dashboard uses the legacy
+`session.md` view and does not infer a step, waiting state, or completion.
+
+Schema 1 requires the following fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `schema` | integer (`1`) | Status schema version |
+| `updatedAt` | ISO 8601 timestamp | Time of this checkpoint |
+| `stage` | integer (`1`–`7`) | Current workflow step |
+| `waitingOn` | `user`, `agent`, or `none` | Current waiting party |
+| `summary` | non-empty string | Concise current-state summary |
+
+Optional fields are `nextAction` (string), `userDecision` (`{ question,
+options[] }`), `activeRuns` (array of `{ runDir, agent, role, startedAt }`),
+and `focus` (array of `{ path, note? }`). `runDir` and `focus.path` are paths
+relative to `SESSION_DIR`; they must not be absolute or escape the session
+directory. `startedAt` and `updatedAt` use ISO 8601 timestamps.
+
+Write a complete new value to a temporary file in `SESSION_DIR`, then rename it
+over `status.json` so readers see either the previous or the new checkpoint,
+not a partial JSON document. Update it whenever a `session.md` checkpoint or
+resume checkpoint changes, when the waiting party changes, and when a delegated
+run starts or ends. Keep `session.md` authoritative and update both files as part
+of the same checkpoint action.
 
 ## Approval evidence
 
@@ -100,7 +132,8 @@ retroactively describe a skipped action as performed.
 Before pausing for feedback or handing off a long-running stage, update
 `session.md` with the current stage and next action, implementer/specialist
 identities, mockup/verifier identities and owned browser session, any active
-execution identity, and the accumulated review counters.
+execution identity, and the accumulated review counters. Update `status.json`
+in the same checkpoint action when it is in use.
 Link the latest approval, feedback, and validation records instead of duplicating
 their contents. Record an active execution as running, not failed or complete.
 

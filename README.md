@@ -222,6 +222,20 @@ native Claude subagents, add the listed `Read(...)` rules to
 `permissions.allow` in `~/.claude/settings.json`; `--profile claude --check`
 reports missing rules as `ACTION_REQUIRED` and never edits the file.
 
+## Session dashboard
+
+View the plan-and-subagent session journal with the local, read-only dashboard:
+
+```bash
+node skills/plan-and-subagent/scripts/session-dashboard/server.mjs --root ~/.local/share/plan-and-subagent/sessions
+```
+
+It binds to `127.0.0.1:4173` by default; use `--port <N>` to select another
+port. The server accepts only GET and HEAD requests, confines file access to the
+journal root, and serves mockup HTML with a restrictive CSP in a sandboxed
+iframe. See [the session journal and status file contract](skills/plan-and-subagent/references/planning.md#status-file)
+for the optional `status.json` checkpoint format and update rules.
+
 ## UI browser
 
 Both profiles install one local MCP server for browser evidence. Each Claude

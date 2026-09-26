@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>plan-and-subagent 세션</title>
+    <link rel="stylesheet" href="/app.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <aside id="session-rail" class="session-rail" aria-label="세션 목록">
+        <div class="rail-heading">plan-and-subagent 세션</div>
+        <label class="filter-label"><span class="sr-only">세션 필터</span><input id="session-filter" type="search" placeholder="세션 필터" autocomplete="off"></label>
+        <div id="session-groups" class="session-groups"></div>
+      </aside>
+      <main id="detail" class="detail" tabindex="-1">
+        <button id="back-to-sessions" class="back-to-sessions" type="button">← 세션</button>
+        <section id="loading" class="empty-state" aria-live="polite" hidden>세션 저널을 읽고 있습니다.</section>
+        <section id="session-detail" hidden>
+          <header id="page-header" class="page-header"><div id="connection-state" class="connection-state" role="status">연결 중</div></header>
+          <nav id="tabs" class="tabs" role="tablist" aria-label="세션 작업 보기"></nav>
+          <div id="tab-panel" role="tabpanel" tabindex="-1"></div>
+        </section>
+      </main>
+    </div>
+    <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <dialog id="lightbox" class="lightbox" aria-label="이미지 보기"></dialog>
+  </body>
+</html>

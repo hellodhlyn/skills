@@ -60,6 +60,15 @@ Create `SESSION_DIR` under `~/.local/share/plan-and-subagent/sessions/` as
 `<YYYY-MM-DD>-<short-task-slug>/`. Browser requests are written inside the
 report directory that will hold their artifacts.
 
+For a read-only local view of the session journal, run:
+
+```bash
+node ~/.claude/skills/plan-and-subagent/scripts/session-dashboard/server.mjs --root ~/.local/share/plan-and-subagent/sessions
+```
+
+The dashboard binds to `127.0.0.1:4173` by default; pass `--port <N>` to choose
+another port.
+
 ## Installation targets
 
 - Common skill: `~/.claude/skills/plan-and-subagent/`

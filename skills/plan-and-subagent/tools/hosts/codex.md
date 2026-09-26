@@ -45,6 +45,26 @@ directory. Route product fixes to the implementer.
 
 ## Completion
 
-Use the host's status and wait capability, with each wait at most 60 seconds;
-repeat until terminal completion or a blocker. Partial reports are not final.
-Retain the identity through corrections; never silently replace the role or model.
+Use the host's wait capability for active work, with each wait at most 60 seconds
+when required by the host. A wait timeout means the work is still pending:
+continue the same wait in the same turn without asking the user to continue.
+For native agents, consume delivered messages and terminal status. Use status
+inspection only when needed to resolve an ambiguous state; do not alternate
+routine waits with log, file timestamp, or status polling merely to show activity.
+Partial reports are not final. Retain the identity through corrections; never
+silently replace the role or model.
+
+For external runners launched through Codex command tools, retain both
+`session_id` and `exit_code`, not just output text. Poll an active command with
+`write_stdin` using the same `session_id` until its `exit_code` is observed.
+If a `functions.exec` call itself yields a cell ID, resume that cell with
+`functions.wait` first. The wrapper's `Script completed` only means the wrapper
+finished; the returned command may still have an active `session_id`.
+Missing terminal metadata calls for recovering the execution state, not declaring
+the runner failed or reading a partial result as complete.
+
+After terminal completion, read the full result and continue the authorized
+workflow. Before a final response, confirm that no required delegation remains
+running unless an explicit user stop or an unresolved blocker requires ending.
+Apply the skill's communication rule while waiting; a progress message never
+substitutes for the next wait call.
