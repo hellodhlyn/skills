@@ -94,3 +94,11 @@ message, progress update, or file that is still being written does not prove
 completion. Confirm terminal completion or a reported blocker before accepting
 evidence, and record the identity, model binding, terminal status, and report
 path in the journal. Never fabricate or predict a pending result.
+
+While delegated work runs, keep a silent heartbeat so the primary's prompt
+cache does not expire during long waits: start `sleep 1800` as a background
+command alongside the work. When the heartbeat completes, check each active
+delegation's terminal state; if work is still running, start another heartbeat
+without writing any user-facing text. Stop the pending heartbeat once no
+delegation is active. A heartbeat never establishes a hang; only a runner's
+stall exit or a reported failure does.

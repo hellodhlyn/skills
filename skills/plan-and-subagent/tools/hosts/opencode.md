@@ -51,6 +51,12 @@ The optional agent and variant arguments are supplied by the profile. Preserve
 the complete process result, including output, process identity, and numeric
 exit status. Do not read an empty or in-progress result file as a review.
 
+The runner stops a review whose report and OpenCode progress log have not
+changed for 15 minutes and exits with status 124. That exit is a confirmed
+stall, not slowness: keep the round's artifacts, then retry automatically in a
+fresh `REVIEW_DIR` with the same prompt, without asking the user. The stalled
+attempt still consumes an external review round.
+
 ## Review result
 
 Nonzero execution, empty output, missing terminal status, missing model identity,
