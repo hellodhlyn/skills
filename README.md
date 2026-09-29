@@ -67,7 +67,7 @@ Luna (`gpt-6-luna`, `xhigh`) through the Codex CLI with
 `scripts/run-codex-exec.sh`, which retains the implementer's thread for
 corrections. UI/UX design (`claude-ui-ux-designer`, Opus 5.5 `high`),
 conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
-`medium`), and mockups (`claude-mockup`, Sonnet 5 `medium`) are native Claude
+`medium`), and mockups (`claude-mockup`, Sonnet 5.5 `medium`) are native Claude
 Code subagents with a subagent-scoped `ui-browser` MCP. Independent code review
 uses the shared OpenCode `reviewer`. Definitions are sourced from
 `profiles/claude/` and `profiles/shared/`. Start a new Claude Code session after changing subagent

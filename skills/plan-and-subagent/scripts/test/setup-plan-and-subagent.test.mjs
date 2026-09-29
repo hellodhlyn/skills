@@ -128,7 +128,7 @@ test("Claude subagents keep their model, effort, and tool boundaries", () => {
   for (const [name, model, effort, writes, delegation] of [
     ["claude-ui-ux-designer", "claude-opus-5-5", "high", false, ["Agent(claude-mockup)", "SendMessage"]],
     ["claude-ui-ux-reviewer", "claude-opus-5-5", "medium", false, []],
-    ["claude-mockup", "claude-sonnet-5", "medium", true, []],
+    ["claude-mockup", "claude-sonnet-5-5", "medium", true, []],
   ]) {
     const text = read(name);
     assert.match(frontmatter(text), new RegExp(`^name: ${name}$`, "m"));
@@ -631,7 +631,7 @@ fs.writeFileSync(process.env.RUNNER_TEST_LOG, JSON.stringify({args, cwd: process
 const resumed=args.includes('--resume');
 console.log(JSON.stringify({type:'result', subtype: process.env.RUNNER_TEST_ERROR ? 'error_during_execution' : 'success', is_error: Boolean(process.env.RUNNER_TEST_ERROR),
   result:'design report', session_id: resumed ? (process.env.RUNNER_TEST_SESSION || args[args.indexOf('--resume')+1]) : 'session-1',
-  modelUsage:{'claude-sonnet-5':{}}}));
+  modelUsage:{'claude-sonnet-5-5':{}}}));
 `, { mode: 0o755 });
   const runner = path.join(repository, "skills/plan-and-subagent/scripts/run-claude-agent.sh");
   const log = path.join(f.directory, "claude.json");
@@ -653,7 +653,7 @@ console.log(JSON.stringify({type:'result', subtype: process.env.RUNNER_TEST_ERRO
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read(design, "result.md"), "design report");
   assert.equal(read(design, "session-id"), "session-1");
-  assert.equal(read(design, "models"), "claude-sonnet-5");
+  assert.equal(read(design, "models"), "claude-sonnet-5-5");
   assert.equal(read(design, "exit-code"), "0");
   let call = JSON.parse(fs.readFileSync(log, "utf8"));
   assert.equal(call.cwd, fs.realpathSync(workdir));

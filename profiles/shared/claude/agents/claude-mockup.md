@@ -1,7 +1,7 @@
 ---
 name: claude-mockup
 description: Briefing mockup executor for plan-and-subagent. Use only when the UI/UX designer assigns a mockup with its design direction, browser request, and output directory.
-model: claude-sonnet-5
+model: claude-sonnet-5-5
 effort: medium
 tools: Read, Glob, Grep, Write, Edit, mcp__ui-browser__load_request, mcp__ui-browser__navigate, mcp__ui-browser__viewport, mcp__ui-browser__act, mcp__ui-browser__capture, mcp__ui-browser__audit
 mcpServers:

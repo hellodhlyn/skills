@@ -22,7 +22,7 @@ providers.
   evidence: `claude-ui-ux-reviewer` (Claude Opus 5.5, `medium`). It is read-only
   except for browser evidence artifacts and judges that evidence against the
   user purpose and approved contract in the same context.
-- Mockups: `claude-mockup` (Claude Sonnet 5, `medium`), started by the designer
+- Mockups: `claude-mockup` (Claude Sonnet 5.5, `medium`), started by the designer
   rather than the runner. It owns only the assigned mockup files; pass
   `SESSION_DIR/mockups/` as the write directory when resuming the designer with
   a mockup direction.

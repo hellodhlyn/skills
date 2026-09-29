@@ -29,7 +29,7 @@ providers.
   `medium`). It is read-only except for browser evidence artifacts and judges
   that evidence against the user purpose and approved contract in the same
   context.
-- Mockups: native subagent `claude-mockup` (Claude Sonnet 5, `medium`), started
+- Mockups: native subagent `claude-mockup` (Claude Sonnet 5.5, `medium`), started
   by the designer rather than the primary. It owns only the assigned mockup
   files.
 - Independent code review: the shared external OpenCode `reviewer` agent, run
