@@ -51,8 +51,32 @@ through the `permissions.allow` rules it lists.
 A mockup is a self-contained HTML file with no network dependency, written under
 `SESSION_DIR/mockups/`. The mockup executor checks rendering through
 `ui-browser` with a `mockup` phase request whose `allowedFileRoot` is that
-directory. The primary presents the file path and captured screenshot to the
-user; the user opens the file to review it.
+directory. The file stays the source of truth and the rendering check stays
+local; the user reviews it as a Claude Artifact instead of opening the file.
+
+Present each mockup and each revision with the `Artifact` tool:
+
+- Before the first publish, load the `artifact-design` skill for the page
+  contract (title, description, icon, viewport, size). Apply it to the wrapper
+  only; the product's own tokens, typography, and components govern the mockup's
+  visual design, so do not restyle the mockup to match the skill's design
+  guidance or edit the executor's file to do so. If the contract requires a
+  change to the mockup, send it to the designer as an in-scope correction.
+- The primary publishes the executor's file as-is; the mockup executor and
+  designer do not receive the `Artifact` tool. Publish with a short
+  `<title>` naming the surface and no `capabilities`.
+- Republish a revision to the same artifact `url` so the user keeps one link.
+  Publish a separate artifact only for a separate alternative that the user
+  compares side by side.
+- Artifacts are private by default. Do not share, pin, or make one public; the
+  user decides that.
+- Give the user the artifact URL together with the captured screenshot path, and
+  record the URL and the source file path in `session.md`. The artifact is a
+  review surface only: the approved reference screenshots, component maps, and
+  brief still come from the local file as described in the common guidance.
+- If publishing is unavailable or refused, report it to the user and let them
+  choose how to review the file; do not silently substitute another display and
+  do not change the mockup's content to satisfy the publisher.
 
 ## Journal
 
