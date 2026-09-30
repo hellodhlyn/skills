@@ -79,6 +79,10 @@ or domain-semantic choices. Resolve minor implementation details directly.
 Use concrete repository evidence for reuse, deletion, and consistency decisions;
 avoid speculative abstractions, dependencies, and unrelated refactoring.
 
+Apply [decision advice](references/decision-advice.md) before settling important
+architecture or domain choices. Classify its applicability, obtain independent
+advice when required, and resolve material disagreements before the brief.
+
 For interface changes, apply [purpose-led UI/UX design](references/ui-ux-design.md)
 before proposing the design, independently of specialist or mockup applicability.
 Classify specialist review using the environment. When UI/UX review applies,
@@ -163,7 +167,9 @@ refresh affected evidence after fixes. Use its separate review budgets and
 completion gate. Return to Step 5 only when the affected result requires feedback.
 
 After required validation and internal review pass, apply authorized milestone
-policy and follow [independent review](references/external-review.md). Wait for
+policy and follow [independent review](references/external-review.md). Use the
+profile's designated final reviewer; optional preliminary review never replaces
+this gate. Wait for
 actual terminal completion and the full report. Triage findings against direct
 evidence; a successful execution is not a clean review. Route accepted fixes to
 the implementer, revalidate, and re-review only prior accepted findings. Do not

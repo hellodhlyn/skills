@@ -36,6 +36,11 @@ role definitions, and explicit start commands in the profile's native settings.
 | Runtime resources | Installation destinations and profile-specific values passed to shared executors |
 | Knowledge sources | Personal knowledge index and read-only knowledge roots, and how delegated roles obtain read access to them |
 
+Resolve the required decision advisor, conditional second opinion, designated
+final reviewer, and separate internal/external review budgets. Optional
+preliminary review cannot replace the final reviewer. Keep models in profile
+bindings and native invocation settings; the common contracts remain portable.
+
 Knowledge locations are personal environment values. The skill defines only
 how they are passed: project instructions may add or override sources, and the
 primary records the combined `KNOWLEDGE_SOURCES` in `session.md` and in each

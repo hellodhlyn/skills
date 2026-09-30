@@ -32,8 +32,16 @@ providers.
 - Mockups: native subagent `claude-mockup` (Claude Sonnet 5.5, `medium`), started
   by the designer rather than the primary. It owns only the assigned mockup
   files.
-- Independent code review: the shared external OpenCode `reviewer` agent, run
-  with `scripts/run-opencode-review.sh` and its default agent and variant.
+- Final independent code review: GPT-6 Astra (`gpt-6-astra`), `high`, through
+  `scripts/run-codex-review.mjs` and `tools/hosts/codex-review.md`. The shared
+  OpenCode reviewer is optional preliminary review and never replaces this gate.
+- Important decisions use the separately installed Claude Agent SDK `advisor`
+  skill (Claude Opus 5.5, `medium`), following its current execution guide.
+  Conditional second opinions use GPT-6 Astra (`gpt-6-astra`), `high`, through
+  the independent-analysis runner and the common decision-advice contract.
+- Internal and external review each have a separate five-round limit. Failed
+  executions count. Conditional advice allows one critique per model unless the
+  user explicitly selects an additional budget; advice does not consume review rounds.
 
 The three native subagents are shared with the Codex profile under the
 repository's `profiles/shared/claude/agents/`. Each gets the local `ui-browser`
@@ -99,7 +107,7 @@ another port.
 - Native subagents: `~/.claude/agents/`
 - Profile document and implementer instructions: `~/.config/agents/profiles/claude/`
 - Shared knowledge sources: `~/.config/agents/profiles/shared/KNOWLEDGE.md`
-- Shared OpenCode reviewer: `~/.config/opencode/agents/reviewer.md`
+- Optional preliminary OpenCode reviewer: `~/.config/opencode/agents/reviewer.md`
 - UI browser runtime: `~/.local/share/plan-and-subagent/opencode-ui-browser/`
 
 The repository installer owns these targets through one receipt and one

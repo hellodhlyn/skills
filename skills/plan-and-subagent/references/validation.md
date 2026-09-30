@@ -137,6 +137,14 @@ fix. Send accepted new regressions
 through the existing implementation loop; material contract changes still need
 user approval. Independent and UI/UX re-review remain limited to accepted findings.
 
+Distinguish finding resolution from new-defect discovery. If a fix materially
+changes the approach, adds previously unreviewed behavior, or affects a new
+high-impact boundary, record its coverage assessment and obtain a separate fresh
+independent review of that delta and affected interactions. It consumes an
+external review round and uses the initial-review contract; do not broaden a
+narrow re-review or certify new scope with an old report. Ordinary fixes still
+use focused regression verification and finding re-review.
+
 Bind validation and review records to the exact inspected code state and
 comparison baseline. Retain the task diff and content identities for changed or
 new files, including changes not captured by the version-control system. When

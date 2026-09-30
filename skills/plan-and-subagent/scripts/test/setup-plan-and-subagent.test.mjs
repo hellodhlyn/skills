@@ -63,7 +63,7 @@ test("the Codex inventory installs GPT-6 roles and no independent GLM profile", 
     && entry.root === "opencode" && entry.target === "agents/advisor.md"));
   assert.equal(fs.existsSync(path.join(repository, "profiles/codex/opencode/agents/advisor.md")), false);
   assert.equal(fs.existsSync(path.join(repository, "profiles/glm")), false);
-  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /GPT-6 Sol \(`gpt-6-sol`\)/);
+  assert.match(fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8"), /GPT-6\.1 Sol \(`gpt-6\.1-sol`\)/);
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_implementer.toml"), "utf8"), /model = "gpt-6-luna"/);
 });
 
@@ -84,8 +84,8 @@ test("the Codex profile runs the shared Claude UI/UX roles and retires its GLM a
   for (const removed of ["profiles/codex/codex/agents/luna_mockup.toml", "profiles/codex/opencode", "profiles/codex/opencode.jsonc", "skills/plan-and-subagent/scripts/run-opencode-ui-ux.sh"]) {
     assert.equal(fs.existsSync(path.join(repository, removed)), false, removed);
   }
-  assert.deepEqual(manifest.checks.codex.opencodeAgents, ["reviewer"]);
-  assert.deepEqual(manifest.checks.codex.authentication.map((check) => check.argv), [["claude", "auth", "status"]]);
+  assert.deepEqual(manifest.checks.codex.opencodeAgents, []);
+  assert.deepEqual(manifest.checks.codex.authentication.map((check) => check.argv), [["claude", "auth", "status"], ["codex", "login", "status"]]);
   const profile = fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8");
   for (const expected of ["claude-ui-ux-designer", "claude-ui-ux-reviewer", "claude-mockup", "scripts/run-claude-agent.sh", "SESSION_DIR/mockups/"]) {
     assert.ok(profile.includes(expected), expected);
@@ -487,9 +487,12 @@ test("global instruction omission is reported without rewriting it; overrides ta
 test("component installer uses shared inventory and does not claim full readiness", (t) => {
   const f = fixture(t);
   const { env } = fakeCommands(f);
-  // Run the compatibility wrapper with the real Node executable.
+  // Use real Node for the wrapper while keeping runtime/auth commands isolated.
+  const node = path.join(f.directory, "bin/node");
+  fs.unlinkSync(node);
+  fs.symlinkSync(process.execPath, node);
   const result = spawnSync("bash", [path.join(repository, "skills/plan-and-subagent/scripts/install-agent-environment.sh")], {
-    env: { ...env, PATH: process.env.PATH }, encoding: "utf8", timeout: 15_000,
+    env, encoding: "utf8", timeout: 15_000,
   });
   assert.equal(result.status, 0, result.stderr);
   assert.ok(fs.existsSync(path.join(f.roots.environment, "profiles/codex/PROFILE.md")));
@@ -514,7 +517,7 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   }
   assert.doesNotMatch(apply.stdout, /Obsolete managed file/);
   assert.doesNotMatch(apply.stdout, /\[(UPDATE|CONFLICT)\].*(reviewer|claude-mockup)\.md/);
-  assert.match(apply.stdout, /\[PASS\] OpenCode agent discovery: reviewer/);
+  assert.doesNotMatch(apply.stdout, /OpenCode agent discovery/);
   assert.doesNotMatch(apply.stdout, /codex-ui-ux/);
   assert.match(apply.stdout, /\[PASS\] Codex CLI login/);
   assert.match(apply.stdout, /\[PASS\] Global profile designation: Profile path found in .*CLAUDE\.md/);

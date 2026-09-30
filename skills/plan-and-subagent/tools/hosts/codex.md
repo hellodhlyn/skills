@@ -43,6 +43,10 @@ models, terminal status, and report. Do not replace it with a native Codex role
 or infer a fallback model. Keep the mockup role's writes limited to its assigned
 directory. Route product fixes to the implementer.
 
+When the profile binds independent review or a second architecture opinion to
+the external Codex CLI, use [Codex independent analysis](codex-review.md).
+This separate read-only role does not change the native implementation binding.
+
 ## Completion
 
 Use the host's wait capability for active work, with each wait at most 60 seconds

@@ -2,14 +2,14 @@
   "profiles": ["codex", "claude"],
   "checks": {
     "codex": {
-      "opencodeAgents": ["reviewer"],
-      "commands": [{"name": "Claude Code CLI for UI/UX roles", "argv": ["claude", "--version"]}],
-      "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}],
+      "opencodeAgents": [],
+      "commands": [{"name": "Claude Code CLI for UI/UX roles", "argv": ["claude", "--version"]}, {"name": "Codex CLI for independent Astra analysis", "argv": ["codex", "exec", "--help"]}],
+      "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}, {"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "codex", "files": ["AGENTS.override.md", "AGENTS.md"]},
       "session": "Start a new Codex session after role updates; current-session discovery cannot be verified by this installer."
     },
     "claude": {
-      "opencodeAgents": ["reviewer"],
+      "opencodeAgents": [],
       "commands": [{"name": "Codex CLI for the implementer", "argv": ["codex", "--version"]}],
       "authentication": [{"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "claude", "files": ["CLAUDE.md"]},

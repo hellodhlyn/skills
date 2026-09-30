@@ -50,12 +50,16 @@ No installer mode invokes a paid model, changes credentials, or edits global
 
 ### Codex
 
-The Codex profile uses GPT-6 Sol (`gpt-6-sol`) for the primary session and GPT-6
+The Codex profile documents GPT-6.1 Sol (`gpt-6.1-sol`) for the primary session and GPT-6
 Luna (`gpt-6-luna`) for implementation. UI/UX design, conformance review with
 browser evidence, and mockups use the same Claude Code subagent definitions as
 the Claude profile, run headless through `scripts/run-claude-agent.sh`.
-Independent code review uses the shared OpenCode `reviewer`. Consequential
-architecture advice uses the standalone Claude Agent SDK-backed `advisor` skill.
+Final independent code review uses GPT-6 Astra (`gpt-6-astra`, `high`) through
+the isolated read-only `scripts/run-codex-review.mjs` runner. The shared OpenCode
+`reviewer` is optional preliminary review and cannot replace the final gate.
+Important architecture and domain choices require the standalone Claude Agent
+SDK-backed `advisor` skill; unresolved consequential questions can receive an
+independent Astra opinion followed by bounded cross-critique.
 Definitions are sourced from `profiles/codex/` and `profiles/shared/`. Start a
 new Codex session after changing native role definitions.
 
@@ -68,14 +72,15 @@ Luna (`gpt-6-luna`, `xhigh`) through the Codex CLI with
 corrections. UI/UX design (`claude-ui-ux-designer`, Opus 5.5 `high`),
 conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
 `medium`), and mockups (`claude-mockup`, Sonnet 5.5 `medium`) are native Claude
-Code subagents with a subagent-scoped `ui-browser` MCP. Independent code review
-uses the shared OpenCode `reviewer`. Definitions are sourced from
+Code subagents with a subagent-scoped `ui-browser` MCP. Final independent code
+review uses the same read-only Astra runner; OpenCode is optional preliminary
+review. Definitions are sourced from
 `profiles/claude/` and `profiles/shared/`. Start a new Claude Code session after changing subagent
 definitions.
 
 ## OpenCode agents
 
-The shared `reviewer` definition (GLM-5.3-flash, `max`; used by both profiles)
+The optional preliminary `reviewer` definition (GLM-5.3-flash, `max`; shared by both profiles)
 is installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
 location is reported for migration and is never deleted automatically. The
 independent GLM profile is retired. Its receipt-tracked files are removed by the
@@ -190,7 +195,7 @@ host designates its own profile.
 
 This is a human-readable instruction, not automatic profile discovery. Neither
 the instruction nor the installer changes an already running session; select
-GPT-6 Sol in Codex and start a new session after native role/configuration
+GPT-6.1 Sol in Codex and start a new session after native role/configuration
 changes.
 
 Check each profile explicitly:
@@ -256,6 +261,12 @@ the official subscription OAuth token with `claude setup-token` and provide it
 as `CLAUDE_CODE_OAUTH_TOKEN`. Calls use the Claude Code subscription allowance;
 medium effort is the default compromise for complex advice and usage. API keys
 and OpenCode profile credentials are not used.
+
+Optional personal token-injection instructions belong in
+`${XDG_CONFIG_HOME:-$HOME/.config}/advisor/ENVIRONMENT.md`, independently of
+plan-and-subagent profiles. The calling agent reads this guide before invocation;
+the runner still receives `CLAUDE_CODE_OAUTH_TOKEN` through its environment.
+Keep personal secret references there, outside this repository.
 
 Install the standalone skill with `gh skill` when authorized:
 

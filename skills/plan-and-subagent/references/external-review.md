@@ -10,6 +10,31 @@ when fixes affect a result requiring confirmation. Feedback iterations do not
 consume or reset the external execution budget. New scope needs an explicit
 coverage assessment; narrow re-review does not certify previously unreviewed scope.
 
+## Reviewer capability and independence
+
+Use the profile's frontier-capable final reviewer by default. Optimize cost only
+after representative task evidence supports the alternative or the user
+explicitly selects it. A cheaper preliminary reviewer may help find easy issues;
+its clean report never decides whether to skip final independent review.
+
+Give the initial reviewer the request, approved contract, raw code and checked
+evidence, without primary/implementer pass verdicts or preliminary review
+conclusions. Supply those conclusions only after its first report when needed
+for reconciliation. Preserve substantive objections and triage each against
+direct evidence; authority, confidence, consensus, or a clean test run is not a
+reason to reject a supported finding. Unresolved material disagreements need
+additional evidence or an explicit user decision, not a silently clean gate.
+
+When findings need runtime or external facts, request scoped verification through
+an authorized executor. Preserve reviewer read-only permissions. Mark missing
+verification explicitly; an unresolved required check blocks completion.
+
+For profile/model changes, compare representative original code states with
+confirmed defects and clean changes under equivalent context, tools and budgets.
+Measure verified important-defect detection and misses, false positives,
+duplicate findings, fix regressions, cost and time. Keep evaluation separate from
+delivery; a benchmark or model label alone does not establish repository coverage.
+
 ## Execution evidence
 
 The reviewer works read-only in a context separate from implementation. It may
@@ -38,7 +63,8 @@ Write `prompt.md` with the matching context and append the contract below:
 - Initial review: the approved brief verbatim, including code quality and any
   specialist contract; workdir, baseline and inspected code identity, task-owned
   paths and complete task diff, pre-existing changes to exclude, relevant
-  environment/project instructions, and independently checked completion evidence.
+  environment/project instructions, and independently checked completion evidence
+  without earlier agents' pass verdicts or review conclusions.
   Primary context informs but never replaces the reviewer's own inspection.
 - Re-review: prior accepted findings and triage reasoning verbatim, the fix
   request, implementer response, post-fix validation and primary regression

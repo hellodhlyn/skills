@@ -25,6 +25,7 @@ SESSION_DIR/
   feedback/
     iteration-N.md           # presented result/code state, feedback, affected corrections
   reviews/
+    advice/                  # independent opinions, conditional critiques, decision and execution evidence
     implementer/
       understanding-N.md     # structured understanding-check response
       attempt-N.md           # concise handoff/result/validation summary

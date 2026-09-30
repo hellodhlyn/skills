@@ -12,6 +12,29 @@ Please investigate the repository and provide an independent recommendation.
 PROMPT
 ```
 
+## Personal execution settings
+
+Before invoking the runner, read an explicitly supplied advisor execution guide,
+or `${XDG_CONFIG_HOME:-$HOME/.config}/advisor/ENVIRONMENT.md` when present.
+This optional Markdown document belongs to the user's environment, independently
+of plan-and-subagent profiles. The calling agent reads it; the runner does not
+parse or execute it. It may describe token injection, but cannot override the
+skill's model, permissions, or advice contract. If absent, use the existing
+`CLAUDE_CODE_OAUTH_TOKEN` environment variable; if authentication is not configured,
+ask for the missing setup without requesting the token in chat.
+
+For 1Password, keep only the secret reference in that local guide and inject the
+resolved token when invoking the runner. Resolve the variables from the guide,
+installed skill, target repository, and sanitized request:
+
+```bash
+CLAUDE_CODE_OAUTH_TOKEN="$ADVISOR_TOKEN_REFERENCE" op run -- \
+  bash "$ADVISOR_RUNNER" "$WORKDIR" < "$PROMPT_FILE"
+```
+
+Never print or record the resolved token. Missing secret access is a failed
+prerequisite; do not substitute another credential or provider.
+
 ## Runtime and authentication
 
 - Requires Node.js 18 or later, npm, and `CLAUDE_CODE_OAUTH_TOKEN` from a Claude
