@@ -39,7 +39,7 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 - Planagent runtime: Node.js 24+, Git, and authenticated Pi providers
 - OpenCode CLI for OpenCode-backed roles
 - Claude Code CLI, signed in with `claude auth login`, for the Claude UI/UX roles
-- For the `advisor` skill: Node.js 18 or later, npm, Claude Code CLI, and `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`
+- For the `advisor` skill: Node.js 18 or later, a locally installed Claude Agent SDK, Claude Code CLI, and `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` (npm is needed only for global SDK lookup)
 - For the UI browser: pnpm and Playwright Chromium
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
 
@@ -255,8 +255,10 @@ browser server has no model or credential configuration.
 ## Standalone advisor
 
 The standalone skill runs the Claude Agent SDK directly, using
-`claude-opus-5-5` at `medium` effort. On first use, it installs the pinned SDK
-in the user cache; it does not install into the inspected repository. Generate
+`claude-opus-5-5` at `medium` effort. It uses the SDK already installed in the
+local Node environment or selected with `ADVISOR_SDK_PACKAGE_DIR`; it does not
+pin, install, or upgrade the SDK. The resolved version and package path are
+recorded in execution metadata. Generate
 the official subscription OAuth token with `claude setup-token` and provide it
 as `CLAUDE_CODE_OAUTH_TOKEN`. Calls use the Claude Code subscription allowance;
 medium effort is the default compromise for complex advice and usage. API keys

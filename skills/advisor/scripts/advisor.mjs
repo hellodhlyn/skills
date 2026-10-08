@@ -1,4 +1,6 @@
 import { createRequire } from "node:module";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -6,8 +8,67 @@ import { mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
 
 const MODEL = "claude-opus-5-5";
 const EFFORT = "medium";
-const SDK_VERSION = "0.3.278";
+const SDK_PACKAGE = "@anthropic-ai/claude-agent-sdk";
+const executeFile = promisify(execFile);
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+async function resolveLocalSdk() {
+  const explicitDirectory = process.env.ADVISOR_SDK_PACKAGE_DIR;
+  let entrypoint;
+  if (explicitDirectory) {
+    if (!path.isAbsolute(explicitDirectory)) {
+      throw new Error("ADVISOR_SDK_PACKAGE_DIR must be an absolute SDK package directory.");
+    }
+    const manifest = JSON.parse(await readFile(path.join(explicitDirectory, "package.json"), "utf8"));
+    if (manifest.name !== SDK_PACKAGE) {
+      throw new Error(`ADVISOR_SDK_PACKAGE_DIR must contain ${SDK_PACKAGE}.`);
+    }
+    entrypoint = createRequire(path.join(explicitDirectory, "package.json")).resolve(SDK_PACKAGE);
+  } else {
+    try {
+      entrypoint = createRequire(import.meta.url).resolve(SDK_PACKAGE);
+    } catch (error) {
+      if (error.code !== "MODULE_NOT_FOUND") throw error;
+      let stdout;
+      try {
+        ({ stdout } = await executeFile("npm", ["root", "-g"], { timeout: 10000 }));
+      } catch (error) {
+        throw new Error(`Local SDK could not be resolved and npm global lookup failed: ${summarizeError(error)}. Set ADVISOR_SDK_PACKAGE_DIR to an existing SDK package directory.`);
+      }
+      const globalRoot = stdout.trim();
+      if (!path.isAbsolute(globalRoot)) throw new Error("npm root -g did not return an absolute directory.");
+      try {
+        entrypoint = createRequire(path.join(globalRoot, "advisor-resolver.cjs")).resolve(SDK_PACKAGE);
+      } catch (error) {
+        if (error.code !== "MODULE_NOT_FOUND") throw error;
+        throw new Error(`Local ${SDK_PACKAGE} is unavailable. Install it in your Node environment or set ADVISOR_SDK_PACKAGE_DIR to its installed package directory; advisor does not install or upgrade it.`);
+      }
+    }
+  }
+
+  const resolvedEntrypoint = await realpath(entrypoint);
+  let directory = path.dirname(resolvedEntrypoint);
+  while (true) {
+    let manifest;
+    try {
+      manifest = JSON.parse(await readFile(path.join(directory, "package.json"), "utf8"));
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    if (manifest?.name === SDK_PACKAGE) {
+      if (typeof manifest.version !== "string" || !manifest.version.trim()) {
+        throw new Error(`Local ${SDK_PACKAGE} package has no valid version in ${directory}/package.json.`);
+      }
+      if (explicitDirectory && directory !== await realpath(explicitDirectory)) {
+        throw new Error("Resolved SDK does not belong to ADVISOR_SDK_PACKAGE_DIR.");
+      }
+      return { entrypoint: resolvedEntrypoint, directory, version: manifest.version };
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) throw new Error(`Cannot identify the local SDK package for ${resolvedEntrypoint}.`);
+    directory = parent;
+  }
+}
 
 function fail(message) {
   console.error(`ERROR: ${message}`);
@@ -47,9 +108,9 @@ function summarizeError(error) {
 }
 
 async function main() {
-  const [repositoryArgument, sdkPackageDirectory] = process.argv.slice(2);
-  if (!repositoryArgument || !sdkPackageDirectory) {
-    fail("advisor.mjs requires a repository directory and the installed Agent SDK package directory.");
+  const [repositoryArgument, ...extraArguments] = process.argv.slice(2);
+  if (!repositoryArgument || extraArguments.length) {
+    fail("advisor.mjs requires one repository directory. Configure a local SDK with ADVISOR_SDK_PACKAGE_DIR when needed.");
     return;
   }
 
@@ -86,7 +147,7 @@ async function main() {
   const startedAt = new Date().toISOString();
   const started = Date.now();
   const metadata = {
-    sdk: `@anthropic-ai/claude-agent-sdk@${SDK_VERSION}`,
+    sdk: SDK_PACKAGE,
     auth: "claude_subscription_oauth",
     model: MODEL,
     effort: EFFORT,
@@ -99,9 +160,11 @@ async function main() {
   let terminalResult;
   let executionError;
   try {
-    const requireFromSdk = createRequire(path.join(sdkPackageDirectory, "package.json"));
-    const entrypoint = requireFromSdk.resolve("@anthropic-ai/claude-agent-sdk");
-    const { query } = await import(pathToFileURL(entrypoint).href);
+    const sdk = await resolveLocalSdk();
+    metadata.sdk = `${SDK_PACKAGE}@${sdk.version}`;
+    metadata.sdk_path = sdk.directory;
+    const { query } = await import(pathToFileURL(sdk.entrypoint).href);
+    if (typeof query !== "function") throw new Error(`Local ${SDK_PACKAGE} does not export query().`);
     const queryOptions = {
       cwd: repositoryRoot,
       model: MODEL,

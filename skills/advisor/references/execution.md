@@ -37,8 +37,9 @@ prerequisite; do not substitute another credential or provider.
 
 ## Runtime and authentication
 
-- Requires Node.js 18 or later, npm, and `CLAUDE_CODE_OAUTH_TOKEN` from a Claude
-  subscription. Create the token with the official Claude Code CLI command
+- Requires Node.js 18 or later, a locally installed `@anthropic-ai/claude-agent-sdk`,
+  and `CLAUDE_CODE_OAUTH_TOKEN` from a Claude subscription. Create the token
+  with the official Claude Code CLI command
   `claude setup-token`, then provide it to the process that invokes the skill.
   This is the documented Claude.ai OAuth method for SDK and automated
   environments. The runner does not read API keys or OpenCode profile
@@ -47,10 +48,23 @@ prerequisite; do not substitute another credential or provider.
   the repository or run artifacts. If authentication expires or is rejected,
   the error is reported and the user can create a new token with
   `claude setup-token`.
-- On first invocation, the runner installs the pinned official package
-  `@anthropic-ai/claude-agent-sdk@0.3.278` from the public npm registry into
-  `${XDG_CACHE_HOME:-$HOME/.cache}/codex-advisor/`. Later calls reuse that cache.
-  It does not install dependencies into the inspected repository.
+- The runner uses the SDK already installed in the local Node environment,
+  without pinning, installing, or upgrading it. It first uses Node's module
+  resolution from the runner (including `NODE_PATH`), then checks the active
+  npm global directory with `npm root -g`. npm is needed only for global lookup.
+  To select a specific existing installation, set `ADVISOR_SDK_PACKAGE_DIR` to
+  the absolute package directory containing the SDK's `package.json`. An invalid
+  explicit path fails; it is never replaced with another installation.
+  For example, to use an SDK you have installed globally:
+
+  ```bash
+  ADVISOR_SDK_PACKAGE_DIR="$(npm root -g)/@anthropic-ai/claude-agent-sdk" \
+    bash "$ADVISOR_RUNNER" "$WORKDIR" < "$PROMPT_FILE"
+  ```
+
+  SDK installation and updates are managed by the user. A missing or
+  incompatible local SDK stops the run. Old advisor caches are not selected
+  automatically; an existing cached package can be selected explicitly.
 - The runner pins `claude-opus-5-5` with `medium` effort as a quality and usage
   compromise. It does not accept model, effort, or provider overrides and does
   not retry through another model or runtime. Calls consume the subscription's
@@ -76,7 +90,8 @@ temporary directory and prints its absolute path to stderr. The caller's prompt
 is not saved. On completion it contains:
 
 - `result.md` only after a successful structured result.
-- `metadata.json` with the selected model and effort, explicit working directory,
+- `metadata.json` with the actual resolved SDK version and package path when
+  available, selected model and effort, explicit working directory,
   terminal result state, duration, token usage, per-model usage, and estimated
   cost when returned by the SDK.
 - `exit_code`, written after SDK completion.
