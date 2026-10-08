@@ -167,8 +167,11 @@ language to user and project instructions; the example labels are not fixed keys
 - <합의한 결과물, 검증 방법, 실행 권한 범위>
 
 ## 완료 조건
-- <조건 ID와 관찰 가능한 결과; 승인된 완료 조건은 모두 필수>
+- <조건 ID, 관찰 가능한 결과, 출처(사용자 요청·결정 ID·연결된 요구사항·프로젝트 지침); 승인된 완료 조건은 모두 필수>
 - <이번 변경으로 대체되어 삭제할 코드가 있다면 그 내용>
+
+## 제외한 제안
+- <출처 없이 primary가 제안한 보강·edge case·확장과 제외 이유, 없으면 없음>
 
 ## 코드 품질
 - 중복 가능성: 이 작업과 책임이 겹치는 기존 component, hook, utility, 화면
@@ -192,6 +195,7 @@ language to user and project instructions; the example labels are not fixed keys
 
 ## 담당 범위
 - <구현자가 담당할 파일 또는 module>
+- <예상 규모: 변경 파일 수와 대략적인 변경량>
 
 ## 제약사항
 - <범위 경계, 호환성 요구사항, 사용자 소유 변경>
@@ -228,6 +232,18 @@ user-confirmed decisions, not its HTML or presentation mechanics. Also keep the
 brief lists. The mockup is not a project deliverable, and neither it nor its
 screenshots replace a precise UI/UX contract or post-implementation visual and
 interaction evidence.
+
+## Requirement sources
+
+Every completion condition needs a source: the user's request, a recorded user
+decision, a linked issue or specification section, or a project instruction.
+A condition without one is a primary proposal. List proposals such as defensive
+hardening, extra edge cases, recovery or reconciliation mechanisms, additional
+modes and states, and future-proofing under excluded proposals with a one-line
+reason. Move one into the completion conditions only after the user accepts it.
+Do not add a condition, state, or test for a case that current data, inputs, and
+deployment cannot produce; list it as an excluded proposal instead. Prefer the
+simplest approach that satisfies the sourced conditions.
 
 Keep optional follow-up ideas outside the completion criteria. See
 [validation and review](validation.md) for the evidence ledger and completion gate.

@@ -5,7 +5,7 @@ Codex CLI, and OpenCode. The common skill owns the pipeline and contracts; this
 file owns only the profile binding. Project instructions and explicit task
 choices take precedence.
 
-Claude Pro usage is the scarcest resource in this profile. Claude handles primary
+Claude Max usage is the scarcest resource in this profile. Claude handles primary
 judgment and UI/UX work; implementation and independent review run on other
 providers.
 

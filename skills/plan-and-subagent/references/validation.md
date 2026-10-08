@@ -124,7 +124,10 @@ component presence and automated tests alone do not establish support for the pu
 
 Use these same four perspectives for primary and initial independent review. Cite
 location, evidence, trigger, and impact. Exclude cosmetic preferences, unsupported
-hypotheticals, and unrelated pre-existing issues. Include an existing-code
+hypotheticals, and unrelated pre-existing issues. Triage internal findings with
+the same [reachability rule](external-review.md#triage) as independent review.
+When the change materially exceeds the brief's expected scale, identify the cause
+before review; logic outside the approved brief is a deviation. Include an existing-code
 interaction when this task introduces, worsens, or makes it necessary to resolve
 for the requested behavior; preserve user-owned edits.
 

@@ -22,12 +22,16 @@ approval. Material choices still belong to the user.
 
 Provide the problem, user purpose, relevant constraints, observed facts, and
 unresolved questions. Keep candidate approaches as hypotheses and include the
-status quo when viable. Do not send caller conversation history, a preferred
+status quo when viable. Include the simplest approach that satisfies the sourced
+requirements, and ask the advisor to justify added complexity with concrete
+reachable triggers. Do not ask it to preserve or maximize scope. Do not send caller conversation history, a preferred
 answer, or prior pass/fail verdicts. Let the advisor inspect the repository.
 
 Keep the complete terminal report. Verify decisive claims against traceable
 evidence; retain unsupported assumptions and missing checks explicitly. Record
-accepted and rejected advice with reasons. A primary-agent preference alone does
+accepted and rejected advice with reasons. Advised hardening follows the
+[triage reachability rule](external-review.md#triage) before it becomes a
+requirement. Present choices the advisor marks as the user's to the user. A primary-agent preference alone does
 not settle a material disagreement: obtain the missing evidence or present the
 alternatives and consequences to the user before committing the approach.
 

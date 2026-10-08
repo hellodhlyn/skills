@@ -76,6 +76,8 @@ behavior; do not infer identifiers or completion semantics across services.
 
 Ask the user about unresolved material product, architecture, data-model, UX,
 or domain-semantic choices. Resolve minor implementation details directly.
+Blanket autonomy or an instruction to decide now and report later does not
+delegate these choices. When advice marks a choice as the user's, present it.
 Use concrete repository evidence for reuse, deletion, and consistency decisions;
 avoid speculative abstractions, dependencies, and unrelated refactoring.
 
@@ -96,7 +98,10 @@ observable completion conditions, ownership, verification, and authorized delive
 Read [implementation feedback](references/implementation-feedback.md) to decide
 whether user result confirmation is required and record its scope and rationale
 in the brief. This conditional result check never replaces Step 3 approval.
-Keep optional follow-ups outside required completion conditions.
+Trace every completion condition to its [requirement source](references/planning.md#requirement-sources).
+List primary-proposed hardening, edge cases, and extensions as excluded
+proposals; include one only after the user accepts it. Keep optional follow-ups
+outside required completion conditions.
 
 ## 3. Present the brief and confirm its approval
 

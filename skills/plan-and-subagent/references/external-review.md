@@ -71,7 +71,19 @@ Write `prompt.md` with the matching context and append the contract below:
   review, and changes since the previous round with code-state identifiers.
 
 Record accepted/rejected findings, reasons, the reviewed code state and baseline,
-and the round conclusion in `triage.md`. Evidence freshness follows
+and the round conclusion in `triage.md`.
+
+## Triage
+
+Accept a finding when it shows missing required evidence or a trigger reachable
+under the current code, data, inputs, deployment, and the project's stated threat
+model. Reject a finding as unreachable when its trigger requires data that does
+not exist, a future change, manual tampering, or an actor outside that threat
+model, and record it as an optional follow-up. Higher-priority user or project
+instructions still apply. A severity label does not make a trigger reachable.
+For an accepted finding, request the smallest fix that removes its trigger. A new
+mode, state, recovery mechanism, or abstraction beyond that fix is a contract
+change that needs user agreement. Evidence freshness follows
 [validation](validation.md). An INCONCLUSIVE result does not resolve a finding.
 
 ## Initial review contract
@@ -97,8 +109,9 @@ Review from exactly these four perspectives:
 4. SECURITY: Authentication, authorization, input handling, trust boundaries, and sensitive-data
    exposure with a concrete trigger and realistic impact.
 
-Do not flag style preferences, speculative concerns without a concrete trigger, requirements
-outside the approved brief, or unrelated pre-existing code. Include existing-code interactions
+Do not flag style preferences, speculative concerns without a concrete trigger, triggers that
+current data, inputs, and deployment cannot produce, requirements outside the approved brief,
+or unrelated pre-existing code. Include existing-code interactions
 only when this task introduces, worsens, or makes them necessary to resolve for the requested
 behavior; the location being pre-existing alone is not a reason to exclude a finding. Do not edit
 files or run commands that modify repository or external state. Return a concise report with location, evidence, trigger, impact, and a useful
