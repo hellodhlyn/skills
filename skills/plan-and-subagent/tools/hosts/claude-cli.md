@@ -13,9 +13,9 @@ Claude Code session in the product workdir. Create a fresh run directory inside
 first.
 
 ```bash
-# Design proposal, conformance review, focused recheck, or first mockup message
+# Design proposal, conformance review, or focused recheck
 sh "$CLAUDE_RUNNER" start [--read-dir "$KNOWLEDGE_ROOT"]... "$WORKDIR" "$SESSION_DIR" "$RUN_DIR" "$AGENT" [WRITE_DIR]
-# In-scope correction to the same role
+# Mockup direction or in-scope correction to the same role
 sh "$CLAUDE_RUNNER" resume [--read-dir "$KNOWLEDGE_ROOT"]... "$WORKDIR" "$SESSION_DIR" "$RUN_DIR" "$AGENT" "$SESSION_ID" [WRITE_DIR]
 ```
 
@@ -28,9 +28,7 @@ pre-approved:
   `KNOWLEDGE_SOURCES`, and no other directory;
 - the role's scoped `ui-browser` tools;
 - edits inside `WRITE_DIR`, a subdirectory of `SESSION_DIR`. Pass it only for
-  the designer's mockup direction; the mockup subagent that the designer starts
-  inherits it, and the designer's tool allowlist keeps the designer itself from
-  editing.
+  the designer's mockup direction, where the designer writes the mockup itself.
 
 The runner needs network access and writes Claude Code session state outside
 the workdir. When the primary host sandboxes commands, run it with the host's
@@ -57,13 +55,9 @@ Start a fresh session for each design proposal, conformance review, focused
 recheck, and new browser request the role loads itself. Use `resume` with the
 recorded `session-id` only for in-scope corrections to the same artifact.
 
-Do not run the mockup role through the runner. Send each mockup direction,
-including user-requested revisions and approved-reference captures, to the
-designer's recorded session through `resume` with `SESSION_DIR/mockups/` as
-`WRITE_DIR`. Running as the main thread, the designer is limited to starting
-the mockup role by its definition. A headless session does not wait for
-background subagents, so the designer starts it in the foreground. The runner's
-`models` file then lists both the designer's and the mockup role's models.
+Send each mockup direction, including user-requested revisions and
+visual-reference captures, to the designer's recorded session through `resume`
+with `SESSION_DIR/mockups/` as `WRITE_DIR`.
 
 ## Completion
 

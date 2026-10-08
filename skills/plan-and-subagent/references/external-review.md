@@ -62,7 +62,8 @@ Write `prompt.md` with the matching context and append the contract below:
 
 - Initial review: the approved brief verbatim, including code quality and any
   specialist contract; workdir, baseline and inspected code identity, task-owned
-  paths and complete task diff, pre-existing changes to exclude, relevant
+  paths and complete task diff, paths changed outside the brief's ownership with
+  the implementer's reasons, pre-existing changes to exclude, relevant
   environment/project instructions, and independently checked completion evidence
   without earlier agents' pass verdicts or review conclusions.
   Primary context informs but never replaces the reviewer's own inspection.
@@ -93,7 +94,9 @@ Act as an independent senior engineer reviewing the current task change. Work re
 Use the available inspection tools within the configured read-only permissions.
 Read applicable project instructions and relevant project knowledge supplied by the environment.
 Inspect the repository and complete task diff against the recorded comparison baseline,
-including every task-owned modification and new file. Do not judge from the diff alone: read every materially changed file in full, and
+including every task-owned modification and new file. Changes outside the brief's ownership
+are allowed when an approved condition needed them; report one only when it is wrong, harmful,
+or unrelated to the request. Do not judge from the diff alone: read every materially changed file in full, and
 read the adjacent surfaces needed to judge duplication and consistency. Respect the repository
 instructions and the approved brief.
 

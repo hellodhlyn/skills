@@ -42,7 +42,8 @@ Fix a known reference deviation before presenting. When a reference state or
 preserved surface remains `UNVERIFIED`, say so first when presenting; never
 imply it matches. This does not start formal review or broad validation. For UI
 work, show the actual screen and relevant interactions with a usable
-preview or reproduction path. For other features, show representative inputs,
+preview or reproduction path, through the profile's display method. A local
+path or loopback URL the user cannot open is not a usable preview. For other features, show representative inputs,
 outputs, or an executable scenario. A static screenshot cannot establish an
 interaction; a briefing mockup cannot establish implemented behavior. Disclose
 missing or unavailable evidence and unfinished requirements. Do not ask the user

@@ -8,13 +8,13 @@ specialist retains design, user-purpose, and semantic review when applicable.
 
 ## Ownership and handoff
 
-Use a mockup identity separate from the product implementer. The configured UI/UX
-role may collect browser evidence and evaluate it in one context; record
-its runtime, model, session/process identity, browser request, and browser context.
-The mockup executor may write only assigned visualization artifacts; the UI/UX role
-may write only assigned evidence artifacts and must not fix product code. Neither
-may decide material product/UX questions. Only the UI/UX design role may start
-an agent, and only the mockup executor, as described under mockup production. Missing roles or
+The UI/UX designer writes briefing mockups; it is separate from the product
+implementer. The configured UI/UX role may collect browser evidence and evaluate
+it in one context; record each role's runtime, model, session/process identity,
+browser request, and browser context. The designer may write only the assigned
+mockup artifacts; the UI/UX role may write only assigned evidence artifacts and
+must not fix product code. Neither may decide material product/UX questions or
+start other agents. Missing roles or
 browser/visualization capabilities block only dependent work; report the gap without
 silently substituting the primary or another model. The primary never writes a
 mockup or visual design itself, including when a user asks for a redesign;
@@ -34,53 +34,46 @@ environment procedure for session continuation or fresh focused invocations. Pas
 changed criteria and relevant evidence, not the full conversation, HTML, screenshots,
 or routine tool logs back and forth. Keep raw artifacts accessible by path. The
 primary presents the actual mockup or implemented preview using the applicable display
-mechanism; an executor's summary is not a user-visible preview or user approval.
+mechanism; a role's summary is not a user-visible preview or user approval.
 
 ## Mockup production
 
-The UI/UX designer that wrote the proposal directs the mockup, so its design
-intent reaches the executor without the primary restating it. After resolving
-the choices that must precede rendering, the primary continues that designer
-with the [mockup direction](ui-ux-handoff.md#목업-지시) handoff: the applicability
+The UI/UX designer that wrote the proposal writes the mockup itself, so its
+design intent reaches the visual without another handoff. After resolving the
+choices that must precede rendering, the primary continues that designer with
+the [mockup direction](ui-ux-handoff.md#목업-지시) handoff: the applicability
 decision and scope, resolved decisions, a `mockup` phase browser request written
 in its own run directory under `SESSION_DIR/mockups/`, and the write directory.
-The designer starts the environment's mockup executor, writes its handoff from
-the proposal and those decisions, checks the returned screenshots against its
-intent, and continues the same executor for corrections under that request.
 Every new browser request, such as one for a user-requested revision or for
-approved references, goes to the same designer and starts a new executor.
-
-When the environment cannot let the designer start the executor, the primary
-starts it and passes the designer's report file by path with the resolved
-decisions, without paraphrasing the proposal. The executor reads the report in
-full and reports any conflict between it and the decisions.
+the brief's visual references, goes to the same designer. If that designer is
+unavailable, start a fresh one with its report path, the resolved decisions,
+and the mockup direction.
 
 Supply [briefing mockups](ui-ux-mockups.md) and the profile's visualization
-guidance. When the executor's definition already carries that guidance, do not
-send the profile document; otherwise pass its path only if the executor can read
-it where it is. It builds and checks the smallest agreed
-proposal from supplied product evidence, including rendering and relevant local
-interactions. It must not invent unresolved behavior or search the project again
-to choose a design. Return artifact/display paths, covered states, checks and
-results, and unresolved decisions or limitations. Local mockup checks establish
-only the proposal's behavior, never product implementation acceptance. The
-designer returns the executor's report with its fidelity judgment and the
-executor's identity.
+guidance. When the designer's definition already carries that guidance, do not
+send the profile document; otherwise pass its path only if the designer can read
+it where it is. It builds and checks the smallest agreed proposal from its
+proposal and the supplied product evidence, including rendering and relevant
+local interactions. It must not invent unresolved behavior or start a new
+project search to choose a design. Return artifact/display paths, covered
+states, checks and results, and unresolved decisions or limitations. Local
+mockup checks establish only the proposal's behavior, never product
+implementation acceptance.
 
 This is planning work before implementation approval. Permit only the assigned
 mockup artifacts; it does not start the product implementer or authorize product
 edits. The primary checks fidelity to the resolved decisions from the returned
 artifact and evidence without repeating the rendering/debugging loop.
 
-After the user confirms the direction, have the designer direct a capture of the
-[approved visual references](ui-ux-mockups.md#approved-visual-references) for
-the named states and viewports. Write a `mockup` phase browser request in
+Before presenting the brief, have the designer capture the
+[visual references](ui-ux-mockups.md#approved-visual-references) for the named
+states and viewports. Write a `mockup` phase browser request in
 `SESSION_DIR/mockups/` whose artifact directory is `SESSION_DIR/mockups/approved/`.
 Capture labels identify surface, state, and viewport. The designer returns
 each path with its state, viewport, and component map. The primary opens each screenshot
-to confirm it shows the confirmed alternative before listing it in the brief.
+to confirm it shows the mockup the brief carries before listing it in the brief.
 These references go to the implementer through the
-[implementer handoff](implementer-handoff.md), not through executor exchanges.
+[implementer handoff](implementer-handoff.md), not through designer exchanges.
 
 ## Implemented UI verification
 

@@ -15,10 +15,7 @@ listed before dependent work. Never silently replace a missing role with the
 primary, `general-purpose`, or another model.
 
 Native subagent definitions omit the Agent tool, so delegated roles cannot spawn
-further agents, except that the UI/UX designer may start the mockup role. A
-subagent definition cannot restrict which agent types it starts, so that limit
-rests on the designer definition and its handoff. State the restriction in
-each handoff.
+further agents. State that restriction in each handoff.
 
 Roles that the profile binds to an external CLI (for example a Codex
 implementer or an OpenCode reviewer) run through their runner script with the
@@ -60,7 +57,7 @@ revised contract and understanding check through `resume` to the same
 Small contract-preserving corrections are sent as a later `resume` after the
 current run ends.
 
-## Native UI/UX and mockup roles
+## Native UI/UX roles
 
 Start a fresh subagent for each design proposal, conformance review, and
 focused recheck. Give it the self-contained handoff, including absolute paths
@@ -68,12 +65,11 @@ to the applicable skill references it must read. Keep the returned agent
 identity for in-scope corrections through SendMessage; each new browser request
 still requires a fresh subagent that loads it.
 
-Do not start the mockup role directly. Send the mockup direction to the retained
-designer through SendMessage. The designer loads no new request itself; it
-starts a fresh mockup subagent in the foreground for each request the primary
-supplies and continues that subagent through SendMessage for corrections under
-the same request. If the designer is unavailable, start a fresh designer with
-its report path, the resolved decisions, and the mockup direction.
+Send the mockup direction, including revisions and visual-reference captures,
+to the retained designer through SendMessage; the designer writes the mockup
+itself and loads the browser request the direction supplies. If the designer
+is unavailable, start a fresh designer with its report path, the resolved
+decisions, and the mockup direction.
 
 Subagents read outside the session's working directories under the primary
 session's permissions. The profile states how its knowledge roots are
@@ -98,7 +94,11 @@ path in the journal. Never fabricate or predict a pending result.
 While delegated work runs, keep a silent heartbeat so the primary's prompt
 cache does not expire during long waits: start `sleep 1800` as a background
 command alongside the work. When the heartbeat completes, check each active
-delegation's terminal state; if work is still running, start another heartbeat
-without writing any user-facing text. Stop the pending heartbeat once no
+delegation's terminal state. For a running implementer, also check the skill's
+drift signals: in its `events.jsonl`, how many read-like commands it ran against
+file changes since the last check and whether it keeps reading the same paths,
+and in the worktree, the latest modification time of task files. If work is
+still running without drift, start another heartbeat without writing any
+user-facing text. Stop the pending heartbeat once no
 delegation is active. A heartbeat never establishes a hang; only a runner's
 stall exit or a reported failure does.

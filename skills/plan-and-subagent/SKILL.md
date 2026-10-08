@@ -7,8 +7,8 @@ description: Plan a code change, delegate implementation, independently validate
 
 Keep requirements, important decisions, authorization, validation oversight,
 finding triage, and delivery in the primary agent. Delegate product edits to an
-implementer and mockup execution to the environment's separate UI executors
-using [delegated UI execution](references/ui-execution.md) when applicable.
+implementer and briefing mockups to the environment's UI/UX designer using
+[delegated UI execution](references/ui-execution.md) when applicable.
 Require an independent read-only reviewer with a separate context who did not
 implement the change. The primary makes the final finding decisions.
 
@@ -23,13 +23,28 @@ workflow. Read references and tool procedures only at the indicated stage.
 Wait for each internal subagent or external runner's terminal result, repeating
 bounded waits as needed. Slowness, silence, and partial output are not hangs.
 Interrupt only for a confirmed hang, blocking failure, explicit cancellation,
-or work that would violate the approved contract; record why before restarting.
+a drift response the user chose, or work that would violate the approved
+contract; record why before restarting.
 Do not announce elapsed time or routine status checks. Report material findings,
 blockers, decisions needed, and completed results; answer status requests briefly.
 An unchanged wait result calls for another wait, not a progress paragraph or a
 final response. Do not repeatedly describe what you will verify after completion.
 If higher-priority host instructions require periodic updates, keep each to one
 short sentence at the required cadence and continue waiting in the same turn.
+
+Slowness is not drift. Drift is an agent that keeps running without progress:
+task files unchanged for a long stretch, reads far outnumbering edits, the same
+files read again and again, or repeated re-orientation in its messages. At each
+wait checkpoint, check these signals in the runner's event log and the worktree;
+they inform judgment and are not verdicts. When drift persists, report the
+signals to the user with these options and wait for the choice:
+
+- stop the agent and start a fresh session of the same role with the approved
+  brief, the current worktree state, and the remaining conditions, repeating the
+  understanding check; a long retained session is often the cause;
+- with the user's explicit approval, the primary makes the remaining fixes
+  within the approved brief; final review then comes from roles that did not
+  write those fixes.
 
 Waiting on an agent is not waiting on the user. Keep the turn active while
 required delegated work is running, then proceed to the next authorized stage.
@@ -90,8 +105,9 @@ before proposing the design, independently of specialist or mockup applicability
 Classify specialist review using the environment. When UI/UX review applies,
 use [the UI/UX handoff](references/ui-ux-handoff.md) and retain the specialist
 for conformance and user-purpose review. For interface changes, independently
-classify and apply [briefing mockups](references/ui-ux-mockups.md). Delegate applicable mockup production
-through the UI execution procedure. Verify advice before using it.
+classify and apply [briefing mockups](references/ui-ux-mockups.md). The designer
+that wrote the proposal produces an applicable mockup through the UI execution
+procedure. Verify advice before using it.
 
 Prepare the complete [implementation brief](references/planning.md), including
 observable completion conditions, ownership, verification, and authorized delivery.
@@ -111,6 +127,11 @@ collapse, or replace any part with a file link, progress update, option comparis
 or mockup. The displayed document must be the exact brief later saved and sent
 to the implementer. If it needs multiple messages, show all parts before asking
 for approval; never treat approval of an incomplete presentation as sufficient.
+When a briefing mockup applies, present it with the brief through the profile's
+display method; approving the brief approves that mockup and the visual
+references the brief lists. There is no separate mockup confirmation gate. A
+revision request on the mockup or the brief is feedback: revise both as needed
+and present the complete revised brief again.
 
 End that response by explicitly asking whether to implement this complete brief,
 state that implementation is awaiting approval, and end the turn. Do not enter

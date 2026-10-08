@@ -53,6 +53,7 @@
     {"component": "skill-opencode", "profile": "codex", "root": "opencode", "target": "skills/plan-and-subagent"},
     {"component": "opencode", "root": "opencode", "target": "agents/advisor.md"},
     {"component": "opencode", "root": "legacyOpencode", "target": "agents/advisor.md"},
-    {"component": "opencode", "root": "legacyOpencode", "target": "agents/reviewer.md"}
+    {"component": "opencode", "root": "legacyOpencode", "target": "agents/reviewer.md"},
+    {"component": "claude", "root": "claude", "target": "agents/claude-mockup.md"}
   ]
 }

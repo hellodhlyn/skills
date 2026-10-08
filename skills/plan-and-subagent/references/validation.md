@@ -64,6 +64,8 @@ ledger in `reviews/primary/round-N.md` and carry its final state into
 | --- | --- | --- | --- | --- |
 | Approved condition ID and outcome | Smallest check that proves the outcome | Command/result, file:line, or visual/interaction artifact | PASS / FAIL / UNVERIFIED | Inspected code state and task delta |
 
+When the condition's named check no longer fits the code, run an equivalent
+check that proves the same outcome and record the substitution in the evidence.
 A command's exit status proves only what the command actually exercises. Use
 code inspection, a focused test, visual evidence, or a real interaction as the
 condition needs; do not require E2E for every task. Independently verify evidence
@@ -79,9 +81,15 @@ against the requested purpose and scope; accepted unresolved omissions block a c
 internal review even when all contract items conform. Material changes require the
 existing decision and approval process before affected work, not unilateral redesign.
 
-Do not run broad checks after every minor visual adjustment. Gather visual
-feedback first, then perform the required final verification once the direction
-is complete, following repository instructions.
+Run the full test suite, lint, and typecheck once, at the completion gate on the
+final code state, following repository instructions. Implementation and fix
+rounds use only the focused checks for the affected area. Rerun the full suite
+only when code changes after that run in a way that can affect other areas, not
+for later copy or style tweaks confined to one surface. Do not run broad checks
+after every minor visual adjustment; gather visual feedback first. Other
+sessions may run the same suite concurrently. When a timing-sensitive test fails
+under that load, rerun it without the concurrent load before diagnosing the
+code, and record both results.
 
 ## Environment and user scenarios
 
@@ -127,7 +135,10 @@ location, evidence, trigger, and impact. Exclude cosmetic preferences, unsupport
 hypotheticals, and unrelated pre-existing issues. Triage internal findings with
 the same [reachability rule](external-review.md#triage) as independent review.
 When the change materially exceeds the brief's expected scale, identify the cause
-before review; logic outside the approved brief is a deviation. Include an existing-code
+before review; logic outside the approved brief is a deviation. Files changed
+outside the brief's ownership are allowed when an approved condition needed
+them; review each such change and treat one that is wrong, harmful, or
+unrelated to the request as a finding. Include an existing-code
 interaction when this task introduces, worsens, or makes it necessary to resolve
 for the requested behavior; preserve user-owned edits.
 
@@ -148,11 +159,11 @@ external review round and uses the initial-review contract; do not broaden a
 narrow re-review or certify new scope with an old report. Ordinary fixes still
 use focused regression verification and finding re-review.
 
-Bind validation and review records to the exact inspected code state and
-comparison baseline. Retain the task diff and content identities for changed or
-new files, including changes not captured by the version-control system. When
-a delivery milestone assigns a new identifier to unchanged content, record the
-mapping; the identifier change alone does not require rerunning unchanged checks.
+Bind validation and review records to the inspected code state and comparison
+baseline as [the journal](planning.md#session-journal) identifies them: commits,
+plus `git status` and a diff stat for uncommitted work. When a delivery
+milestone assigns a new identifier to unchanged content, record the mapping;
+the identifier change alone does not require rerunning unchanged checks.
 Any later code change invalidates affected evidence until rechecked. Carry forward
 unaffected evidence only with a recorded impact reason, never silently relabel an
 old report as reviewing a new commit. If the review base changes, reassess the

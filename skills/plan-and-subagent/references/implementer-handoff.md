@@ -20,9 +20,10 @@ absolute paths in the brief. If the host cannot attach images, the brief's paths
 remain and the implementer must open them itself. Resend the images only when
 the approved set changes or a new implementer session starts.
 
-Retain the session for corrections. If it becomes unavailable, use the same
-configured role with the complete brief and current state and repeat the check;
-do not silently substitute a role. For material changes, interrupt only if
+Retain the session for corrections. If it becomes unavailable, or the user
+chooses a fresh session after [drift](../SKILL.md#wait-for-delegated-work), use
+the same configured role with the complete brief and current state and repeat
+the check; do not silently substitute a role. For material changes, interrupt only if
 continuing would violate the revised contract; otherwise wait for completion.
 Resolve the decision and renewed agreement, then recheck before resuming.
 Send small contract-preserving corrections to the same session without restarting
@@ -37,13 +38,15 @@ Verify that the entire brief was shown to the user and a subsequent user message
 explicitly approved implementation of that same contract. If either evidence is
 missing or mismatched, report it as a BLOCKER and stop. A primary-agent assertion,
 an approved filename, a design-choice answer, or an approval waiver is insufficient.
-You are not alone in the codebase: preserve unrelated changes and own only the paths in the brief.
+You are not alone in the codebase: preserve unrelated changes. Your planned ownership is the
+paths in the brief.
 Read the relevant repository files yourself, then return only:
 
 SUMMARY: one sentence describing the intended change
 DONE_CRITERIA: YES or NO; list missing observable criteria when NO
 BLOCKERS: NONE or concrete blockers that prevent implementation
-SCOPE: the exact files or modules you expect to own
+SCOPE: the exact files or modules you expect to own, and any file outside the brief's
+  ownership you already expect to change, with the condition that needs it
 APPROACH: the concise implementation approach and why it fits the brief
 QUALITY: how you will satisfy the brief's code-quality section — what you will
   extend or reuse, what you will delete, and any overlap the brief missed
@@ -73,7 +76,12 @@ INTERPRETATION: any concrete instruction you would reinterpret or replace, with
 ## Implementation
 
 ```text
-Implement the approved brief now. You own only the listed files or modules.
+Implement the approved brief now. Your planned ownership is the listed files or modules.
+You may change another file only when an approved completion condition cannot be met
+without it, such as a caller or test the planned change breaks. Keep that change to what
+the condition needs: no refactoring, extension, or cleanup there. Report every such path
+under OUTSIDE_PLAN with the condition and reason. Never touch pre-existing or user-owned
+changes.
 Before editing, verify the supplied full-brief presentation and subsequent explicit
 user approval against this contract. If missing or mismatched, stop and report a
 BLOCKER; this implementation instruction alone does not establish user approval.
@@ -85,8 +93,9 @@ diagnose a concrete failure; defer broad tests, lint, typecheck, and final valid
 When confirmation is not required, or the primary records it as satisfied, run the
 validation assigned by the primary without waiting for another user response.
 Report each completion condition's
-evidence and PASS, FAIL, or UNVERIFIED status, changed files, tests, failures, and
-anything incomplete. Check adjacent behavior affected by fixes and report the code
+evidence and PASS, FAIL, or UNVERIFIED status, changed files, OUTSIDE_PLAN paths,
+tests, failures, and anything incomplete. When a condition's named check no longer
+fits the code, run an equivalent check for the same outcome and say so. Check adjacent behavior affected by fixes and report the code
 state validated. Do not perform delivery or modify external systems unless the user explicitly
 authorized it.
 
@@ -109,7 +118,7 @@ not name unchanged; a needed change there is a DEVIATION.
 For a correction ticket, change only its target within its allowed change and
 report any other edit the ticket would require before making it.
 
-If new evidence would require changing the approved approach, ownership, or an
+If new evidence would require changing the approved approach, ownership beyond what a condition needs, or an
 important product, architecture, data-model, UX, or domain-semantic decision,
 stop before editing and report:
 

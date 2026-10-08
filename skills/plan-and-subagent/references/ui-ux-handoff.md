@@ -63,38 +63,35 @@ Primary는 근거를 확인하고 중요한 선택을 사용자에게 요청합�
 
 ## 목업 지시
 
-목업이 적용되면 제안을 작성한 같은 설계자에게 이어서 보냅니다. 설계자의 제안을
-primary가 다시 요약하지 않고, 다음만 전달합니다: 적용 판단과 목업 범위, 렌더링 전에
-사용자와 정한 결정, 목업 제작자에게 넘길 browser request 절대 경로와 쓰기
+목업이 적용되면 제안을 작성한 같은 설계자에게 이어서 보냅니다. 설계자가 목업을 직접
+작성합니다. 설계자의 제안을 primary가 다시 요약하지 않고, 다음만 전달합니다: 적용
+판단과 목업 범위, 렌더링 전에 사용자와 정한 결정, browser request 절대 경로와 쓰기
 디렉터리, [브리핑 목업 지침](ui-ux-mockups.md)과 [UI 실행 위임](ui-execution.md),
-profile의 시각화 지침 경로(목업 제작자 정의에 이미 반영돼 있으면 생략). 사용자 피드백 반영이나 승인본 캡처처럼 새 browser
-request가 필요하면 같은 설계자에게 새 request와 함께 이 지시를 다시 보냅니다.
+profile의 시각화 지침 경로(설계자 정의에 이미 반영돼 있으면 생략). 사용자의 수정
+요청 반영이나 시각 참조 캡처처럼 새 browser request가 필요하면 같은 설계자에게 새
+request와 함께 이 지시를 다시 보냅니다.
 
 ```text
-Direct the briefing mockup for your proposal. Do not write files yourself and do
-not load the browser request yourself. Start only the mockup executor role named
-in this handoff, in the foreground, and never any other agent. Write its handoff
-yourself: your proposal's structure, hierarchy, composition, interaction, states,
-and rationale, amended by the resolved decisions supplied here; the product
-component for each principal element, or NEW where your proposal gives it a
-visual form no existing component renders; the supplied
-product and design-system evidence; the scope and alternatives to render; the
-browser request path and write directory unchanged; and the guidance paths it
-must read, naming the sections its definition specifies when it has one. Tell it
-not to spawn agents. Do not settle an open decision
-the primary has not resolved; have alternatives rendered only where supplied.
+Write the briefing mockup for your proposal yourself. Write and edit files only
+inside the supplied write directory; never edit product code, spawn agents, or
+change external state. Build it from your proposal's structure, hierarchy,
+composition, interaction, states, and rationale, amended by the resolved
+decisions supplied here, and from the supplied product and design-system
+evidence. Mark each principal element with the product component your proposal
+names for it, or NEW where it has a visual form no existing component renders.
+Render alternatives only where supplied, and do not settle an open decision the
+primary has not resolved. Read the supplied guidance paths first.
 
-Inspect the returned screenshots yourself. Send corrections to the same executor
-while they stay within this request and your proposal. Do not start another
-executor for this request.
+Call load_request with the supplied browser request before any other browser
+tool, check rendering and the relevant local interactions, and inspect the
+screenshots yourself. For a visual-reference capture, pass components: true and
+return each reference's component map.
 
 Return:
-MOCKUP_EXECUTOR: executor identity and terminal status
 ARTIFACTS: mockup and screenshot paths with covered states and viewports, and
-  for approved-reference captures each reference's component map
-FIDELITY: MATCHES or DIVERGES from your intent, per state, with evidence and any
-  correction you could not complete
-EXECUTOR_REPORT: the executor's checks, results, and limitations
+  for visual-reference captures each reference's component map
+CHECKS: rendering and interaction checks with observed results
+LIMITATIONS: defects you could not correct, with screenshot paths, or NONE
 DECISION_REQUIRED: material choices the mockup exposed, or NONE
 ```
 
@@ -134,7 +131,7 @@ primary engineering review와 함께 하나의 내부 리뷰 라운드로 집계
 근거와 원래 사용자 목적을 전달합니다. 전문가는 해당 근거로 설계 준수와 목적 지원을
 별도로 판단하며, 브라우저 조작을 일괄 반복하지 않습니다.
 근거가 부족하거나 충돌하면 필요한 항목만 지정해
-추가 검증을 요청합니다. 목업 제작은 별도 역할이 담당하며 전문가는 read-only를 유지합니다.
+추가 검증을 요청합니다. 목업은 설계자가 작성하며 검토자는 read-only를 유지합니다.
 
 ```text
 Perform a read-only UI/UX review of only the task-changed surfaces.

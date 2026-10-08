@@ -51,8 +51,8 @@ No installer mode invokes a paid model, changes credentials, or edits global
 ### Codex
 
 The Codex profile documents GPT-6.1 Sol (`gpt-6.1-sol`) for the primary session and GPT-6
-Luna (`gpt-6-luna`) for implementation. UI/UX design, conformance review with
-browser evidence, and mockups use the same Claude Code subagent definitions as
+Luna (`gpt-6-luna`) for implementation. UI/UX design with briefing mockups and conformance review with
+browser evidence use the same Claude Code subagent definitions as
 the Claude profile, run headless through `scripts/run-claude-agent.sh`.
 Final independent code review uses GPT-6 Astra (`gpt-6-astra`, `high`) through
 the isolated read-only `scripts/run-codex-review.mjs` runner. The shared OpenCode
@@ -69,10 +69,9 @@ The Claude profile uses Claude Opus 5.5 (`claude-opus-5-5`) for the primary
 Claude Code session, at `medium` effort by default. Implementation runs on GPT-6
 Luna (`gpt-6-luna`, `xhigh`) through the Codex CLI with
 `scripts/run-codex-exec.sh`, which retains the implementer's thread for
-corrections. UI/UX design (`claude-ui-ux-designer`, Opus 5.5 `high`),
-conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
-`medium`), and mockups (`claude-mockup`, Sonnet 5.5 `medium`) are native Claude
-Code subagents with a subagent-scoped `ui-browser` MCP. Final independent code
+corrections. UI/UX design with briefing mockups (`claude-ui-ux-designer`, Opus 5.5 `high`)
+and conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
+`medium`) are native Claude Code subagents with a subagent-scoped `ui-browser` MCP. Final independent code
 review uses the same read-only Astra runner; OpenCode is optional preliminary
 review. Definitions are sourced from
 `profiles/claude/` and `profiles/shared/`. Start a new Claude Code session after changing subagent
@@ -216,6 +215,8 @@ location.
 The Codex profile's earlier UI/UX files (`luna_mockup.toml`, the OpenCode
 `codex-ui-ux` agent, `profiles/codex/opencode.jsonc`, and the OpenCode skill
 copy) are reported as obsolete and preserved. Remove them after inspection.
+The retired `claude-mockup` subagent (`~/.claude/agents/claude-mockup.md`) is
+reported and preserved the same way; the designer now writes briefing mockups.
 
 ### Knowledge sources
 
@@ -244,7 +245,7 @@ for the optional `status.json` checkpoint format and update rules.
 ## UI browser
 
 Both profiles install one local MCP server for browser evidence. Each Claude
-UI/UX and mockup role starts its own scoped server and binds the per-run request
+UI/UX role starts its own scoped server and binds the per-run request
 with `load_request`, whether it runs as a native subagent or through the Claude
 runner; the primary session does not receive the browser tools. A request
 confines navigation to declared origins (or, for mockups, files under a declared

@@ -5,7 +5,7 @@ supplies the role names and native definitions.
 
 ## Roles
 
-The profile must identify the implementation, UI/UX, and mockup roles and their
+The profile must identify the implementation and UI/UX roles and their
 native or external definitions. Install them separately from the portable skill;
 start a new session to discover changed native roles. Never replace a different
 installed definition without explicit authorization.
@@ -34,13 +34,13 @@ a material contract change, interrupt only if continuing would violate the
 revised contract; otherwise wait. Resume after the revised understanding check.
 Send small contract-preserving corrections without interruption.
 
-When the profile binds UI/UX or mockup work to Claude Code subagent
+When the profile binds UI/UX work, including briefing mockups, to Claude Code subagent
 definitions, follow [Claude CLI execution](claude-cli.md): create a fresh run
 directory, write the exact design, review, or mockup direction prompt and
 supplied evidence, then run the Claude runner. Mockup direction resumes the
-designer, which starts the mockup role itself. Record the agent, session ID,
+designer, which writes the mockup itself. Record the agent, session ID,
 models, terminal status, and report. Do not replace it with a native Codex role
-or infer a fallback model. Keep the mockup role's writes limited to its assigned
+or infer a fallback model. Keep the designer's writes limited to its assigned
 directory. Route product fixes to the implementer.
 
 When the profile binds independent review or a second architecture opinion to

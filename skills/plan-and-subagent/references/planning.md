@@ -13,6 +13,15 @@ reasoning, or routine tool output. Retain complete independent-review reports
 and relevant execution failure artifacts using the configured procedure. Redact
 secrets and unrelated personal/customer data, and note the redaction.
 
+Identify code state with version control: the baseline and reviewed commits,
+plus `git status` and a diff stat for uncommitted work. Do not create per-file
+hash manifests, identity files, or a copy of the patch for each round; save a
+patch only when uncommitted work must be preserved or moved and version control
+cannot hold it. Store a check's full output only when it failed or a review
+cites it; otherwise record the command, exit status, and pass/fail counts.
+Write journal entries as readable sentences: abbreviating or dropping spaces to
+save length makes the record unusable.
+
 ```text
 SESSION_DIR/
   session.md                 # profile/settings sources, workdir, baseline/code state, issue context, pre-existing paths, creation time
@@ -21,7 +30,7 @@ SESSION_DIR/
   approved_brief.md          # latest user-approved brief
   decisions.md               # material decisions, approvals, and scope changes
   mockups/
-    approved/                # screenshots of the confirmed mockup states listed in the brief
+    approved/                # visual-reference screenshots of the mockup the approved brief carries
   feedback/
     iteration-N.md           # presented result/code state, feedback, affected corrections
   reviews/
@@ -35,7 +44,7 @@ SESSION_DIR/
     uiux/
       design-N.md            # pre-approval UI/UX contract proposal
       conformance-N.md       # post-implementation conformance and user-purpose review
-      execution-N.md         # mockup/preview/final phase, executor identity, condition evidence and artifact paths
+      execution-N.md         # mockup/preview/final phase, role identity, condition evidence and artifact paths
     external/
       round-N/
         prompt.md
@@ -167,7 +176,7 @@ language to user and project instructions; the example labels are not fixed keys
 - <합의한 결과물, 검증 방법, 실행 권한 범위>
 
 ## 완료 조건
-- <조건 ID, 관찰 가능한 결과, 출처(사용자 요청·결정 ID·연결된 요구사항·프로젝트 지침); 승인된 완료 조건은 모두 필수>
+- <조건 ID, 관찰 가능한 결과, 확인 방법, 출처(사용자 요청·결정 ID·연결된 요구사항·프로젝트 지침); 승인된 완료 조건은 모두 필수>
 - <이번 변경으로 대체되어 삭제할 코드가 있다면 그 내용>
 
 ## 제외한 제안
@@ -200,12 +209,9 @@ language to user and project instructions; the example labels are not fixed keys
 ## 제약사항
 - <범위 경계, 호환성 요구사항, 사용자 소유 변경>
 
-## 검증
-- <조건 ID → 확인 방법 → 기대 결과; 각 조건을 증명하는 가장 작은 검증>
-- <결과 확인이 필요하면 미리보기용 동작 확인과 확인 후 최종 검증을 구분>
-
 ## 구현 결과 확인
 - <결과 확인 필요 여부와 근거; 필요하면 확인할 기능·화면과 대표 시나리오>
+- <결과 확인이 필요하면 미리보기용 동작 확인과 확인 후 최종 검증을 구분>
 - <필요 시 확인 후 최종 검증·리뷰로 진행; 명시적 확인 위임이 있으면 그 범위>
 - <불필요하면 구현 후 검증·수정·리뷰까지 계속 진행>
 ```
@@ -244,6 +250,12 @@ reason. Move one into the completion conditions only after the user accepts it.
 Do not add a condition, state, or test for a case that current data, inputs, and
 deployment cannot produce; list it as an excluded proposal instead. Prefer the
 simplest approach that satisfies the sourced conditions.
+
+Write each condition as an observable outcome together with the smallest check
+that proves it, not as a frozen command, test file, or path. Code moves during
+implementation; when the named check no longer fits the code, an equivalent
+check proving the same outcome satisfies the condition, and the evidence names
+the substitution. Changing the outcome itself is a contract change.
 
 Keep optional follow-up ideas outside the completion criteria. See
 [validation and review](validation.md) for the evidence ledger and completion gate.

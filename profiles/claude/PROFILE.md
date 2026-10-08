@@ -21,17 +21,15 @@ providers.
   brief whose difficulty justifies it and record the choice. The Codex session
   runs in the `workspace-write` sandbox and is retained by thread ID for
   understanding checks, implementation, and corrections.
-- UI/UX design proposal and mockup direction: native subagent
-  `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It is read-only, returns
-  advisory evidence, and starts `claude-mockup` for each mockup direction.
+- UI/UX design proposal and briefing mockups: native subagent
+  `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It returns advisory
+  evidence and writes each briefing mockup itself under a mockup direction;
+  otherwise it is read-only.
 - UI/UX conformance review, focused recheck, and implemented UI browser
   evidence: native subagent `claude-ui-ux-reviewer` (Claude Opus 5.5,
   `medium`). It is read-only except for browser evidence artifacts and judges
   that evidence against the user purpose and approved contract in the same
   context.
-- Mockups: native subagent `claude-mockup` (Claude Sonnet 5.5, `medium`), started
-  by the designer rather than the primary. It owns only the assigned mockup
-  files.
 - Final independent code review: GPT-6 Astra (`gpt-6-astra`), `high`, through
   `scripts/run-codex-review.mjs` and `tools/hosts/codex-review.md`. The shared
   OpenCode reviewer is optional preliminary review and never replaces this gate.
@@ -43,7 +41,7 @@ providers.
   executions count. Conditional advice allows one critique per model unless the
   user explicitly selects an additional budget; advice does not consume review rounds.
 
-The three native subagents are shared with the Codex profile under the
+The two native subagents are shared with the Codex profile under the
 repository's `profiles/shared/claude/agents/`. Each gets the local `ui-browser`
 MCP as a server scoped to that subagent; the primary session does not receive
 the browser tools.
@@ -56,34 +54,42 @@ through the `permissions.allow` rules it lists.
 
 ## Visualization and display
 
-A mockup is a self-contained HTML file with no network dependency, written under
-`SESSION_DIR/mockups/`. The mockup executor checks rendering through
+The user works remotely and cannot open local file paths or loopback URLs. Any
+visual result the user must see goes out as a Claude Artifact: briefing mockups,
+result-confirmation previews, and UI evidence the user is asked to judge. Never
+offer a local path, `localhost`, or `127.0.0.1` URL as the way to view something.
+
+A mockup is a self-contained HTML file with no network dependency, written by
+the designer under `SESSION_DIR/mockups/`. The designer checks rendering through
 `ui-browser` with a `mockup` phase request whose `allowedFileRoot` is that
 directory. The file stays the source of truth and the rendering check stays
-local; the user reviews it as a Claude Artifact instead of opening the file.
+local; the user reviews it as an Artifact instead of opening the file.
 
-Present each mockup and each revision with the `Artifact` tool:
+Publish with the `Artifact` tool:
 
 - Before the first publish, load the `artifact-design` skill for the page
   contract (title, description, icon, viewport, size). Apply it to the wrapper
   only; the product's own tokens, typography, and components govern the mockup's
   visual design, so do not restyle the mockup to match the skill's design
-  guidance or edit the executor's file to do so. If the contract requires a
+  guidance or edit the designer's file to do so. If the contract requires a
   change to the mockup, send it to the designer as an in-scope correction.
-- The primary publishes the executor's file as-is; the mockup executor and
-  designer do not receive the `Artifact` tool. Publish with a short
-  `<title>` naming the surface and no `capabilities`.
+- The primary publishes the designer's mockup file as-is; the designer does not
+  receive the `Artifact` tool. Publish with a short `<title>` naming the surface
+  and no `capabilities`.
+- For a result-confirmation preview or UI evidence, publish one page that embeds
+  the captured screenshots as `data:` URIs, with each state
+  and viewport labeled. Do not restyle or crop the screenshots.
 - Republish a revision to the same artifact `url` so the user keeps one link.
   Publish a separate artifact only for a separate alternative that the user
   compares side by side.
 - Artifacts are private by default. Do not share, pin, or make one public; the
   user decides that.
-- Give the user the artifact URL together with the captured screenshot path, and
-  record the URL and the source file path in `session.md`. The artifact is a
-  review surface only: the approved reference screenshots, component maps, and
-  brief still come from the local file as described in the common guidance.
+- Give the user the artifact URL, and record the URL and the source file paths
+  in `session.md`. The artifact is a review surface only: the approved reference
+  screenshots, component maps, and brief still come from the local files as
+  described in the common guidance.
 - If publishing is unavailable or refused, report it to the user and let them
-  choose how to review the file; do not silently substitute another display and
+  choose how to review the result; do not silently substitute another display and
   do not change the mockup's content to satisfy the publisher.
 
 ## Journal
@@ -99,7 +105,8 @@ node ~/.claude/skills/plan-and-subagent/scripts/session-dashboard/server.mjs --r
 ```
 
 The dashboard binds to `127.0.0.1:4173` by default; pass `--port <N>` to choose
-another port.
+another port. It is a local aid for the primary host; do not offer it to
+the remote user as a way to follow the session.
 
 ## Installation targets
 

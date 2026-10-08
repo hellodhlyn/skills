@@ -9,9 +9,8 @@ project instructions and explicit user choices take precedence.
 | --- | --- | --- |
 | Primary | Codex / GPT-6.1 Sol (`gpt-6.1-sol`) | Select in Codex |
 | Implementation | `luna_implementer` / `gpt-6-luna` | `max` |
-| UI/UX design | `claude-ui-ux-designer` / Claude Opus 5.5 | `high` |
+| UI/UX design and briefing mockups | `claude-ui-ux-designer` / Claude Opus 5.5 | `high` |
 | UI/UX review and browser evidence | `claude-ui-ux-reviewer` / Claude Opus 5.5 | `medium` |
-| Mockups | `claude-mockup` / Claude Sonnet 5.5 | `medium` |
 | Final independent code review | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
 | Architecture advice | Separate `advisor` skill / Claude Opus 5.5 | `medium` |
 | Conditional second architecture opinion | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
@@ -27,8 +26,8 @@ require a new session; this document does not change a running session.
   review follows `tools/hosts/opencode.md`.
 - Use the native Codex implementer. Claude UI/UX roles use `scripts/run-claude-agent.sh`
   and their scoped `ui-browser` MCP; check `claude auth status` before use.
-- The designer starts the mockup agent. Design and review are read-only except
-  for assigned mockup/browser artifacts; product fixes go to the implementer.
+- The designer writes briefing mockups itself. Design and review are read-only
+  except for assigned mockup/browser artifacts; product fixes go to the implementer.
 - Final review uses `scripts/run-codex-review.mjs` with `gpt-6-astra`, `high`,
   in a fresh read-only Codex CLI context; check `codex login status` first. A
   preliminary review cannot skip this gate.
