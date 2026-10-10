@@ -51,7 +51,7 @@ No installer mode invokes a paid model, changes credentials, or edits global
 ### Codex
 
 The Codex profile documents GPT-6.1 Sol (`gpt-6.1-sol`) for the primary session and GPT-6
-Luna (`gpt-6-luna`) for implementation. UI/UX design with briefing mockups and conformance review with
+Luna (`gpt-6-luna`, `xhigh`) for implementation. UI/UX design with briefing mockups and conformance review with
 browser evidence use the same Claude Code subagent definitions as
 the Claude profile, run headless through `scripts/run-claude-agent.sh`.
 Final independent code review uses GPT-6 Astra (`gpt-6-astra`, `high`) through

@@ -1,7 +1,7 @@
 name = "luna_implementer"
 description = "Implementation agent for approved, well-scoped code changes delegated by plan-and-subagent."
 model = "gpt-6-luna"
-model_reasoning_effort = "max"
+model_reasoning_effort = "xhigh"
 
 developer_instructions = """
 Implement only the approved brief supplied by the primary agent.

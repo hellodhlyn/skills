@@ -8,7 +8,7 @@ project instructions and explicit user choices take precedence.
 | Responsibility | Agent / model | Effort |
 | --- | --- | --- |
 | Primary | Codex / GPT-6.1 Sol (`gpt-6.1-sol`) | Select in Codex |
-| Implementation | `luna_implementer` / `gpt-6-luna` | `max` |
+| Implementation | `luna_implementer` / `gpt-6-luna` | `xhigh` |
 | UI/UX design and briefing mockups | `claude-ui-ux-designer` / Claude Opus 5.5 | `high` |
 | UI/UX review and browser evidence | `claude-ui-ux-reviewer` / Claude Opus 5.5 | `medium` |
 | Final independent code review | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
