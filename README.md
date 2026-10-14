@@ -220,13 +220,32 @@ reported and preserved the same way; the designer now writes briefing mockups.
 
 ### Knowledge sources
 
-The common skill refers only to a designated knowledge index and read-only
-knowledge roots. The personal values live in `profiles/shared/KNOWLEDGE.md`,
-shared by both profiles; project instructions may add sources for their project.
-The Codex profile passes each root to the Claude runner with `--read-dir`. For
-native Claude subagents, add the listed `Read(...)` rules to
-`permissions.allow` in `~/.claude/settings.json`; `--profile claude --check`
-reports missing rules as `ACTION_REQUIRED` and never edits the file.
+The Codex profile uses the personal sources in `profiles/shared/KNOWLEDGE.md`
+and passes their roots to the Claude runner with `--read-dir`. The experimental
+Claude profile uses repository instructions and explicit handoffs instead; it
+has no personal knowledge-index or global knowledge-read permission requirement.
+
+### Experimental Claude Cloud implementer
+
+The Claude profile calls the native `claude-cloud-implementer` subagent, which
+uses the official Claude CLI to manage a retained Cloud Haiku 5.5 session.
+The coordinator itself runs locally on Haiku. Implementation stays in Cloud;
+understanding checks and corrections reuse its session ID. Codex Astra remains
+the independent final reviewer.
+
+Approved code is sent as a disposable source snapshot with one transport-only
+commit. Briefs, mockups, fixtures, and worker instructions are staged but
+uncommitted bundle inputs. Internal deliberation, hidden evaluation data,
+credentials, and original repository history are excluded. The worker returns
+an uncommitted binary patch; the primary verifies it before applying and reviewing
+it. No product commit or push is required for this transport.
+
+See [Cloud execution](skills/plan-and-subagent/tools/hosts/claude-cloud.md) for
+bundle construction, gates, official CLI retrieval, patch integrity, and timing.
+No-remote teleport transcript retrieval is experimental and must be verified;
+Cloud availability and promotional credit deduction are not established by
+installer checks. Changing source does not install this profile in the personal
+environment. An authorized installation still requires dry-run, then apply.
 
 ## Session dashboard
 
