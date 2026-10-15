@@ -75,6 +75,7 @@ test("the Codex profile runs the shared Claude UI/UX roles and retires its GLM a
   for (const name of ["claude-ui-ux-designer", "claude-ui-ux-reviewer"]) {
     assert.ok(targets.includes(path.join(f.roots.claude, "agents", `${name}.md`)), name);
   }
+  assert.equal(targets.includes(path.join(f.roots.claude, "agents/claude-cloud-implementer.md")), false);
   assert.equal(targets.some((target) => within(path.join(f.roots.claude, "skills"), target)), false);
   assert.equal(targets.some((target) => within(path.join(f.roots.opencode, "skills"), target)), false);
   for (const retired of ["agents/luna_mockup.toml", "agents/codex-ui-ux.md", "profiles/codex/opencode.jsonc", "skills/plan-and-subagent"]) {
@@ -106,8 +107,9 @@ test("the Claude inventory installs native Claude roles and shares the OpenCode 
     path.join(f.roots.claude, "skills/plan-and-subagent/tools/hosts/claude-code.md"),
     path.join(f.roots.claude, "agents/claude-ui-ux-designer.md"),
     path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"),
+    path.join(f.roots.claude, "agents/claude-cloud-implementer.md"),
     path.join(f.roots.environment, "profiles/claude/PROFILE.md"),
-    path.join(f.roots.environment, "profiles/claude/codex/implementer.md"),
+    path.join(f.roots.environment, "profiles/claude/cloud/implementer.md"),
     path.join(f.roots.opencode, "agents/reviewer.md"),
     path.join(f.roots.browser, "server.mjs"),
   ]) assert.ok(targets.includes(expected), expected);
@@ -141,9 +143,9 @@ test("Claude subagents keep their model, effort, and tool boundaries", () => {
     assert.deepEqual(allowed.filter((tool) => tool.startsWith("Agent") || tool === "SendMessage"), delegation, name);
   }
   const profile = fs.readFileSync(path.join(repository, "profiles/claude/PROFILE.md"), "utf8");
-  assert.match(profile, /GPT-6 Luna \(`gpt-6-luna`\)/);
-  assert.match(profile, /effort `xhigh`/);
-  assert.match(profile, /\[codex\/implementer\.md\]\(codex\/implementer\.md\)/);
+  assert.match(profile, /Claude Haiku 5\.5 \(`claude-haiku-5-5`\)/);
+  assert.match(profile, /claude-cloud-implementer/);
+  assert.match(profile, /\[cloud\/implementer\.md\]\(cloud\/implementer\.md\)/);
 });
 
 test("read-only permission evaluation denies unknown tools while allowing installed contracts", (t) => {
@@ -510,7 +512,7 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   assert.equal(fs.existsSync(path.join(f.roots.claude, "skills")), false);
   const apply = run(["--apply", "--profile", "claude"]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
-  for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"), path.join(f.roots.environment, "profiles/claude/codex/implementer.md")]) {
+  for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"), path.join(f.roots.environment, "profiles/claude/cloud/implementer.md")]) {
     assert.ok(fs.existsSync(file), file);
   }
   assert.doesNotMatch(apply.stdout, /Obsolete managed file/);
@@ -518,6 +520,7 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   assert.doesNotMatch(apply.stdout, /OpenCode agent discovery/);
   assert.doesNotMatch(apply.stdout, /codex-ui-ux/);
   assert.match(apply.stdout, /\[PASS\] Codex CLI login/);
+  assert.match(apply.stdout, /\[PASS\] Claude Code login/);
   assert.match(apply.stdout, /\[PASS\] Global profile designation: Profile path found in .*CLAUDE\.md/);
   assert.equal(fs.readFileSync(codexSkill, "utf8"), codexBefore);
   assert.ok(calls().some((call) => call[0] === "gh" && call.includes("claude-code")));
@@ -557,33 +560,17 @@ test("Claude profile reports missing Codex login and designation as user actions
   assert.equal(fs.readFileSync(path.join(f.roots.claude, "CLAUDE.md"), "utf8"), "Other instructions\n");
 });
 
-test("Claude profile reports missing knowledge read permissions without editing settings", (t) => {
+test("Claude profile needs no personal knowledge permissions or installed index", (t) => {
   const f = fixture(t);
   const { run } = fakeCommands(f);
   const settings = path.join(f.roots.claude, "settings.json");
-  const original = JSON.stringify({ permissions: { allow: ["Read(~/.knowledges/**)"] } });
-  fs.writeFileSync(settings, original);
-  const result = run(["--apply", "--profile", "claude"]);
-  assert.equal(result.status, 2, result.stdout + result.stderr);
-  assert.match(result.stdout, /\[ACTION_REQUIRED\] Knowledge read permissions: Add Read\(~\/Workspace\/bakb\/\*\*\) to permissions\.allow/);
-  assert.equal(fs.readFileSync(settings, "utf8"), original);
   fs.rmSync(settings);
-  assert.match(run(["--check", "--profile", "claude"]).stdout, /\[ACTION_REQUIRED\] Knowledge read permissions: .*file is missing/);
-  assert.doesNotMatch(run(["--check"]).stdout, /Knowledge read permissions/);
-});
-
-test("personal knowledge sources stay in the profile layer", () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
-  const knowledge = fs.readFileSync(path.join(repository, "profiles/shared/KNOWLEDGE.md"), "utf8");
-  for (const rule of manifest.checks.claude.readPermissions.rules) assert.ok(knowledge.includes(rule), rule);
-  for (const profile of ["codex", "claude"]) {
-    assert.match(fs.readFileSync(path.join(repository, "profiles", profile, "PROFILE.md"), "utf8"), /\]\(\.\.\/shared\/KNOWLEDGE\.md\)/);
-  }
-  const skill = path.join(repository, "skills/plan-and-subagent");
-  const documents = fs.readdirSync(skill, { recursive: true }).filter((file) => !file.includes("node_modules") && /\.(md|sh|mjs)$/.test(file) && !file.includes("test/"));
-  for (const file of documents) {
-    assert.doesNotMatch(fs.readFileSync(path.join(skill, file), "utf8"), /\.knowledges|bakb/i, file);
-  }
+  const result = run(["--apply", "--profile", "claude"]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.doesNotMatch(result.stdout, /Knowledge read permissions/);
+  assert.equal(fs.existsSync(settings), false);
+  assert.equal(fs.existsSync(path.join(f.roots.environment, "profiles/shared/KNOWLEDGE.md")), false);
+  assert.ok(fs.existsSync(path.join(f.roots.claude, "agents/claude-cloud-implementer.md")));
 });
 
 test("Codex profile reports a missing Claude Code login as a user action", (t) => {

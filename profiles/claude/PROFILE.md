@@ -1,13 +1,13 @@
 # Claude profile for plan-and-subagent
 
-This profile connects the common plan-and-subagent skill to Claude Code, the
-Codex CLI, and OpenCode. The common skill owns the pipeline and contracts; this
+This experimental profile connects the common plan-and-subagent skill to Claude
+Code Cloud, the Codex CLI, and OpenCode. The common skill owns the pipeline and contracts; this
 file owns only the profile binding. Project instructions and explicit task
 choices take precedence.
 
-Claude Max usage is the scarcest resource in this profile. Claude handles primary
-judgment and UI/UX work; implementation and independent review run on other
-providers.
+Claude handles primary judgment and UI/UX work. Implementation runs on Haiku in
+a Cloud session; independent review stays on Codex. Promotional Cloud credit
+deduction is not observable through this workflow and must not be promised.
 
 ## Native bindings
 
@@ -15,12 +15,15 @@ providers.
   effort by default and `high` for architecture-heavy tasks; choose it with
   `/effort` before starting the session. Follow the common skill's
   `tools/hosts/claude-code.md`.
-- Implementation: GPT-6 Luna (`gpt-6-luna`) through the Codex CLI, using
-  `scripts/run-codex-exec.sh` with effort `xhigh` and the instruction file
-  [codex/implementer.md](codex/implementer.md). Use `max` only for an approved
-  brief whose difficulty justifies it and record the choice. The Codex session
-  runs in the `workspace-write` sandbox and is retained by thread ID for
-  understanding checks, implementation, and corrections.
+- Implementation: Claude Haiku 5.5 (`claude-haiku-5-5`), `high`, in a Cloud
+  session. Invoke the native `claude-cloud-implementer` subagent, whose local
+  Haiku role only manages the official CLI transport. It must not implement
+  locally. Read the common skill's `tools/hosts/claude-cloud.md`
+  and bundle [cloud/implementer.md](cloud/implementer.md) with the approved
+  handoff. Retain the Cloud session ID across the read-only understanding check,
+  implementation, and corrections. Verify the served Cloud model from the
+  retrieved transcript; a launch flag alone is not model evidence. Never
+  substitute a local agent or another model when Cloud is unavailable.
 - UI/UX design proposal and briefing mockups: native subagent
   `claude-ui-ux-designer` (Claude Opus 5.5, `high`). It returns advisory
   evidence and writes each briefing mockup itself under a mockup direction;
@@ -41,16 +44,19 @@ providers.
   executions count. Conditional advice allows one critique per model unless the
   user explicitly selects an additional budget; advice does not consume review rounds.
 
-The two native subagents are shared with the Codex profile under the
+The two native UI/UX subagents are shared with the Codex profile under the
 repository's `profiles/shared/claude/agents/`. Each gets the local `ui-browser`
 MCP as a server scoped to that subagent; the primary session does not receive
 the browser tools.
 
 ## Knowledge sources
 
-Use the personal index and read-only roots in
-[shared knowledge sources](../shared/KNOWLEDGE.md). Native subagents read them
-through the `permissions.allow` rules it lists.
+Use repository instructions and the self-contained approved handoff. This
+profile has no personal knowledge-index dependency. Pass needed facts, mockups,
+images, and fixtures explicitly as bundle inputs. Keep primary deliberation,
+journals, hidden evaluation data, credentials, and unrelated history outside
+the bundle and outside product branches. UI/UX roles receive the same explicit
+sources they need; they do not discover personal knowledge roots implicitly.
 
 ## Visualization and display
 
@@ -113,7 +119,6 @@ the remote user as a way to follow the session.
 - Common skill: `~/.claude/skills/plan-and-subagent/`
 - Native subagents: `~/.claude/agents/`
 - Profile document and implementer instructions: `~/.config/agents/profiles/claude/`
-- Shared knowledge sources: `~/.config/agents/profiles/shared/KNOWLEDGE.md`
 - Optional preliminary OpenCode reviewer: `~/.config/opencode/agents/reviewer.md`
 - UI browser runtime: `~/.local/share/plan-and-subagent/opencode-ui-browser/`
 

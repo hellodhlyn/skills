@@ -23,6 +23,11 @@ Bash tool, as described below and in [OpenCode execution](opencode.md).
 
 ## External Codex implementer
 
+For a profile binding implementation to a Cloud transport subagent, use
+[Cloud implementation](claude-cloud.md) instead of this section. The Agent call
+runs the transport coordinator locally; the retained Cloud session runs the
+implementation. The coordinator returns evidence to the primary at each gate.
+
 Use `../../scripts/run-codex-exec.sh` when the profile binds the implementer to
 the Codex CLI. The profile supplies the model, effort, and instruction file.
 Create a fresh `reviews/implementer/run-N/` directory for every invocation and

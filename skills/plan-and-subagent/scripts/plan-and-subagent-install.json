@@ -10,10 +10,9 @@
     },
     "claude": {
       "opencodeAgents": [],
-      "commands": [{"name": "Codex CLI for the implementer", "argv": ["codex", "--version"]}],
-      "authentication": [{"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
+      "commands": [{"name": "Claude Code CLI for Cloud implementation", "argv": ["claude", "--version"]}, {"name": "Python PTY helper for official CLI retrieval", "argv": ["python3", "--version"]}, {"name": "Codex CLI for independent Astra review", "argv": ["codex", "exec", "--help"]}],
+      "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}, {"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "claude", "files": ["CLAUDE.md"]},
-      "readPermissions": {"root": "claude", "file": "settings.json", "rules": ["Read(~/.knowledges/**)", "Read(~/Workspace/bakb/**)"]},
       "session": "Start a new Claude Code session after subagent updates; current-session discovery cannot be verified by this installer."
     }
   },
@@ -31,8 +30,9 @@
     {"component": "skill", "profile": "claude", "root": "claude", "source": "skills/plan-and-subagent", "target": "skills/plan-and-subagent", "skill": "plan-and-subagent", "agent": "claude-code"},
     {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/codex/PROFILE.md", "target": "profiles/codex/PROFILE.md"},
     {"component": "profile", "profile": "claude", "root": "environment", "source": "profiles/claude/PROFILE.md", "target": "profiles/claude/PROFILE.md"},
-    {"component": "profile", "profile": "claude", "root": "environment", "source": "profiles/claude/codex", "target": "profiles/claude/codex"},
-    {"component": "profile", "profiles": ["codex", "claude"], "root": "environment", "source": "profiles/shared/KNOWLEDGE.md", "target": "profiles/shared/KNOWLEDGE.md"},
+    {"component": "profile", "profile": "claude", "root": "environment", "source": "profiles/claude/cloud", "target": "profiles/claude/cloud"},
+    {"component": "profile", "profile": "codex", "root": "environment", "source": "profiles/shared/KNOWLEDGE.md", "target": "profiles/shared/KNOWLEDGE.md"},
+    {"component": "claude", "profile": "claude", "root": "claude", "source": "profiles/claude/agents", "target": "agents"},
     {"component": "codex", "profile": "codex", "root": "codex", "source": "profiles/codex/codex/agents", "target": "agents"},
     {"component": "claude", "profiles": ["codex", "claude"], "root": "claude", "source": "profiles/shared/claude/agents", "target": "agents"},
     {"component": "opencode", "profiles": ["codex", "claude"], "root": "opencode", "source": "profiles/shared/opencode/agents", "target": "agents"},
