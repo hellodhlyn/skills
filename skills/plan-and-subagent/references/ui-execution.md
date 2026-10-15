@@ -65,9 +65,9 @@ mockup artifacts; it does not start the product implementer or authorize product
 edits. The primary checks fidelity to the resolved decisions from the returned
 artifact and evidence without repeating the rendering/debugging loop.
 
-Before presenting the brief, have the designer capture the
+When no material decision remains, combine mockup checking and the
 [visual references](ui-ux-mockups.md#approved-visual-references) for the named
-states and viewports. Write a `mockup` phase browser request in
+states and representative viewports in the same designer run. Write a `mockup` phase browser request in
 `SESSION_DIR/mockups/` whose artifact directory is `SESSION_DIR/mockups/approved/`.
 Capture labels identify surface, state, and viewport. The designer returns
 each path with its state, viewport, and component map. The primary opens each screenshot
@@ -117,7 +117,9 @@ file when the run ends. If that path is refused, stop and report it rather than
 switching runtimes, tools, or verification methods. Without such a procedure,
 states that need login remain `UNVERIFIED`.
 
-Preview work checks representative behavior and omissions only. It does not start
+Preview work checks representative behavior and omissions only. Cover the
+smallest scenario and viewport set that distinguishes the contract; do not repeat
+unchanged cells of a full matrix. It does not start
 formal conformance review, broad validation, or bypass required user feedback.
 Final verification follows the existing feedback entry gate and review budgets;
 delegation creates no additional review round or new approval gate.
@@ -168,7 +170,8 @@ performs both judgments and semantic verification.
 Required conditions without sufficient current evidence block completion. User confirmation and the
 mandatory independent code review remain separate requirements.
 
-After fixes, delegate only affected browser checks and concrete regression paths.
+Batch accepted UI findings into one correction round. After fixes, delegate only
+affected browser checks and concrete regression paths.
 Carry forward unchanged evidence with a recorded impact reason. Keep the condition
 ledger and final acceptance decision in the primary's review record; link the
 executor report rather than duplicating its full content.

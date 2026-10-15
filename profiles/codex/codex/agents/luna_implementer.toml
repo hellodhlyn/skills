@@ -30,6 +30,6 @@ implementer thread.
 A small primary correction that leaves the approved contract, ownership, approach,
 and important semantics unchanged may be applied while work is active. If a correction
 is material or may make current work diverge, do not apply it silently: stop and wait
-for the primary's interruption, revised brief, and any repeated read-only check before
-resuming through followup_task on this same thread.
+for the primary's interruption, revised brief, and affected scope before resuming
+through followup_task on this same thread.
 """

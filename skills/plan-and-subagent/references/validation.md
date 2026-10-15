@@ -14,11 +14,11 @@ Keep three separate counters in the journal:
 - Implementation iterations: no fixed cap; continue until requirements are met
   and any required result confirmation is satisfied. Preview checks and feedback
   corrections do not consume review rounds.
-- Internal review: the primary engineering review and applicable UI/UX conformance
-  review form one coordinated round, not two. The initial review and each focused
-  follow-up for internal findings consume one round, up to the configured limit.
-  Bundle findings before sending corrections; do not count individual checks or
-  implementer edits as rounds. A failed/inconclusive review attempt still counts.
+- Requirements validation: the primary completion check and applicable UI/UX
+  conformance review form one coordinated round, not two. The initial validation
+  and each focused follow-up consume one round, up to the configured limit.
+  Bundle failures before sending corrections; do not count individual checks or
+  implementer edits as rounds. A failed or inconclusive attempt still counts.
 - External review: each independent reviewer execution consumes one round,
   including failed invocations and clarification retries, up to its separate
   configured limit. The first review covers the whole change; subsequent fix
@@ -26,8 +26,8 @@ Keep three separate counters in the journal:
 
 Resolve the two limits independently from the environment. Primary validation
 and regression checks for external-review fixes
-are part of that fix verification, not a new full internal round. If they uncover
-new internal findings needing a review/fix loop, use the remaining internal budget.
+are part of that fix verification, not a new full requirements round. If they uncover
+new requirement failures needing a validation/fix loop, use the remaining budget.
 Returning to user feedback does not reset either review counter. At a limit,
 proceed if that review has passed; otherwise report partial/blocked with unresolved
 findings or evidence. Do not exceed a review budget or use unlimited implementation
@@ -35,17 +35,19 @@ iterations to bypass a review limit.
 
 ## Completion evidence
 
-Inspect the complete task diff and every materially changed file. Confirm that
-unrelated and user-owned work was preserved. Independently run the required
-acceptance checks when safe and in scope; an implementer's report is not proof.
+Inspect the complete task diff for ownership, scope, and preservation of unrelated
+or user-owned work. Inspect the code needed to prove each condition and independently
+run the required acceptance checks when safe and in scope; an implementer's report
+is not proof. Do not repeat the external reviewer's exploratory code-quality,
+bug, or security review.
 For UI browser checks, use the profile's configured UI/UX role and evidence
 acceptance procedure in [delegated UI execution](ui-execution.md) instead of
 repeating execution in the primary. This exception delegates execution, not
-final validation judgment or the primary's engineering review.
+final validation judgment or the primary's requirements validation.
 For applicable specialist review, supply the user's purpose, approved contract,
-current task diff, and verified evidence to the retained specialist using its
+affected UI diff, and verified evidence to the retained specialist using its
 handoff. Review contract conformance and support for the user purpose separately
-within the same internal round, following [purpose-led design](ui-ux-design.md).
+within the same requirements round, following [purpose-led design](ui-ux-design.md).
 Verify its conclusions and route accepted deviations or design omissions through
 the existing fix/decision loop. The primary performs both judgments when specialist
 review is skipped.
@@ -78,7 +80,7 @@ Record `PURPOSE_SUPPORT` separately with its `PASS`, `FAIL`, or `UNVERIFIED`
 evidence, referencing the relevant purpose-derived conditions. Contract conformance
 does not override a purpose-support failure. Triage newly discovered design omissions
 against the requested purpose and scope; accepted unresolved omissions block a clean
-internal review even when all contract items conform. Material changes require the
+requirements validation even when all contract items conform. Material changes require the
 existing decision and approval process before affected work, not unilateral redesign.
 
 Run the full test suite, lint, and typecheck once, at the completion gate on the
@@ -117,30 +119,22 @@ a fixed E2E checklist on every interface. Obtain any necessary authorization for
 changes. Distinguish rendered, interaction-tested, and unverified behavior;
 component presence and automated tests alone do not establish support for the purpose.
 
-## Four review perspectives
+## Requirements validation boundary
 
-1. **Requirements completeness:** all requested and approved behavior, including
-   promised deletions, backed by the corresponding completion evidence.
-2. **Code quality and maintainability:** duplication, dead code, redundant state,
-   inconsistent patterns/copy/UX/naming, complexity, ownership, coupling, and
-   testability that create concrete maintenance costs.
-3. **Bugs:** a plausible execution path causing incorrect behavior, including
-   errors, state, concurrency, compatibility, and demonstrated performance or
-   stability failures.
-4. **Security:** authentication, authorization, input handling, trust boundaries,
-   and sensitive-data exposure with a concrete trigger and realistic impact.
+The primary verifies only:
 
-Use these same four perspectives for primary and initial independent review. Cite
-location, evidence, trigger, and impact. Exclude cosmetic preferences, unsupported
-hypotheticals, and unrelated pre-existing issues. Triage internal findings with
-the same [reachability rule](external-review.md#triage) as independent review.
-When the change materially exceeds the brief's expected scale, identify the cause
-before review; logic outside the approved brief is a deviation. Files changed
-outside the brief's ownership are allowed when an approved condition needed
-them; review each such change and treat one that is wrong, harmful, or
-unrelated to the request as a finding. Include an existing-code
-interaction when this task introduces, worsens, or makes it necessary to resolve
-for the requested behavior; preserve user-owned edits.
+- every approved condition and promised deletion has current evidence;
+- task scope, authorization, and user-owned work were preserved;
+- changes outside the scope packet were necessary for an approved condition;
+- required product, domain, UI/UX, and delivery decisions are resolved; and
+- required validation and specialist evidence is current.
+
+The independent reviewer owns exploratory code quality, maintainability, bug,
+and security review. The primary does not run a duplicate sweep, but must not
+ignore an obvious concrete defect encountered while validating requirements.
+Triage such a defect with the same [reachability rule](external-review.md#triage).
+When the diff materially exceeds the scope packet, resolve the cause before the
+gate; unauthorized or unrelated logic is a requirement failure.
 
 ## Fix regressions and evidence freshness
 
@@ -173,7 +167,7 @@ resulting task diff before reusing evidence.
 
 Proceed to delivery only when any required result confirmation or scoped
 delegation is recorded, every required condition has current `PASS` evidence,
-primary review is clean, and mandatory independent review has completed with no
+requirements validation is clean, and mandatory independent review has completed with no
 accepted unresolved findings. Use the applicability rule and approved brief to
 determine confirmation requirements. For interface changes, the primary's accepted
 `PURPOSE_SUPPORT` judgment must also be `PASS` within the requested scope; contract

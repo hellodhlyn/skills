@@ -49,17 +49,21 @@ When the mockup applies:
    changing. Use representative content to expose the proposed information
    structure, visual hierarchy, and relevant interaction. Include only the
    situations and states needed to judge the design against its user purpose.
+   Choose one representative viewport per materially different layout; do not
+   render a full viewport-state matrix unless the contract depends on each cell.
 4. Render multiple alternatives only when each represents a real material
    choice. Do not invent variants to decorate a settled direction. Ask the user
    to choose among real alternatives as a design-choice question before the
    brief; the brief carries only the chosen one.
-5. Capture the visual references described below, express the direction
+5. In the same designer run when no decision remains, capture the visual
+   references described below, express the direction
    precisely in the brief's `UI/UX contract`, and present the mockup with the
    complete brief for Step 3 approval. There is no separate mockup
    confirmation gate. Do not hand the visualization source to the implementer
    as a substitute for the contract.
-6. Treat a revision request on the mockup as brief feedback: send it to the same
-   designer, recapture the affected references, update the contract, and
+6. Treat revision requests on the mockup as brief feedback: batch the user's
+   current feedback into one correction, send it to the same designer, recapture
+   only affected references, update the contract, and
    present the complete revised brief again. Record the approved direction and
    any rejected alternative in `decisions.md`.
 

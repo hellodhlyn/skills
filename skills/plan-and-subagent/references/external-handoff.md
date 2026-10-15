@@ -57,7 +57,7 @@ When the handoff is valid and there is no material change:
 - treat Step 2 planning and the Step 3 presentation/approval gate as already
   satisfied for that unchanged contract;
 - do not rewrite the brief, re-present it, or request re-approval;
-- continue from Step 4 `Check understanding and delegate implementation`
+- continue from Step 4 `Delegate implementation`
   unchanged.
 
 ## Stale or incomplete handoff
@@ -140,36 +140,18 @@ User approval:
 
 ## Approved implementation brief
 
-## 프로젝트 맥락
-...
-
 ## 작업
 ...
 
-## 작업 추적
-...
-
-## 전달 목표
+## 결정 및 범위
 ...
 
 ## 완료 조건
 ...
 
-## 제외한 제안
-...
-
-## 코드 품질
-...
-
 ## UI/UX 계약
 ...
 
-## 담당 범위
-...
-
-## 제약사항
-...
-
-## 구현 결과 확인
+## 검증 및 전달
 ...
 ```

@@ -29,7 +29,8 @@ material contract changes before affected implementation.
 While required user confirmation is pending, run only checks needed to execute
 the implementation, demonstrate representative behavior, or diagnose a concrete failure. A necessary
 build or focused logic test is appropriate; the final test suite, lint, typecheck,
-formal engineering reviews, and UI/UX conformance review belong after confirmation.
+requirements validation, independent code review, and UI/UX conformance review
+belong after confirmation.
 Pre-implementation design advice remains part of planning.
 
 Before presenting a non-UI result, the primary checks obvious omissions against
@@ -89,8 +90,8 @@ unavailable, report the block rather than substituting primary judgment.
 
 When presenting a corrected result, state who set each visual change: the
 user's exact instruction, the designer's report path, or a recorded user decision. Reuse unchanged planning and design work;
-repeat the understanding check only when the contract materially changes or the
-implementer session must be replaced. Resolve new material choices before editing.
+send only the changed contract and scope when the contract materially changes or
+the implementer session must be replaced. Resolve new material choices before editing.
 
 When one response both requests a precise correction and confirms the rest
 (for example, "apply this change; the rest of the screen is final"), record the

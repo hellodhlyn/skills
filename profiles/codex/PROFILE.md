@@ -14,7 +14,7 @@ project instructions and explicit user choices take precedence.
 | Final independent code review | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
 | Architecture advice | Separate `advisor` skill / Claude Opus 5.5 | `medium` |
 | Conditional second architecture opinion | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
-| Optional preliminary code review | OpenCode `reviewer` / `zai-coding-plan/glm-5.3-flash` | `max` |
+| Preliminary code review (explicit request only) | OpenCode `reviewer` / `zai-coding-plan/glm-5.3-flash` | `max` |
 
 Native definitions own the effective model, effort, and permissions. Role updates
 require a new session; this document does not change a running session.
@@ -30,14 +30,14 @@ require a new session; this document does not change a running session.
   except for assigned mockup/browser artifacts; product fixes go to the implementer.
 - Final review uses `scripts/run-codex-review.mjs` with `gpt-6-astra`, `high`,
   in a fresh read-only Codex CLI context; check `codex login status` first. A
-  preliminary review cannot skip this gate.
+  preliminary review cannot skip this gate and is not part of the standard workflow.
 - Apply the common decision-advice contract to important choices. Use the
   separately installed advisor and its current execution guide, including
   personal OAuth instructions. A Claude CLI login does not verify advisor
   authentication. Conditional second opinions use the same Codex independent
   analysis runner with `gpt-6-astra`, `high`. Reserve Claude usage for UI/UX
   and architecture advice.
-- Internal and external code review each have a separate five-round limit;
+- Requirements validation and external code review each have a separate five-round limit;
   failed executions count. Conditional advice allows one focused critique per
   model unless the user selects an additional budget. Advice has its own records
   and does not consume code-review rounds.

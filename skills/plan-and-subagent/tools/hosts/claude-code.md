@@ -34,14 +34,14 @@ Create a fresh `reviews/implementer/run-N/` directory for every invocation and
 write the complete prompt to `prompt.md` first.
 
 ```bash
-# Understanding check or first implementation message
+# First implementation message
 sh "$CODEX_RUNNER" start [--image "$IMAGE"]... "$WORKDIR" "$INSTRUCTIONS" "$RUN_DIR" "$MODEL" "$EFFORT"
 # Every later message to the same implementer
 sh "$CODEX_RUNNER" resume [--image "$IMAGE"]... "$WORKDIR" "$RUN_DIR" "$MODEL" "$EFFORT" "$IMPLEMENTER"
 ```
 
-Pass one `--image` per approved visual reference the brief lists on the `start`
-that sends the understanding check, and again on a `resume` only when the
+Pass one `--image` per approved visual reference the brief lists on the initial
+`start`, and again on a `resume` only when the
 approved set changes. The runner attaches them to the Codex prompt and records
 them in `images`.
 
@@ -49,16 +49,15 @@ The runner reads `$RUN_DIR/prompt.md` and writes `events.jsonl`, `result.md`,
 `stderr.log`, `thread-id`, and `exit-code`. `start` prepends the instruction
 file; `resume` relies on the instructions already in the session. Record the
 `thread-id` from the first run as `IMPLEMENTER` and pass it to every later
-`resume`; a new `start` creates a different implementer and requires the full
-brief and a repeated understanding check. Run long invocations with
+`resume`; a new `start` creates a different implementer and requires the approved
+brief, scope packet, and current code state. Run long invocations with
 `run_in_background` and wait for the completion notification instead of
 polling. A nonzero exit, missing `thread-id`, or empty `result.md` is a failed
 attempt, not an implementation report.
 
 For a material contract change, stop the task only if continuing would violate
 the revised contract; otherwise wait. Then resolve the decision and send the
-revised contract and understanding check through `resume` to the same
-`IMPLEMENTER`.
+revised contract and affected scope through `resume` to the same `IMPLEMENTER`.
 Small contract-preserving corrections are sent as a later `resume` after the
 current run ends.
 

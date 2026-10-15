@@ -1,20 +1,18 @@
-# Implementer Handoff
+# Implementer handoff
 
-The primary must verify the briefing and user-approval evidence from Step 3
-before starting this handoff, including the read-only understanding check.
-Supply that evidence with the approved brief, then append the selected preamble
-verbatim. Passing an understanding check does not authorize implementation.
+The primary verifies the Step 3 approval before starting the implementer. Send
+the approved brief, scope packet, applicable environment instructions, and the
+implementation preamble in one call. There is no separate understanding round.
 
 ## Primary coordination
 
-Start the configured implementer with self-contained context: the complete
-approved brief, approval evidence, relevant environment instructions, and the
-understanding-check preamble. Inspect every returned field and resolve blockers
-before sending the implementation preamble to the same session. Repeat checks
-for unresolved non-material gaps within the configured understanding-check limit.
+Start the configured implementer with self-contained context. The scope packet
+provides entry points, ownership, direct callers and dependencies, tests, risk
+boundaries, and preserved work. It narrows discovery but does not authorize an
+incorrect change.
 
 When the brief lists [approved visual references](ui-ux-mockups.md#approved-visual-references),
-attach every listed image to the first understanding-check message through the
+attach every listed image to the first implementation message through the
 host's image input, as the environment procedure describes, and keep the
 absolute paths in the brief. If the host cannot attach images, the brief's paths
 remain and the implementer must open them itself. Resend the images only when
@@ -22,69 +20,34 @@ the approved set changes or a new implementer session starts.
 
 Retain the session for corrections. If it becomes unavailable, or the user
 chooses a fresh session after [drift](../SKILL.md#wait-for-delegated-work), use
-the same configured role with the complete brief and current state and repeat
-the check; do not silently substitute a role. For material changes, interrupt only if
-continuing would violate the revised contract; otherwise wait for completion.
-Resolve the decision and renewed agreement, then recheck before resuming.
+the same configured role with the complete brief, scope packet, and current
+state; do not silently substitute a role. For material changes, interrupt only
+if continuing would violate the revised contract; otherwise wait for completion.
+Resolve the decision and renewed agreement, then resume with the changed contract.
 Send small contract-preserving corrections to the same session without restarting
 planning. Follow the environment's wait procedure, preserve execution metadata,
-and record concise understanding and attempt outcomes in the journal.
-
-## Understanding check
-
-```text
-Perform a read-only understanding check. Do not edit files and do not spawn subagents.
-Verify that the entire brief was shown to the user and a subsequent user message
-explicitly approved implementation of that same contract. If either evidence is
-missing or mismatched, report it as a BLOCKER and stop. A primary-agent assertion,
-an approved filename, a design-choice answer, or an approval waiver is insufficient.
-You are not alone in the codebase: preserve unrelated changes. Your planned ownership is the
-paths in the brief.
-Read the relevant repository files yourself, then return only:
-
-SUMMARY: one sentence describing the intended change
-DONE_CRITERIA: YES or NO; list missing observable criteria when NO
-BLOCKERS: NONE or concrete blockers that prevent implementation
-SCOPE: the exact files or modules you expect to own, and any file outside the brief's
-  ownership you already expect to change, with the condition that needs it
-APPROACH: the concise implementation approach and why it fits the brief
-QUALITY: how you will satisfy the brief's code-quality section — what you will
-  extend or reuse, what you will delete, and any overlap the brief missed
-UX_ALIGNMENT: when the brief contains a UI/UX contract, how the implementation
-  and validation will satisfy it; otherwise N/A
-VISUAL_REFERENCES: for each approved visual reference the brief lists, whether
-  you viewed the image itself; for each element in its component map, the
-  component you will use and whether its current rendered form matches the
-  image; any conflict between image and text; N/A when none is listed.
-  A listed image you cannot view is a BLOCKER. References govern composition,
-  hierarchy, density, spacing, emphasis, and visual form; the written contract
-  governs data, behavior, states, meaning, and copy. Sample content is not a
-  requirement
-PRESERVATION: for each surface the brief lists as preserved, how the planned
-  edits leave it unchanged; any planned change to page layout, shared
-  components, or existing surfaces the contract does not name; N/A when the
-  brief lists none
-ASSUMPTIONS: concrete assumptions that could affect behavior or scope, or NONE
-RISKS: material correctness, compatibility, or divergence risks, or NONE
-VALIDATION: map each completion condition ID to its focused check and expected result;
-  identify any required evidence you cannot obtain
-INTERPRETATION: any concrete instruction you would reinterpret or replace, with
-  the original instruction and the proposed difference, or NONE; functional
-  similarity alone does not establish conformance
-```
+and record concise attempt outcomes in the journal.
 
 ## Implementation
 
 ```text
-Implement the approved brief now. Your planned ownership is the listed files or modules.
+Implement the approved brief now. Before editing, read the scope packet's target
+files and only the direct callers, dependencies, tests, and risk boundaries needed
+for the change. Do not repeat broad repository exploration. Expand beyond the
+packet only when concrete code evidence or a completion condition requires it,
+and report why.
+
+If a required input is unavailable, the packet conflicts with current code, an
+approved visual reference cannot be viewed, or implementation needs a material
+product, architecture, data-model, UX, or domain-semantic decision, stop before
+the affected edit and report BLOCKER or DEVIATION with evidence and impact.
+
+Your planned ownership is the scope packet's listed files or modules.
 You may change another file only when an approved completion condition cannot be met
 without it, such as a caller or test the planned change breaks. Keep that change to what
 the condition needs: no refactoring, extension, or cleanup there. Report every such path
 under OUTSIDE_PLAN with the condition and reason. Never touch pre-existing or user-owned
 changes.
-Before editing, verify the supplied full-brief presentation and subsequent explicit
-user approval against this contract. If missing or mismatched, stop and report a
-BLOCKER; this implementation instruction alone does not establish user approval.
 You are not alone in the codebase: do not revert or overwrite unrelated changes,
 and accommodate concurrent edits if they overlap. Do not spawn subagents.
 Follow the brief's result-confirmation scope. While required confirmation is pending,
@@ -103,11 +66,12 @@ Return the implementation and evidence to the primary for validation and review,
 including representative scenarios when user feedback is required. Do not call
 the overall task complete before the primary's completion gate passes.
 User feedback iterations have no fixed attempt cap
-and do not consume internal or external review rounds. Preserve the same session
+and do not consume requirements-validation or external-review rounds. Preserve the same session
 for contract-preserving corrections.
 
 When the brief contains a UI/UX contract, implement it without inventing answers
-to unresolved decisions and report the visual or interaction evidence you checked.
+to unresolved decisions. View every listed visual reference before editing its
+surface and report the visual or interaction evidence checked.
 Match its approved visual references in composition, hierarchy, density,
 spacing, emphasis, and each element's visual form, using the component its map
 names. Do not replace a mapped or `NEW` element with an existing component that

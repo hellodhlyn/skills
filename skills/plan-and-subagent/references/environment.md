@@ -37,7 +37,7 @@ role definitions, and explicit start commands in the profile's native settings.
 | Knowledge sources | Personal knowledge index and read-only knowledge roots, and how delegated roles obtain read access to them |
 
 Resolve the required decision advisor, conditional second opinion, designated
-final reviewer, and separate internal/external review budgets. Optional
+final reviewer, and separate requirements-validation/external-review budgets. Optional
 preliminary review cannot replace the final reviewer. Keep models in profile
 bindings and native invocation settings; the common contracts remain portable.
 

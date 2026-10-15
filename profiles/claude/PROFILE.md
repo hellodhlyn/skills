@@ -20,8 +20,8 @@ deduction is not observable through this workflow and must not be promised.
   Haiku role only manages the official CLI transport. It must not implement
   locally. Read the common skill's `tools/hosts/claude-cloud.md`
   and bundle [cloud/implementer.md](cloud/implementer.md) with the approved
-  handoff. Retain the Cloud session ID across the read-only understanding check,
-  implementation, and corrections. Verify the served Cloud model from the
+  handoff. Retain the Cloud session ID across implementation and corrections.
+  Verify the served Cloud model from the
   retrieved transcript; a launch flag alone is not model evidence. Never
   substitute a local agent or another model when Cloud is unavailable.
 - UI/UX design proposal and briefing mockups: native subagent
@@ -35,12 +35,12 @@ deduction is not observable through this workflow and must not be promised.
   context.
 - Final independent code review: GPT-6 Astra (`gpt-6-astra`), `high`, through
   `scripts/run-codex-review.mjs` and `tools/hosts/codex-review.md`. The shared
-  OpenCode reviewer is optional preliminary review and never replaces this gate.
+  OpenCode reviewer runs only on explicit request and never replaces this gate.
 - Important decisions use the separately installed Claude Agent SDK `advisor`
   skill (Claude Opus 5.5, `medium`), following its current execution guide.
   Conditional second opinions use GPT-6 Astra (`gpt-6-astra`), `high`, through
   the independent-analysis runner and the common decision-advice contract.
-- Internal and external review each have a separate five-round limit. Failed
+- Requirements validation and external review each have a separate five-round limit. Failed
   executions count. Conditional advice allows one critique per model unless the
   user explicitly selects an additional budget; advice does not consume review rounds.
 

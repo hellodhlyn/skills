@@ -9,14 +9,14 @@ extraction, or direct API calls for this binding.
 
 ## Handoff and bundle
 
-Give the coordinator the stage (`understanding`, `implement`, or `correct`), a
+Give the coordinator the stage (`implement` or `correct`), a
 fresh round ID containing only letters, digits, and hyphens, the self-contained
-approved brief and approval evidence, ownership, completion conditions,
-validation plan, explicit source/input file lists, worker instruction file,
+approved brief, scope packet, ownership, completion conditions, validation plan,
+explicit source/input file lists, worker instruction file,
 this execution document, skill script directory, and absolute bundle/receiver/
 report directories outside the product checkout. Include the existing Cloud
 session ID on continuations. Missing context is a blocker, not permission to
-infer product decisions. The primary judges understanding and deviations.
+infer product decisions. The primary judges deviations.
 
 Keep a local `cloud-state.json` outside the bundle with the Cloud session ID/URL,
 `CLOUD_BASE`, immutable source snapshot/hash, current round/stage, last verified
@@ -45,13 +45,13 @@ git -c user.name=seq030 -c user.email=218389549+seq030@users.noreply.github.com 
 ```
 
 This disposable source commit is not a product commit. Record its HEAD as
-`CLOUD_BASE`. Then copy the approved brief, worker instructions, mockups, image
+`CLOUD_BASE`. Then copy the approved brief, scope packet, worker instructions, mockups, image
 references, fixtures, and `scripts/cloud-patch.mjs` into `.cloud-inputs/` and run
 `git add -f -- .cloud-inputs`. Inputs must remain staged and uncommitted. Confirm
 `git remote -v` is empty, there is exactly one commit, and the source tree and
 staged inputs contain only the inspected files. Required inputs named like
 credentials or managed by Git filters can be omitted by the CLI; use neutral
-fixture filenames and verify the received inventory in the understanding check.
+fixture filenames and verify the received inventory during initial preflight.
 If an input cannot be delivered, report it instead of proceeding without it.
 
 Create a separate clean receiver with `git clone --no-hardlinks "$BUNDLE_DIR"
@@ -68,11 +68,12 @@ Use the profile's exact Cloud model and effort. From the bundle directory:
 env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDECODE CCR_FORCE_BUNDLE=1 claude --cloud "$(cat "$RUN_DIR/prompt.md")" --model claude-haiku-5-5 --effort high --setting-sources project
 ```
 
-The first prompt names every input and requests a read-only understanding
-report, received file inventory, runtime requirements, and
-`CLOUD_STAGE_COMPLETE <round-id> understanding`. It explicitly forbids source
-edits and implementation until continuation. Save the launch output and Cloud
-session ID/URL. The Cloud worker reads `.cloud-inputs/implementer.md`. Verify
+The first prompt names every input and asks the worker to verify the received
+inventory and runtime requirements before editing, then implement immediately.
+It stops before affected edits only for a missing input, concrete blocker, or
+material deviation, and otherwise returns `CLOUD_STAGE_COMPLETE <round-id>
+implement`. Save the launch output and Cloud session ID/URL. The Cloud worker
+reads `.cloud-inputs/implementer.md`. Verify
 the served model from actual Cloud assistant records in the retrieved
 transcript before accepting its work. An unsupported flag, missing session,
 omitted input, model mismatch, or provisioning error is a reported blocker.
@@ -85,11 +86,9 @@ env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDECODE claude -p --cloud "$CLOUD_SESSION
 
 Require exit zero and `{ok:true, session_id:<expected>}`. This is delivery
 acknowledgment only. It does not wait for the worker or prove completion.
-Return the understanding report to the primary and stop at that gate. Only
-the primary's explicit continuation starts implementation, and only an
-explicit resolution permits a deviating change. Keep the same session for
-corrections. If it has expired, report the blocker; a replacement requires a
-fresh full handoff and understanding check.
+Only an explicit primary resolution permits a deviating change. Keep the same
+session for corrections. If it has expired, report the blocker; a replacement
+requires a fresh full handoff and implementation run.
 
 Before continuing after local edits or new approved references, send an explicit
 sync payload in the follow-up message: changed paths, complete small text/files

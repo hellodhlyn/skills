@@ -124,7 +124,7 @@ DECISION_REQUIRED: when only a layout change or component swap would satisfy
 [결과 확인 지침](implementation-feedback.md)에 따라 확인이 필요한 경우에는
 사용자의 확인 또는 명시적 위임 후 실행합니다. 확인이 불필요한 작업은 최종 검증
 단계에서 바로 실행하며, 피드백을 반영하는 각 이터레이션마다 실행하지 않습니다. 이 검토는
-primary engineering review와 함께 하나의 내부 리뷰 라운드로 집계하며,
+primary requirements validation과 함께 하나의 검증 라운드로 집계하며,
 전문가의 적합성 판단은 사용자 확인을 대신하지 않습니다.
 
 [UI 실행 위임](ui-execution.md)에 따라 별도 검증자가 수집하고 primary가 검토한

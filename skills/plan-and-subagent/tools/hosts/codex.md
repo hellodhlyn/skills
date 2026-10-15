@@ -17,21 +17,21 @@ invoke `codex exec` for a role the profile binds to a native Codex agent.
 ## Start and continue
 
 Start the implementer using the host's native `spawn_agent` capability with a
-self-contained message containing the complete approved brief, applicable
-profile instructions, and understanding-check preamble. Use `fork_turns: none`,
-retain the returned identity as `IMPLEMENTER`, and assign only the approved
-paths. The implementer must not spawn further agents.
+self-contained message containing the approved brief, scope packet, applicable
+profile instructions, and implementation preamble. Use `fork_turns: none`, retain
+the returned identity as `IMPLEMENTER`, and assign only the approved paths. The
+implementer must not spawn further agents.
 
 When the brief lists approved visual references, attach each image as an image
 input item of that `spawn_agent` message rather than only naming its path. If
 the host's `spawn_agent` does not accept image items, send the paths and require
 the implementer to open each one with its image-viewing tool; its
-`VISUAL_REFERENCES` answer must confirm that it viewed every listed image.
+final report must confirm that it viewed every listed image.
 
 Send later instructions through the host's follow-up mechanism to the same
-identity. Send the implementation preamble only after understanding passes. For
-a material contract change, interrupt only if continuing would violate the
-revised contract; otherwise wait. Resume after the revised understanding check.
+identity. For a material contract change, interrupt only if continuing would
+violate the revised contract; otherwise wait. Resume with the changed contract
+and affected scope.
 Send small contract-preserving corrections without interruption.
 
 When the profile binds UI/UX work, including briefing mockups, to Claude Code subagent

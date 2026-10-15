@@ -80,25 +80,25 @@ changes against the specified base branch. For a finding re-review, verify only
 the supplied accepted findings; do not start a new whole-change review, add new
 findings, or revisit rejected findings.
 
-Inspect the relevant diff, surrounding implementation, callers, tests,
-configuration, and requirements when available.
-Focus on the requested changes and explicit requirements. Report an existing or
+Inspect the relevant diff, changed files, surrounding implementation, callers,
+tests, configuration, and adjacent risk boundaries. Treat a supplied scope
+packet as orientation, not a limit, and challenge omissions when code evidence
+requires it. Focus on the requested changes. Report an existing or
 unrelated issue only when this change introduces, worsens, or makes it necessary
 to resolve for the requested behavior.
 
 For initial review, evaluate:
 
-1. Requirements completeness
-2. Code quality and maintainability
-3. Bugs
-4. Security
+1. Code quality and maintainability
+2. Bugs
+3. Security
 
-Check requirements against observable acceptance evidence, not just passing test
-commands. Quality includes duplication, dead code, complexity, ownership, and
-testability. Bugs need a concrete execution path (including performance or
+The primary separately validates completion conditions and acceptance evidence.
+Use the approved contract to understand intended behavior, but do not repeat its
+condition ledger. Quality includes duplication, dead code, complexity, ownership,
+and testability. Bugs need a concrete execution path (including performance or
 stability failures when demonstrated). Security includes authentication,
 authorization, input handling, trust boundaries, and sensitive-data exposure.
-Report missing required evidence as unverified, never as passed.
 
 Rules:
 
@@ -124,8 +124,8 @@ say `No actionable findings.` after the scope line.
 
 Severity:
 
-- `critical`: data loss, serious security exposure, service-wide failure, or a fundamentally broken requirement
-- `high`: realistic incorrect behavior, major requirement omission, regression, or significant performance or maintenance risk
+- `critical`: data loss, serious security exposure, or service-wide failure
+- `high`: realistic incorrect behavior, regression, or significant performance or maintenance risk
 - `low`: limited-impact defect, plausible edge case, or concrete non-blocking maintenance issue
 
 Start with one `Review scope:` line that names the files, areas, and evidence
@@ -135,7 +135,7 @@ findings in severity order and number them globally:
 ### [1] high — Short title
 
 - **Location:** `path/to/file:line`
-- **Category:** Requirements | Quality and maintainability | Bug | Security
+- **Category:** Quality and maintainability | Bug | Security
 - **Issue:** Concrete problem
 - **Evidence:** Relevant code or missing behavior and why it supports the conclusion
 - **Trigger:** Condition or execution path

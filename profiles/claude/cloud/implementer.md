@@ -5,12 +5,11 @@ Read the relevant code before editing. Preserve concurrent and unrelated edits.
 Your ownership is the assigned files/modules. Report necessary edits outside
 that ownership with their reason before changing them.
 
-The first stage is a read-only understanding check. Report the concrete
-requirements, planned edits, validation, and unresolved decisions, then stop.
-Wait for the primary's explicit implementation continuation. Do not infer
-authorization from the presence of an implementation brief.
-
-Implement the approved contract and run appropriate focused validation. Follow
+Before editing, verify the supplied input inventory and read only the scope
+packet's target files and necessary direct callers, dependencies, and tests.
+Stop before affected edits for a missing input, concrete blocker, or material
+deviation; otherwise implement the approved contract in the same run. Run
+appropriate focused validation. Follow
 the approved UI references and component map when supplied. If new evidence
 requires a material product, architecture, data-model, UX, or semantic decision,
 stop affected work and return DEVIATION, EVIDENCE, IMPACT, and DECISION_NEEDED.

@@ -28,6 +28,7 @@ SESSION_DIR/
   status.json                # optional schema 1 checkpoint for the local session dashboard
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
+  scope.md                   # bounded code map for implementation and review
   decisions.md               # material decisions, approvals, and scope changes
   mockups/
     approved/                # visual-reference screenshots of the mockup the approved brief carries
@@ -36,10 +37,9 @@ SESSION_DIR/
   reviews/
     advice/                  # independent opinions, conditional critiques, decision and execution evidence
     implementer/
-      understanding-N.md     # structured understanding-check response
       attempt-N.md           # concise handoff/result/validation summary
     primary/
-      round-N.md             # primary validation and direct review
+      round-N.md             # primary requirements validation
       fix-request-N.md       # accepted findings sent back for revision
     uiux/
       design-N.md            # pre-approval UI/UX contract proposal
@@ -80,10 +80,8 @@ directory. `startedAt` and `updatedAt` use ISO 8601 timestamps.
 
 Write a complete new value to a temporary file in `SESSION_DIR`, then rename it
 over `status.json` so readers see either the previous or the new checkpoint,
-not a partial JSON document. Update it whenever a `session.md` checkpoint or
-resume checkpoint changes, when the waiting party changes, and when a delegated
-run starts or ends. Keep `session.md` authoritative and update both files as part
-of the same checkpoint action.
+not a partial JSON document. Update it with the event-based milestones below,
+not for routine waits or tool calls. Keep `session.md` authoritative.
 
 ## Approval evidence
 
@@ -109,8 +107,13 @@ delegation; a missing record must not be replaced by an invented approval.
 
 ## Stage checkpoint
 
-Keep a compact current-stage checkpoint in `session.md`. Before the stage's
-first dependent action, read its routed references and the applicable environment
+Before dependent work and each exit gate, reconcile the applicable obligations.
+Write a compact checkpoint only for an approval, material decision or scope
+change, delegated implementation start or end, review result, user wait or long
+interruption, and delivery. Do not rewrite unchanged obligations after routine
+waits, focused checks, or tool invocations.
+
+At the first applicable checkpoint, read the routed references and environment
 execution document, then extract the concrete obligations for this task:
 
 | Instruction and source | Required action or evidence | State |
@@ -139,11 +142,9 @@ retroactively describe a skipped action as performed.
 
 ## Resume the same task
 
-Before pausing for feedback or handing off a long-running stage, update
-`session.md` with the current stage and next action, implementer/specialist
-identities, mockup/verifier identities and owned browser session, any active
-execution identity, and the accumulated review counters. Update `status.json`
-in the same checkpoint action when it is in use.
+Before pausing for user feedback or a long interruption, update `session.md`
+with the current stage, next action, active execution identities, and review
+counters. Update `status.json` in the same checkpoint action when it is in use.
 Link the latest approval, feedback, and validation records instead of duplicating
 their contents. Record an active execution as running, not failed or complete.
 
@@ -155,71 +156,56 @@ A status question does not cancel the task or reset approvals and review budgets
 When an identity is unavailable, establish whether the prior execution ended
 before replacing it under the selected execution procedure.
 
+## Scope packet
+
+Write `scope.md` once after the primary investigation and update it only when
+code evidence materially changes the implementation boundary. It is an execution
+aid, not part of the user-approved contract. Include only:
+
+- workdir, baseline, task-owned and pre-existing changed paths;
+- target entry points and expected owned files or modules;
+- direct callers, dependencies, existing implementations to reuse, and focused tests;
+- relevant trust, persistence, concurrency, compatibility, and UI boundaries;
+- excluded adjacent areas and the evidence needed to expand into them.
+
+The implementer uses this packet for bounded preflight and may expand only for
+concrete code evidence or a completion condition. The independent reviewer gets
+it as non-binding context and may inspect beyond it to challenge omissions.
+The packet cannot expand approved behavior or authorization; material changes
+still require an updated brief and user approval.
+
 ## Implementation brief
 
 Create a concise brief with these section meanings. Match the presentation
 language to user and project instructions; the example labels are not fixed keys:
 
 ```markdown
-## 프로젝트 맥락
-- 프로젝트 절대 경로
-- 관련 아키텍처와 기존 패턴
-
 ## 작업
 <구현할 내용과 이유>
 
-## 작업 추적
-- <연결된 작업의 reference와 확인한 context 출처, 없으면 없음>
-- <연결된 작업의 전체 해결인지 부분 기여인지와 그 근거>
-
-## 전달 목표
-- <합의한 결과물, 검증 방법, 실행 권한 범위>
+## 결정 및 범위
+- <사용자가 결정한 중요한 동작·UX·도메인 의미>
+- <포함 범위, 보존 대상, 제외 범위>
 
 ## 완료 조건
 - <조건 ID, 관찰 가능한 결과, 확인 방법, 출처(사용자 요청·결정 ID·연결된 요구사항·프로젝트 지침); 승인된 완료 조건은 모두 필수>
 - <이번 변경으로 대체되어 삭제할 코드가 있다면 그 내용>
 
-## 제외한 제안
-- <출처 없이 primary가 제안한 보강·edge case·확장과 제외 이유, 없으면 없음>
-
-## 코드 품질
-- 중복 가능성: 이 작업과 책임이 겹치는 기존 component, hook, utility, 화면
-- 확장 또는 신규 작성: 재사용·확장할 대상, 새로 만들 대상, 확장할 수 없는 이유
-- 삭제: 이번 변경으로 대체되어 제거할 코드
-- 일관성: 인접 화면과 맞춰야 할 사용자 문구, UX 상태, 이름
-
 ## UI/UX 계약
-<인터페이스 변경 시 사용자 목적과 사용 맥락, 근거, 정보 구조와 시각적 위계,
-구체적인 화면 구성과 상호작용, 중요한 설계 이유와 절충을 기록.
-변경에 관련된 상태, 디자인 시스템, 접근성, 의미 변경, 브리핑 목업의 적용
-근거와 확인된 방향, 목적에서 도출한 관찰 가능한 검증 기준, 미결정 사항을 포함>
+<인터페이스 변경 시 사용자 목적, 정보 구조, 주요 상태·상호작용,
+디자인 시스템, 접근성, 의미 변경, 관찰 가능한 검증 기준. 해당 없으면 없음>
 <승인된 시각 참조: 목업을 사용했다면 스크린샷 절대 경로, 상태와 viewport,
-보여주는 요소, 요소별 component map(기존 component 이름 또는 NEW). 구성·위계·밀도·
-간격·강조·요소의 시각 형태는 이미지가, 데이터·동작·상태·의미·문구는 글이 정하고
-예시 데이터는 요구사항이 아님을 명시. 목업이 없으면 없음>
-<보존 대상: 페이지 레이아웃, 공용 component, 기존 화면 배치가 바뀔 수 있는
-작업이면 바뀌지 않아야 할 화면·영역과 viewport, 기준 캡처 경로. 해당 없으면 없음>
-<도메인 지침에 따라 지식 출처 → 설계에 영향을 준 개념 관계 → 화면 표현 →
-관찰 가능한 검증을 연결하고, 해당하지 않으면 간단한 사유를 기록>
+보여주는 요소와 component map. 목업이 없으면 없음>
 
-## 담당 범위
-- <구현자가 담당할 파일 또는 module>
-- <예상 규모: 변경 파일 수와 대략적인 변경량>
-
-## 제약사항
-- <범위 경계, 호환성 요구사항, 사용자 소유 변경>
-
-## 구현 결과 확인
-- <결과 확인 필요 여부와 근거; 필요하면 확인할 기능·화면과 대표 시나리오>
-- <결과 확인이 필요하면 미리보기용 동작 확인과 확인 후 최종 검증을 구분>
-- <필요 시 확인 후 최종 검증·리뷰로 진행; 명시적 확인 위임이 있으면 그 범위>
-- <불필요하면 구현 후 검증·수정·리뷰까지 계속 진행>
+## 검증 및 전달
+- <완료 조건을 증명할 대표 검사와 사용자 결과 확인 필요 여부·이유>
+- <허용된 commit, push, PR, deploy 등 전달 범위>
 ```
 
-Build the `코드 품질` section from the Step 1 investigation, not from
-assumption: name the concrete overlapping files. Reference concrete files
-throughout, but leave implementation mechanics to the implementer unless a
-mechanism is part of the approved design. Persist only the final approved
+Keep repository paths, callers, test candidates, risk seams, and implementation
+mechanics in `scope.md`, and primary-only proposals in `decisions.md`; keep both out of
+the approval contract unless they materially constrain user-visible behavior,
+authorization, or long-term architecture. Persist only the final approved
 brief, not drafts.
 
 For concrete instructions susceptible to reinterpretation, connect the user's
@@ -243,12 +229,12 @@ interaction evidence.
 
 Every completion condition needs a source: the user's request, a recorded user
 decision, a linked issue or specification section, or a project instruction.
-A condition without one is a primary proposal. List proposals such as defensive
+A condition without one is a primary proposal. Record proposals such as defensive
 hardening, extra edge cases, recovery or reconciliation mechanisms, additional
-modes and states, and future-proofing under excluded proposals with a one-line
-reason. Move one into the completion conditions only after the user accepts it.
+modes and states, and future-proofing in `decisions.md` with a one-line reason.
+Move one into the completion conditions only after the user accepts it.
 Do not add a condition, state, or test for a case that current data, inputs, and
-deployment cannot produce; list it as an excluded proposal instead. Prefer the
+deployment cannot produce; keep it outside the brief. Prefer the
 simplest approach that satisfies the sourced conditions.
 
 Write each condition as an observable outcome together with the smallest check

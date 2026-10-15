@@ -5,7 +5,7 @@ reviewer's execution document. Keep provider commands and permission syntax in
 that document; this file defines the review contract.
 
 Start after the [validation entry gate](validation.md), required final validation,
-and passing internal review. Follow [implementation feedback](implementation-feedback.md)
+and passing requirements validation. Follow [implementation feedback](implementation-feedback.md)
 when fixes affect a result requiring confirmation. Feedback iterations do not
 consume or reset the external execution budget. New scope needs an explicit
 coverage assessment; narrow re-review does not certify previously unreviewed scope.
@@ -14,13 +14,16 @@ coverage assessment; narrow re-review does not certify previously unreviewed sco
 
 Use the profile's frontier-capable final reviewer by default. Optimize cost only
 after representative task evidence supports the alternative or the user
-explicitly selects it. A cheaper preliminary reviewer may help find easy issues;
-its clean report never decides whether to skip final independent review.
+explicitly selects it. Do not run a preliminary reviewer in the standard
+workflow; use one only when the user explicitly requests it. Its report never
+replaces final independent review.
 
-Give the initial reviewer the request, approved contract, raw code and checked
-evidence, without primary/implementer pass verdicts or preliminary review
-conclusions. Supply those conclusions only after its first report when needed
-for reconciliation. Preserve substantive objections and triage each against
+Give the initial reviewer the approved contract, current code, scope packet, and
+checked evidence, without primary/implementer pass verdicts or preliminary review
+conclusions. The scope packet is orientation, not a boundary: the reviewer may
+inspect changed files and adjacent risk seams needed to challenge omissions.
+Supply earlier conclusions only after its first report when needed for
+reconciliation. Preserve substantive objections and triage each against
 direct evidence; authority, confidence, consensus, or a clean test run is not a
 reason to reject a supported finding. Unresolved material disagreements need
 additional evidence or an explicit user decision, not a silently clean gate.
@@ -58,15 +61,16 @@ a fix re-review remains limited to previously accepted findings.
 
 ## Review context
 
-Write `prompt.md` with the matching context and append the contract below:
+Write `prompt.md` with the matching context and append the contract below. Link
+canonical artifacts the reviewer can read instead of copying their full contents;
+inline only an artifact the selected reviewer cannot access.
 
-- Initial review: the approved brief verbatim, including code quality and any
-  specialist contract; workdir, baseline and inspected code identity, task-owned
-  paths and complete task diff, paths changed outside the brief's ownership with
-  the implementer's reasons, pre-existing changes to exclude, relevant
-  environment/project instructions, and independently checked completion evidence
-  without earlier agents' pass verdicts or review conclusions.
-  Primary context informs but never replaces the reviewer's own inspection.
+- Initial review: canonical approved-brief and scope-packet paths; workdir,
+  baseline and inspected code identity; task-owned and outside-packet paths;
+  pre-existing changes to exclude; relevant environment/project instructions;
+  and independently checked evidence paths without earlier agents' pass verdicts
+  or review conclusions. The reviewer reads the diff from the repository.
+  Primary context informs but never limits the reviewer's own inspection.
 - Re-review: prior accepted findings and triage reasoning verbatim, the fix
   request, implementer response, post-fix validation and primary regression
   review, and changes since the previous round with code-state identifiers.
@@ -94,23 +98,25 @@ Act as an independent senior engineer reviewing the current task change. Work re
 Use the available inspection tools within the configured read-only permissions.
 Read applicable project instructions and relevant project knowledge supplied by the environment.
 Inspect the repository and complete task diff against the recorded comparison baseline,
-including every task-owned modification and new file. Changes outside the brief's ownership
+including every task-owned modification and new file. Changes outside the scope packet's ownership
 are allowed when an approved condition needed them; report one only when it is wrong, harmful,
 or unrelated to the request. Do not judge from the diff alone: read every materially changed file in full, and
 read the adjacent surfaces needed to judge duplication and consistency. Respect the repository
 instructions and the approved brief.
 
-Review from exactly these four perspectives:
-1. REQUIREMENTS: Completeness of the requested and approved behavior, including promised
-   deletions; verify each completion condition against observable evidence. Identify missing
-   required evidence explicitly, even when the supplied test commands passed.
-2. QUALITY_MAINTAINABILITY: Duplication, dead code, redundant state, inconsistent copy/UX/naming,
+Review from exactly these three perspectives:
+1. QUALITY_MAINTAINABILITY: Duplication, dead code, redundant state, inconsistent code/API naming,
    unnecessary complexity, hidden coupling, unclear ownership, and poor testability.
-3. BUG: Concrete, plausible execution paths causing incorrect behavior, including error handling,
+2. BUG: Concrete, plausible execution paths causing incorrect behavior, including error handling,
    nullability, state transitions, concurrency, compatibility, and demonstrated performance or
    stability failures.
-4. SECURITY: Authentication, authorization, input handling, trust boundaries, and sensitive-data
+3. SECURITY: Authentication, authorization, input handling, trust boundaries, and sensitive-data
    exposure with a concrete trigger and realistic impact.
+
+The primary separately validates completion conditions and evidence. Use the
+approved contract to understand intended behavior and scope, but do not repeat
+its condition-by-condition evidence ledger. A quality, bug, or security finding
+may still identify behavior that violates the contract.
 
 Do not flag style preferences, speculative concerns without a concrete trigger, triggers that
 current data, inputs, and deployment cannot produce, requirements outside the approved brief,

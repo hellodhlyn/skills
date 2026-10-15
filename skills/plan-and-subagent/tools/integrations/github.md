@@ -31,7 +31,7 @@ reference, read [Linear integration](linear.md) instead.
 Apply these milestones only when task commits are authorized. When reviewing
 local-only work, record content identities instead and do not require a commit.
 
-- After required validation and primary review pass, create one coherent
+- After required validation and requirements validation pass, create one coherent
   implementation milestone before initial independent review.
 - After each accepted review round's fixes and revalidation, create one grouped
   feedback milestone covering the round. Do not create a commit per finding.

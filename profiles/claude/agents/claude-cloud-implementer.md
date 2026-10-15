@@ -17,13 +17,13 @@ The official CLI may persist its own normal session history under its configured
 Claude directory; this exception does not permit editing settings, credentials,
 or other sessions.
 
-Take the stage, self-contained approved handoff, explicit source/input manifest,
+Take the stage, self-contained approved handoff and scope packet, explicit source/input manifest,
 Cloud worker instructions, execution document, directories, and existing Cloud
 session ID from the primary. Report missing required context rather than
 searching personal knowledge or inheriting assumptions from a parent session.
-At the understanding stage, return the worker's read-only report and stop.
-Only an explicit continuation from the primary starts implementation. Return
-deviations for primary resolution; do not approve a change yourself.
+On the initial implementation stage, verify the worker's input inventory and
+let it continue directly unless it reports a blocker or material deviation.
+Return deviations for primary resolution; do not approve a change yourself.
 
 Use the same Cloud session for all later stages. Each correction/export has a
 fresh round ID so earlier completion markers and patches cannot satisfy it.

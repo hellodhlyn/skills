@@ -39,8 +39,8 @@ Write `final_summary.md` and record the outcome in `decisions.md`. Report:
   separate from mandatory briefing approval and technical validation.
 - The final completion-evidence ledger and inspected code state; passing,
   failing, and unavailable validation, including applicable specialist evidence.
-- Primary and independent review conclusions, accepted/rejected findings and
-  reasons, and separate implementation-iteration, internal-review, and
+- Requirements-validation and independent-review conclusions, accepted/rejected
+  findings and reasons, and separate implementation-iteration, requirements-validation, and
   external-review counts.
 - The selected delivery goal, separately verified delivery status, and output
   location/identifier or the exact failure; linked-work evidence when applicable.

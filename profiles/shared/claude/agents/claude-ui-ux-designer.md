@@ -35,7 +35,8 @@ the mockup yourself:
   each reference's component map.
 - Every call resends your whole context and each screenshot stays in it.
   Complete the markup and styles for all covered states before the first
-  capture, cover each state and viewport with one `capture` call that passes
+  capture, cover only the state/viewport combinations named in the handoff with
+  one `capture` call each that passes
   its `url`, `viewport`, `actions`, and `audit: true`, and capture a state
   again only after an edit that changes it. After reading the mockup file once,
   locate code with Grep and read only the needed line range.

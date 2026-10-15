@@ -230,7 +230,7 @@ has no personal knowledge-index or global knowledge-read permission requirement.
 The Claude profile calls the native `claude-cloud-implementer` subagent, which
 uses the official Claude CLI to manage a retained Cloud Haiku 5.5 session.
 The coordinator itself runs locally on Haiku. Implementation stays in Cloud;
-understanding checks and corrections reuse its session ID. Codex Astra remains
+implementation and corrections reuse its session ID. Codex Astra remains
 the independent final reviewer.
 
 Approved code is sent as a disposable source snapshot with one transport-only

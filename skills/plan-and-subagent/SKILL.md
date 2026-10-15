@@ -40,8 +40,8 @@ they inform judgment and are not verdicts. When drift persists, report the
 signals to the user with these options and wait for the choice:
 
 - stop the agent and start a fresh session of the same role with the approved
-  brief, the current worktree state, and the remaining conditions, repeating the
-  understanding check; a long retained session is often the cause;
+  brief, scope packet, current worktree state, and remaining conditions; a long
+  retained session is often the cause;
 - with the user's explicit approval, the primary makes the remaining fixes
   within the approved brief; final review then comes from roles that did not
   write those fixes.
@@ -55,14 +55,13 @@ alone does not establish a blocker.
 
 ## Follow the stage contract
 
-Use the [stage checkpoint](references/planning.md#stage-checkpoint) before
-starting each stage and before crossing its exit gate. Following the broad
-sequence is insufficient: satisfy the concrete instructions in the applicable
-reference and execution procedure. Do not replace a required action with an
-apparently equivalent summary, agent assertion, or passing test. Resolve real
-instruction conflicts by priority and record the resolution; do not invent an
-exception for convenience. Skill instructions never override explicit user or
-higher-priority instructions.
+Reconcile the [stage checkpoint](references/planning.md#stage-checkpoint) before
+dependent work and each exit gate. Record it only when a material milestone or
+obligation changes; do not rewrite unchanged checklists after routine waits or
+tool calls. Satisfy the applicable references and execution procedure rather
+than replacing a required action with an agent assertion or passing test.
+Resolve real instruction conflicts by priority. Skill instructions never
+override explicit user or higher-priority instructions.
 
 ## 1. Resolve the environment and establish the task
 
@@ -86,6 +85,8 @@ Inspect project instructions and the code, knowledge, dependencies, and tests
 needed for the task. Resolve explicitly linked requirements and comments through
 the applicable integration. Derive the smallest checks proving the requested
 behavior; do not infer identifiers or completion semantics across services.
+Write the bounded [scope packet](references/planning.md#scope-packet) that later
+roles use instead of repeating broad repository exploration.
 
 ## 2. Resolve decisions and prepare the brief
 
@@ -109,15 +110,16 @@ classify and apply [briefing mockups](references/ui-ux-mockups.md). The designer
 that wrote the proposal produces an applicable mockup through the UI execution
 procedure. Verify advice before using it.
 
-Prepare the complete [implementation brief](references/planning.md), including
-observable completion conditions, ownership, verification, and authorized delivery.
+Prepare the concise approval contract in the complete
+[implementation brief](references/planning.md), including observable completion
+conditions, material scope boundaries, verification, and authorized delivery.
 Read [implementation feedback](references/implementation-feedback.md) to decide
 whether user result confirmation is required and record its scope and rationale
 in the brief. This conditional result check never replaces Step 3 approval.
 Trace every completion condition to its [requirement source](references/planning.md#requirement-sources).
-List primary-proposed hardening, edge cases, and extensions as excluded
-proposals; include one only after the user accepts it. Keep optional follow-ups
-outside required completion conditions.
+Record unapproved primary-proposed hardening, edge cases, and extensions in
+`decisions.md`; include one only after the user accepts it. Keep optional
+follow-ups outside required completion conditions.
 
 ## 3. Present the brief and confirm its approval
 
@@ -145,7 +147,7 @@ choice; it does not approve a complete brief written afterward. Never label
 such a later brief approved merely because its direction matches that choice.
 If the complete brief has not been approved, present it and ask whether to
 execute it, then wait for the user's answer. Silence, elapsed time, a saved
-file, and an agent's understanding check are not user approval.
+file, and an agent report are not user approval.
 
 Existing explicit approval given after presentation of the same complete brief
 remains valid; do not ask again for an unchanged approved contract. An external
@@ -158,8 +160,8 @@ does not grant permission beyond the displayed and explicitly authorized scope.
 
 Until this gate passes, continue only planning, read-only investigation and
 specialist advice, and authorized journal, briefing, or delegated mockup artifacts.
-Do not start the implementer, including its understanding check, or edit product
-code or other project files outside those assigned planning artifacts.
+Do not start the implementer or edit product code or other project files outside
+those assigned planning artifacts.
 Workspace mutations require authorization for those specific actions; they are
 not implicitly allowed as implementation preparation.
 
@@ -167,15 +169,17 @@ Save the approved brief verbatim and record the supporting user response and
 the brief it approves in the [decision ledger](references/planning.md).
 Material contract changes require renewed agreement before affected work.
 
-## 4. Check understanding and delegate implementation
+## 4. Delegate implementation
 
 Verify Step 3 approval evidence against the current brief, then follow
 [the implementer handoff](references/implementer-handoff.md) and the selected
 execution procedure. A valid imported approval under
 [external handoff](references/external-handoff.md) enters this same flow
-without other changes. Send self-contained context and retain the implementer's
-identity for understanding checks, implementation, and corrections. The primary
-performs read-only work while implementation runs; no overlapping edits.
+without other changes. Send the approved brief and scope packet in one
+implementation call and retain the implementer's identity for corrections. The
+implementer checks the bounded inputs before editing and continues immediately
+unless it finds a concrete blocker or material deviation. The primary performs
+read-only work while implementation runs; no overlapping edits.
 
 ## 5. Complete implementation and applicable feedback
 
@@ -188,11 +192,12 @@ Material contract changes still require renewed agreement.
 ## 6. Validate and review
 
 Apply [validation and review](references/validation.md): independently verify
-completion evidence, perform primary and applicable specialist review, and
+completion evidence, perform primary requirements validation and applicable
+specialist review, and
 refresh affected evidence after fixes. Use its separate review budgets and
 completion gate. Return to Step 5 only when the affected result requires feedback.
 
-After required validation and internal review pass, apply authorized milestone
+After requirements validation passes, apply authorized milestone
 policy and follow [independent review](references/external-review.md). Use the
 profile's designated final reviewer; optional preliminary review never replaces
 this gate. Wait for
