@@ -51,28 +51,32 @@ No installer mode invokes a paid model, changes credentials, or edits global
 ### Codex
 
 The Codex profile documents GPT-6.1 Sol (`gpt-6.1-sol`) for the primary session and GPT-6
-Luna (`gpt-6-luna`, `xhigh`) for implementation. UI/UX design with briefing mockups and conformance review with
-browser evidence use the same Claude Code subagent definitions as
-the Claude profile, run headless through `scripts/run-claude-agent.sh`.
+Luna (`gpt-6-luna`, `xhigh`) for implementation. UI/UX design and briefing mockups
+use the shared Claude designer (Opus 5.5, `high`), run headless through
+`scripts/run-claude-agent.sh`. UI/UX conformance review and browser evidence use
+GPT-6.1 Sol (`gpt-6.1-sol`, `medium`) through `scripts/run-codex-review.mjs`
+with `--browser-request` and the request-scoped `ui-browser` MCP.
 Final independent code review uses GPT-6 Astra (`gpt-6-astra`, `high`) through
 the isolated read-only `scripts/run-codex-review.mjs` runner. The shared OpenCode
 `reviewer` is optional preliminary review and cannot replace the final gate.
-Important architecture and domain choices require the standalone Claude Agent
-SDK-backed `advisor` skill; unresolved consequential questions can receive an
-independent Astra opinion followed by bounded cross-critique.
+Important architecture and domain choices use a fresh Astra analysis first;
+unresolved consequential questions can receive a second opinion from the
+standalone Claude Agent SDK-backed `advisor` skill followed by bounded cross-critique.
 Definitions are sourced from `profiles/codex/` and `profiles/shared/`. Start a
 new Codex session after changing native role definitions.
 
 ### Claude
 
 The Claude profile uses Claude Opus 5.5 (`claude-opus-5-5`) for the primary
-Claude Code session, at `medium` effort by default. Implementation runs on GPT-6
-Luna (`gpt-6-luna`, `xhigh`) through the Codex CLI with
-`scripts/run-codex-exec.sh`, which retains the implementer's thread for
-corrections. UI/UX design with briefing mockups (`claude-ui-ux-designer`, Opus 5.5 `high`)
-and conformance review with browser evidence (`claude-ui-ux-reviewer`, Opus 5.5
-`medium`) are native Claude Code subagents with a subagent-scoped `ui-browser` MCP. Final independent code
-review uses the same read-only Astra runner; OpenCode is optional preliminary
+Claude Code session, at `medium` effort by default. Implementation remains on
+Claude Haiku 5.5 (`claude-haiku-5-5`, `high`) in a retained Cloud session,
+managed by the local `claude-cloud-implementer` transport subagent. Cloud usage
+and promotional credit deduction must not be inferred from the launch flags.
+UI/UX design with briefing mockups (`claude-ui-ux-designer`, Opus 5.5 `high`)
+uses a native Claude subagent with its scoped `ui-browser` MCP. UI verification
+uses the same Sol CLI runner and browser request procedure as the Codex profile.
+Architecture advice uses Astra first and Claude advisor conditionally.
+Final independent code review uses the same read-only Astra runner; OpenCode is optional preliminary
 review. Definitions are sourced from
 `profiles/claude/` and `profiles/shared/`. Start a new Claude Code session after changing subagent
 definitions.

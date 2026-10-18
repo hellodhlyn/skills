@@ -71,6 +71,75 @@ test("starts isolated read-only analysis and preserves its terminal evidence", (
   assert.equal(fs.readFileSync(path.join(f.run, "exit-code"), "utf8"), "0\n");
 });
 
+function uiFixture(t) {
+  const f = fixture(t);
+  const runtime = path.join(f.root, "browser-runtime");
+  fs.mkdirSync(runtime);
+  fs.writeFileSync(path.join(runtime, "server.mjs"), "// browser runtime fixture\n");
+  const requestFile = path.join(f.root, "browser-request.json");
+  const request = {
+    phase: "final", workdir: f.workdir, artifactDir: path.join(f.root, "evidence"),
+    codeState: "approved-state", url: "http://localhost:3000/", allowedOrigins: ["http://localhost:3000"],
+    viewports: [{ name: "desktop", width: 1280, height: 720 }],
+    conditions: [{ id: "visible", expected: "The approved content is visible." }],
+    stateChangesAuthorized: false,
+  };
+  const execute = (changes = {}, file = requestFile, browserRuntime = runtime) => {
+    fs.writeFileSync(file, JSON.stringify({ ...request, ...changes }));
+    return spawnSync(process.execPath,
+      [runner, f.workdir, f.prompt, f.run, "gpt-6.1-sol", "medium", "--browser-request", file],
+      { encoding: "utf8", timeout: 10000, env: { ...f.env, PLAN_AND_SUBAGENT_UI_BROWSER_DIR: browserRuntime } });
+  };
+  return { ...f, runtime, requestFile, execute };
+}
+
+test("UI verification keeps product access read-only and adds only its pinned browser MCP", (t) => {
+  const f = uiFixture(t);
+  const child = f.execute();
+  assert.equal(child.status, 0, child.stderr);
+  const args = JSON.parse(fs.readFileSync(path.join(f.root, "argv.json"), "utf8"));
+  assert.equal(args[args.indexOf("-m") + 1], "gpt-6.1-sol");
+  assert.equal(args[args.indexOf("-s") + 1], "read-only");
+  assert.ok(args.includes('model_reasoning_effort="medium"'));
+  assert.ok(args.includes("features.apps=false"));
+  const mcp = args.filter((arg) => arg.startsWith("mcp_servers="));
+  assert.equal(mcp.length, 1);
+  assert.ok(mcp[0].includes(`PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST = ${JSON.stringify(f.requestFile)}`));
+  assert.ok(mcp[0].includes("required = true"));
+  assert.ok(mcp[0].includes('enabled_tools = ["load_request", "navigate", "viewport", "act", "capture", "audit"]'));
+  const evidence = JSON.parse(fs.readFileSync(path.join(f.run, "execution.json"), "utf8"));
+  assert.deepEqual(evidence.browser, { request: f.requestFile, server: path.join(f.runtime, "server.mjs") });
+  const input = fs.readFileSync(path.join(f.root, "stdin.txt"), "utf8");
+  assert.match(input, /Inspect every captured screenshot yourself/);
+  assert.ok(input.includes(`Browser request: ${f.requestFile}`));
+  assert.ok(input.endsWith("independent review request\n"));
+});
+
+for (const [label, changes, expected] of [
+  ["design phase", { phase: "design" }, /requires preview, final, or recheck/],
+  ["different repository", { workdir: os.tmpdir() }, /workdir does not match/],
+  ["escaping evidence", { artifactDir: path.join(os.tmpdir(), "outside-request") }, /artifactDir must stay within/],
+]) {
+  test(`UI verification refuses ${label} before calling the model`, (t) => {
+    const f = uiFixture(t);
+    const child = f.execute(changes);
+    assert.equal(child.status, 1);
+    assert.match(child.stderr, expected);
+    assert.equal(fs.existsSync(path.join(f.root, "argv.json")), false);
+    assert.equal(fs.existsSync(f.run), false);
+  });
+}
+
+test("UI verification rejects product-local requests and missing browser installations", (t) => {
+  const f = uiFixture(t);
+  const child = f.execute({ artifactDir: path.join(f.workdir, "evidence") }, path.join(f.workdir, "request.json"));
+  assert.equal(child.status, 1);
+  assert.match(child.stderr, /request and evidence must be outside/);
+  assert.equal(f.execute({}, f.requestFile, path.join(f.root, "missing-runtime")).status, 1);
+  assert.equal(fs.existsSync(path.join(f.root, "argv.json")), false);
+  assert.equal(fs.existsSync(f.run), false);
+});
+
 test("a model access failure preserves its exit and never publishes partial advice", (t) => {
   const f = fixture(t);
   const child = f.execute("error");

@@ -160,7 +160,7 @@ server.registerTool("load_request", {
   inputSchema: { requestPath: z.string() },
 }, async ({ requestPath }) => {
   if (requestFile) throw new Error(`This browser session is already bound to ${requestFile}; start a fresh session for another request.`);
-  const loaded = loadRequestFile(requestPath);
+  const loaded = loadRequestFile(requestPath, process.env.PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST);
   requestFile = loaded.file;
   bindRequest(loaded.request);
   return result(`Bound ${loaded.file}\nPhase: ${request.phase}\nCode state: ${request.codeState}\nURL: ${request.url}\nConditions: ${[...conditions].join(", ")}\nViewports: ${[...viewports.keys()].join(", ")}\nState changes authorized: ${request.stateChangesAuthorized}`);

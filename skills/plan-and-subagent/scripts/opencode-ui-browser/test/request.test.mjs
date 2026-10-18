@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -54,4 +54,18 @@ test("a request file binds only artifacts inside its own directory", (t) => {
   writeFileSync(file, JSON.stringify({ ...request, artifactDir: path.join(tmpdir(), "elsewhere") }));
   assert.throws(() => loadRequestFile(file), /artifactDir must stay within/);
   assert.throws(() => loadRequestFile("relative.json"), /absolute path/);
+});
+
+test("a pinned browser session accepts its assigned request but rejects another request", (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), "ui-browser-pin-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const assigned = path.join(directory, "assigned.json");
+  const other = path.join(directory, "other.json");
+  const alias = path.join(directory, "alias.json");
+  const content = JSON.stringify({ ...request, artifactDir: path.join(directory, "browser") });
+  writeFileSync(assigned, content);
+  writeFileSync(other, content);
+  symlinkSync(assigned, alias);
+  assert.equal(loadRequestFile(alias, assigned).request.codeState, request.codeState);
+  assert.throws(() => loadRequestFile(other, assigned), /only the runner's assigned request/);
 });

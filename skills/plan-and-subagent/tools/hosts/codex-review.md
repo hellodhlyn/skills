@@ -1,6 +1,6 @@
 # Codex CLI independent analysis
 
-Read when a profile binds final review or a second architecture opinion to Codex
+Read when a profile binds code/UI review or architecture advice to Codex
 CLI. This role is external to the native implementer and has a fresh context.
 
 ## Start and evidence
@@ -34,7 +34,42 @@ waits. Exit 0 requires a complete event stream and non-empty final report;
 evaluate the report's substance separately. Failed or incomplete calls consume
 the applicable review budget and never establish a clean review.
 
-## Corrections and continuation
+## UI/UX review and browser evidence
+
+For UI/UX evidence, use the same runner with the profile's UI reviewer model
+and effort and an explicit browser request:
+
+```bash
+node "$SKILL_ROOT/scripts/run-codex-review.mjs" "$WORKDIR" "$PROMPT_FILE" "$NEW_RUN_DIR" "$MODEL" "$EFFORT" --browser-request "$BROWSER_REQUEST"
+```
+
+Follow [UI browser evidence](../integrations/ui-browser.md) when writing the
+request. Put it outside the inspected repository, with its artifact directory
+inside the request's directory. Use phase `preview`, `final`, or `recheck`;
+design and mockup requests remain with the designer. The runner validates the
+request's workdir and phase, prepends the shared [UI reviewer instructions](../../references/ui-reviewer.md),
+and configures the required `ui-browser` MCP with its six declared tools.
+User configuration is ignored, but MCP overrides merge with project tables.
+The project-configuration check above must confirm there are no other enabled
+MCP servers or extra settings on `ui-browser`; otherwise report incompatible
+configuration before starting. The runner disables Apps and pins the browser
+to this request. Product shell access
+remains read-only; browser evidence writes are confined by the server's request.
+The browser runtime must already be installed at
+`PLAN_AND_SUBAGENT_UI_BROWSER_DIR` or the default
+`~/.local/share/plan-and-subagent/opencode-ui-browser/`. No global MCP or agent
+configuration is changed. Required MCP startup failure must fail the run.
+
+Keep the UI/UX handoff, references, condition IDs, and expected judgments in
+the prompt; the model must inspect the captured screenshots and report both
+conformance and user-purpose support. A zero runner exit is not UI acceptance.
+Read the full report and verify the required artifact evidence. Missing or
+unavailable browser evidence remains `UNVERIFIED` and blocks dependent approval.
+Record the request and server paths from `execution.json` with the evidence.
+Each new browser request or recheck uses a fresh run, with accepted findings and
+current code-state evidence rather than a resumed browser context.
+
+## Finding re-review and advice critique
 
 This runner does not resume sessions. For accepted findings, start a fresh call
 with the narrow re-review contract, original findings, fix delta and checked

@@ -10,10 +10,10 @@ project instructions and explicit user choices take precedence.
 | Primary | Codex / GPT-6.1 Sol (`gpt-6.1-sol`) | Select in Codex |
 | Implementation | `luna_implementer` / `gpt-6-luna` | `xhigh` |
 | UI/UX design and briefing mockups | `claude-ui-ux-designer` / Claude Opus 5.5 | `high` |
-| UI/UX review and browser evidence | `claude-ui-ux-reviewer` / Claude Opus 5.5 | `medium` |
+| UI/UX review and browser evidence | Codex CLI / GPT-6.1 Sol (`gpt-6.1-sol`) | `medium` |
 | Final independent code review | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
-| Architecture advice | Separate `advisor` skill / Claude Opus 5.5 | `medium` |
-| Conditional second architecture opinion | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
+| Architecture advice | Codex CLI / GPT-6 Astra (`gpt-6-astra`) | `high` |
+| Conditional second architecture opinion | Separate `advisor` skill / Claude Opus 5.5 | `medium` |
 | Preliminary code review (explicit request only) | OpenCode `reviewer` / `zai-coding-plan/glm-5.3-flash` | `max` |
 
 Native definitions own the effective model, effort, and permissions. Role updates
@@ -24,19 +24,22 @@ require a new session; this document does not change a running session.
 - Use the skill's `tools/hosts/codex.md`, `claude-cli.md`, `codex-review.md`,
   and applicable `tools/integrations/` procedures. Optional OpenCode preliminary
   review follows `tools/hosts/opencode.md`.
-- Use the native Codex implementer. Claude UI/UX roles use `scripts/run-claude-agent.sh`
-  and their scoped `ui-browser` MCP; check `claude auth status` before use.
+- Use the native Codex implementer. The Claude designer uses `scripts/run-claude-agent.sh`
+  and its scoped `ui-browser` MCP; check `claude auth status` before use.
+- UI/UX review and browser evidence use `scripts/run-codex-review.mjs` with
+  `gpt-6.1-sol`, `medium`, and `--browser-request`, following `tools/hosts/codex-review.md`.
+  Each request gets a fresh read-only context and only its scoped browser MCP.
 - The designer writes briefing mockups itself. Design and review are read-only
   except for assigned mockup/browser artifacts; product fixes go to the implementer.
 - Final review uses `scripts/run-codex-review.mjs` with `gpt-6-astra`, `high`,
   in a fresh read-only Codex CLI context; check `codex login status` first. A
   preliminary review cannot skip this gate and is not part of the standard workflow.
-- Apply the common decision-advice contract to important choices. Use the
+- Apply the common decision-advice contract to important choices. First opinions
+  use the Codex independent analysis runner with `gpt-6-astra`, `high`, in a
+  fresh context separate from final review. Conditional second opinions use the
   separately installed advisor and its current execution guide, including
   personal OAuth instructions. A Claude CLI login does not verify advisor
-  authentication. Conditional second opinions use the same Codex independent
-  analysis runner with `gpt-6-astra`, `high`. Reserve Claude usage for UI/UX
-  and architecture advice.
+  authentication. Reserve Claude usage for design/mockups and conditional advice.
 - Requirements validation and external code review each have a separate five-round limit;
   failed executions count. Conditional advice allows one focused critique per
   model unless the user selects an additional budget. Advice has its own records

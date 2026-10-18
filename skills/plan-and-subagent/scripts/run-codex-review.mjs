@@ -1,10 +1,14 @@
 import { spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+import { loadRequestFile } from "./opencode-ui-browser/src/request.mjs";
 
 const [workdir, promptFile, runDirectory, model, effort, ...extra] = process.argv.slice(2);
-if (!workdir || !promptFile || !runDirectory || !model || !effort || extra.length) {
-  console.error("Usage: node run-codex-review.mjs <workdir> <prompt-file> <new-run-dir> <model> <effort>");
+if (!workdir || !promptFile || !runDirectory || !model || !effort
+    || (extra.length && (extra.length !== 2 || extra[0] !== "--browser-request"))) {
+  console.error("Usage: node run-codex-review.mjs <workdir> <prompt-file> <new-run-dir> <model> <effort> [--browser-request <file>]");
   process.exit(2);
 }
 if (!/^[a-zA-Z0-9._/-]+$/.test(model) || !["low", "medium", "high", "xhigh", "max"].includes(effort)) {
@@ -14,7 +18,7 @@ if (!/^[a-zA-Z0-9._/-]+$/.test(model) || !["low", "medium", "high", "xhigh", "ma
 
 async function main() {
   const cwd = realpathSync(workdir);
-  const prompt = readFileSync(promptFile, "utf8");
+  let prompt = readFileSync(promptFile, "utf8");
   if (!prompt.trim()) throw new Error("empty prompt");
   const run = path.resolve(runDirectory);
   if (existsSync(run)) throw new Error("run directory already exists; use a fresh directory");
@@ -23,6 +27,22 @@ async function main() {
   if (relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative))) {
     throw new Error("review artifacts must be outside the inspected repository");
   }
+  let browser;
+  if (extra.length) {
+    const loaded = loadRequestFile(realpathSync(extra[1]));
+    if (realpathSync(loaded.request.workdir) !== cwd) throw new Error("browser request workdir does not match inspected repository");
+    if (!["preview", "final", "recheck"].includes(loaded.request.phase)) throw new Error("UI review requires preview, final, or recheck phase");
+    const requestParent = realpathSync(path.dirname(loaded.file));
+    const requestRelative = path.relative(cwd, requestParent);
+    if (requestRelative === "" || (!requestRelative.startsWith(`..${path.sep}`) && requestRelative !== ".." && !path.isAbsolute(requestRelative))) {
+      throw new Error("browser request and evidence must be outside the inspected repository");
+    }
+    const runtime = process.env.PLAN_AND_SUBAGENT_UI_BROWSER_DIR || path.join(os.homedir(), ".local/share/plan-and-subagent/opencode-ui-browser");
+    const server = realpathSync(path.join(runtime, "server.mjs"));
+    browser = { request: loaded.file, server };
+    const instructions = readFileSync(fileURLToPath(new URL("../references/ui-reviewer.md", import.meta.url)), "utf8");
+    prompt = `${instructions}\n\nBrowser request: ${loaded.file}\n\n---\n\n${prompt}`;
+  }
   mkdirSync(run, { mode: 0o700 });
   writeFileSync(path.join(run, "prompt.md"), prompt, { mode: 0o600 });
   const args = ["exec", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--json",
@@ -30,7 +50,13 @@ async function main() {
     "-c", 'model_provider="openai"', "-c", `model_reasoning_effort="${effort}"`,
     "-c", 'approval_policy="never"', "-c", 'web_search="disabled"',
     "-o", path.join(run, "result.md"), "-"];
+  if (browser) {
+    // User config is ignored; project configuration must pass the documented isolation check.
+    const config = `{ "ui-browser" = { command = ${JSON.stringify(process.execPath)}, args = [${JSON.stringify(browser.server)}], env = { PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST = ${JSON.stringify(browser.request)} }, enabled_tools = ["load_request", "navigate", "viewport", "act", "capture", "audit"], default_tools_approval_mode = "approve", required = true } }`;
+    args.splice(args.length - 1, 0, "-c", `mcp_servers=${config}`, "-c", "features.apps=false");
+  }
   const metadata = { model, effort, cwd, sandbox: "read-only", argv: args,
+    ...(browser ? { browser } : {}),
     startedAt: new Date().toISOString(), status: "running" };
   const save = () => writeFileSync(path.join(run, "execution.json"), `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
   save();
