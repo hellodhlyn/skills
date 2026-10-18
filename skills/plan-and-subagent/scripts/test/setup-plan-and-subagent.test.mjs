@@ -67,14 +67,16 @@ test("the Codex inventory installs GPT-6 roles and no independent GLM profile", 
   assert.match(fs.readFileSync(path.join(repository, "profiles/codex/codex/agents/luna_implementer.toml"), "utf8"), /model = "gpt-6-luna"/);
 });
 
-test("the Codex profile runs the shared Claude UI/UX roles and retires its GLM and GPT UI/UX roles", (t) => {
+test("the Codex profile shares Claude design and Codex UI verification", (t) => {
   const f = fixture(t);
   const manifest = JSON.parse(fs.readFileSync(path.join(repository, "skills/plan-and-subagent/scripts/plan-and-subagent-install.json"), "utf8"));
   const selected = ["skill", "skill-opencode", "profile", "codex", "claude", "opencode", "ui-browser"];
   const targets = buildPlan(manifest, repository, f.roots, f.receipt, selected, new Map(), ["codex"]).files.map((entry) => entry.target);
-  for (const name of ["claude-ui-ux-designer", "claude-ui-ux-reviewer"]) {
+  for (const name of ["claude-ui-ux-designer"]) {
     assert.ok(targets.includes(path.join(f.roots.claude, "agents", `${name}.md`)), name);
   }
+  assert.equal(targets.includes(path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md")), false);
+  assert.ok(manifest.retired.some((entry) => entry.root === "claude" && entry.target === "agents/claude-ui-ux-reviewer.md"));
   assert.equal(targets.includes(path.join(f.roots.claude, "agents/claude-cloud-implementer.md")), false);
   assert.equal(targets.some((target) => within(path.join(f.roots.claude, "skills"), target)), false);
   assert.equal(targets.some((target) => within(path.join(f.roots.opencode, "skills"), target)), false);
@@ -88,7 +90,7 @@ test("the Codex profile runs the shared Claude UI/UX roles and retires its GLM a
   assert.deepEqual(manifest.checks.codex.opencodeAgents, []);
   assert.deepEqual(manifest.checks.codex.authentication.map((check) => check.argv), [["claude", "auth", "status"], ["codex", "login", "status"]]);
   const profile = fs.readFileSync(path.join(repository, "profiles/codex/PROFILE.md"), "utf8");
-  for (const expected of ["claude-ui-ux-designer", "claude-ui-ux-reviewer", "scripts/run-claude-agent.sh", "SESSION_DIR/mockups/"]) {
+  for (const expected of ["claude-ui-ux-designer", "gpt-6.1-sol", "--browser-request", "scripts/run-claude-agent.sh", "SESSION_DIR/mockups/"]) {
     assert.ok(profile.includes(expected), expected);
   }
   assert.doesNotMatch(profile, /codex-ui-ux|luna_mockup|claude-mockup|visualize/);
@@ -106,7 +108,7 @@ test("the Claude inventory installs native Claude roles and shares the OpenCode 
     path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"),
     path.join(f.roots.claude, "skills/plan-and-subagent/tools/hosts/claude-code.md"),
     path.join(f.roots.claude, "agents/claude-ui-ux-designer.md"),
-    path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"),
+    path.join(f.roots.claude, "skills/plan-and-subagent/references/ui-reviewer.md"),
     path.join(f.roots.claude, "agents/claude-cloud-implementer.md"),
     path.join(f.roots.environment, "profiles/claude/PROFILE.md"),
     path.join(f.roots.environment, "profiles/claude/cloud/implementer.md"),
@@ -128,7 +130,6 @@ test("Claude subagents keep their model, effort, and tool boundaries", () => {
   const browserTools = ["load_request", "navigate", "viewport", "act", "capture", "audit"].map((tool) => `mcp__ui-browser__${tool}`);
   for (const [name, model, effort, writes, delegation] of [
     ["claude-ui-ux-designer", "claude-opus-5-5", "high", true, []],
-    ["claude-ui-ux-reviewer", "claude-opus-5-5", "medium", false, []],
   ]) {
     const text = read(name);
     assert.match(frontmatter(text), new RegExp(`^name: ${name}$`, "m"));
@@ -512,7 +513,7 @@ test("Claude profile installs beside Codex without touching or misreporting Code
   assert.equal(fs.existsSync(path.join(f.roots.claude, "skills")), false);
   const apply = run(["--apply", "--profile", "claude"]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
-  for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"), path.join(f.roots.environment, "profiles/claude/cloud/implementer.md")]) {
+  for (const file of [path.join(f.roots.claude, "skills/plan-and-subagent/SKILL.md"), path.join(f.roots.claude, "skills/plan-and-subagent/references/ui-reviewer.md"), path.join(f.roots.environment, "profiles/claude/cloud/implementer.md")]) {
     assert.ok(fs.existsSync(file), file);
   }
   assert.doesNotMatch(apply.stdout, /Obsolete managed file/);
@@ -578,7 +579,7 @@ test("Codex profile reports a missing Claude Code login as a user action", (t) =
   const { run } = fakeCommands(f);
   const result = run(["--apply"], { SETUP_TEST_CLAUDE_LOGGED_OUT: "1" });
   assert.equal(result.status, 2, result.stdout + result.stderr);
-  assert.match(result.stdout, /\[PASS\] Claude Code CLI for UI\/UX roles/);
+  assert.match(result.stdout, /\[PASS\] Claude Code CLI for design\/mockups/);
   assert.match(result.stdout, /\[ACTION_REQUIRED\] Claude Code login/);
 });
 
@@ -590,13 +591,14 @@ test("an existing Codex installation reports its retired UI/UX files without del
     path.join(f.roots.opencode, "agents/codex-ui-ux.md"),
     path.join(f.roots.opencode, "profiles/codex/opencode.jsonc"),
     path.join(f.roots.opencode, "skills/plan-and-subagent/SKILL.md"),
+    path.join(f.roots.claude, "agents/claude-ui-ux-reviewer.md"),
   ];
   fs.mkdirSync(f.roots.state, { recursive: true });
   const receipt = { version: 1, files: {} };
   for (const file of legacy) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, "legacy");
-    receipt.files[file] = { component: file.includes("/skills/") ? "skill-opencode" : file.includes("luna_") ? "codex" : "opencode", profile: "codex", hash: createHash("sha256").update("legacy").digest("hex") };
+    receipt.files[file] = { component: file.includes("/skills/") ? "skill-opencode" : file.includes("luna_") ? "codex" : file.includes("claude-ui-ux") ? "claude" : "opencode", profile: "codex", hash: createHash("sha256").update("legacy").digest("hex") };
   }
   fs.writeFileSync(f.receiptPath, JSON.stringify(receipt));
   const result = run(["--apply"]);
@@ -664,7 +666,7 @@ console.log(JSON.stringify({type:'result', subtype: process.env.RUNNER_TEST_ERRO
   assert.equal(run(["resume", workdir, session, mismatch, "claude-ui-ux-designer", "session-1"], { RUNNER_TEST_SESSION: "other" }).status, 3);
   assert.match(read(mismatch, "stderr.log"), /does not match/);
   const failed = runDir("run-5");
-  assert.equal(run(["start", workdir, session, failed, "claude-ui-ux-reviewer"], { RUNNER_TEST_ERROR: "1" }).status, 3);
+  assert.equal(run(["start", workdir, session, failed, "claude-ui-ux-designer"], { RUNNER_TEST_ERROR: "1" }).status, 3);
   assert.equal(read(failed, "exit-code"), "3");
 
   assert.equal(run(["start", workdir, session, design, "claude-ui-ux-designer"]).status, 2);

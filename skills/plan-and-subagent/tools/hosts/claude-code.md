@@ -63,7 +63,13 @@ current run ends.
 
 ## Native UI/UX roles
 
-Start a fresh subagent for each design proposal, conformance review, and
+This section applies only to roles the profile binds to native Claude agents.
+For a Codex CLI UI reviewer, use [Codex independent analysis](codex-review.md)
+with `--browser-request` instead. Its request-scoped MCP collects browser
+evidence and its fresh context judges conformance and user-purpose support;
+do not start a native Claude reviewer for the same assignment.
+
+Start a fresh subagent for each native design proposal, conformance review, and
 focused recheck. Give it the self-contained handoff, including absolute paths
 to the applicable skill references it must read. Keep the returned agent
 identity for in-scope corrections through SendMessage; each new browser request

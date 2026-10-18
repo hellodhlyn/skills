@@ -43,8 +43,10 @@ models, terminal status, and report. Do not replace it with a native Codex role
 or infer a fallback model. Keep the designer's writes limited to its assigned
 directory. Route product fixes to the implementer.
 
-When the profile binds independent review or a second architecture opinion to
+When the profile binds UI/UX verification, independent code review, or architecture advice to
 the external Codex CLI, use [Codex independent analysis](codex-review.md).
+UI verification requires its `--browser-request` procedure; the Claude designer
+continues to own design proposals and briefing mockups.
 This separate read-only role does not change the native implementation binding.
 
 ## Completion

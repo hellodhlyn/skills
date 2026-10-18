@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -86,8 +86,11 @@ export function validateRequest(input) {
   };
 }
 
-export function loadRequestFile(requestPath) {
+export function loadRequestFile(requestPath, pinnedRequest) {
   const file = absolute(requestPath, "requestPath");
+  if (pinnedRequest && realpathSync(file) !== realpathSync(pinnedRequest)) {
+    throw new Error("This browser session may load only the runner's assigned request.");
+  }
   const request = validateRequest(JSON.parse(readFileSync(file, "utf8")));
   assertPathWithin(path.dirname(file), request.artifactDir, "artifactDir");
   return { file, request };

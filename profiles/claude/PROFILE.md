@@ -5,8 +5,9 @@ Code Cloud, the Codex CLI, and OpenCode. The common skill owns the pipeline and 
 file owns only the profile binding. Project instructions and explicit task
 choices take precedence.
 
-Claude handles primary judgment and UI/UX work. Implementation runs on Haiku in
-a Cloud session; independent review stays on Codex. Promotional Cloud credit
+Claude handles primary judgment and UI/UX design. Implementation runs on Haiku in
+a Cloud session; UI verification, first architecture advice, and independent code
+review run on Codex. Promotional Cloud credit
 deduction is not observable through this workflow and must not be promised.
 
 ## Native bindings
@@ -29,25 +30,28 @@ deduction is not observable through this workflow and must not be promised.
   evidence and writes each briefing mockup itself under a mockup direction;
   otherwise it is read-only.
 - UI/UX conformance review, focused recheck, and implemented UI browser
-  evidence: native subagent `claude-ui-ux-reviewer` (Claude Opus 5.5,
-  `medium`). It is read-only except for browser evidence artifacts and judges
-  that evidence against the user purpose and approved contract in the same
-  context.
+  evidence: GPT-6.1 Sol (`gpt-6.1-sol`), `medium`, through
+  `scripts/run-codex-review.mjs` with `--browser-request` and
+  `tools/hosts/codex-review.md`. Each request gets a fresh read-only context and
+  only its scoped browser MCP. It collects evidence and judges the user purpose
+  and approved contract in that same context.
 - Final independent code review: GPT-6 Astra (`gpt-6-astra`), `high`, through
   `scripts/run-codex-review.mjs` and `tools/hosts/codex-review.md`. The shared
   OpenCode reviewer runs only on explicit request and never replaces this gate.
-- Important decisions use the separately installed Claude Agent SDK `advisor`
-  skill (Claude Opus 5.5, `medium`), following its current execution guide.
-  Conditional second opinions use GPT-6 Astra (`gpt-6-astra`), `high`, through
-  the independent-analysis runner and the common decision-advice contract.
+- Important decisions use GPT-6 Astra (`gpt-6-astra`), `high`, through the
+  independent-analysis runner and the common decision-advice contract, in a
+  fresh context separate from final review. Conditional second opinions use the
+  separately installed Claude Agent SDK `advisor` skill (Claude Opus 5.5,
+  `medium`), following its current execution guide and personal OAuth instructions.
+  Claude CLI login does not establish advisor authentication.
 - Requirements validation and external review each have a separate five-round limit. Failed
   executions count. Conditional advice allows one critique per model unless the
   user explicitly selects an additional budget; advice does not consume review rounds.
 
-The two native UI/UX subagents are shared with the Codex profile under the
-repository's `profiles/shared/claude/agents/`. Each gets the local `ui-browser`
-MCP as a server scoped to that subagent; the primary session does not receive
-the browser tools.
+The native designer is shared with the Codex profile under the repository's
+`profiles/shared/claude/agents/`. It gets the local `ui-browser` MCP scoped to
+that subagent. The Codex UI reviewer uses the same browser runtime through its
+request-scoped runner; the primary session does not receive browser tools.
 
 ## Knowledge sources
 

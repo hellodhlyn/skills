@@ -3,14 +3,14 @@
   "checks": {
     "codex": {
       "opencodeAgents": [],
-      "commands": [{"name": "Claude Code CLI for UI/UX roles", "argv": ["claude", "--version"]}, {"name": "Codex CLI for independent Astra analysis", "argv": ["codex", "exec", "--help"]}],
+      "commands": [{"name": "Claude Code CLI for design/mockups", "argv": ["claude", "--version"]}, {"name": "Codex CLI for Sol UI verification and Astra analysis", "argv": ["codex", "exec", "--help"]}],
       "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}, {"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "codex", "files": ["AGENTS.override.md", "AGENTS.md"]},
       "session": "Start a new Codex session after role updates; current-session discovery cannot be verified by this installer."
     },
     "claude": {
       "opencodeAgents": [],
-      "commands": [{"name": "Claude Code CLI for Cloud implementation", "argv": ["claude", "--version"]}, {"name": "Python PTY helper for official CLI retrieval", "argv": ["python3", "--version"]}, {"name": "Codex CLI for independent Astra review", "argv": ["codex", "exec", "--help"]}],
+      "commands": [{"name": "Claude Code CLI for Cloud implementation", "argv": ["claude", "--version"]}, {"name": "Python PTY helper for official CLI retrieval", "argv": ["python3", "--version"]}, {"name": "Codex CLI for Sol UI verification and Astra analysis", "argv": ["codex", "exec", "--help"]}],
       "authentication": [{"name": "Claude Code login", "argv": ["claude", "auth", "status"]}, {"name": "Codex CLI login", "argv": ["codex", "login", "status"]}],
       "designation": {"root": "claude", "files": ["CLAUDE.md"]},
       "session": "Start a new Claude Code session after subagent updates; current-session discovery cannot be verified by this installer."
@@ -42,6 +42,7 @@
     {"component": "ui-browser", "profiles": ["codex", "claude"], "root": "browser", "source": "skills/plan-and-subagent/scripts/opencode-ui-browser/src", "target": "src"}
   ],
   "retired": [
+    {"component": "claude", "root": "claude", "target": "agents/claude-ui-ux-reviewer.md"},
     {"component": "environment", "root": "environment", "target": "plan-and-subagent.md"},
     {"component": "environment", "root": "environment", "target": "plan-and-subagent"},
     {"component": "environment", "root": "environment", "target": "plan-and-subagent/agents/luna_ui_verifier.toml"},

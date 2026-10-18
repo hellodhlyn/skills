@@ -21,9 +21,11 @@ the project's own procedure, as described under
 State in the role's prompt that it is a local test session for the declared
 local origin, not a production credential, and delete it when the run ends.
 
-Pass the request's absolute path in the role's prompt. The role calls
+Pass the request's absolute path in the role's prompt. For a Codex CLI reviewer,
+also pass it through `--browser-request` as described in
+[Codex independent analysis](../hosts/codex-review.md). The role calls
 `load_request` before any other browser action, whether it runs as a native
-Claude Code subagent or through the Claude runner. The artifact directory must
+Claude Code subagent, through the Claude runner, or through the Codex runner. The artifact directory must
 be inside the request file's directory, and the server refuses a second request
 in the same run.
 
