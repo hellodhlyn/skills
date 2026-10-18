@@ -23,11 +23,6 @@ Bash tool, as described below and in [OpenCode execution](opencode.md).
 
 ## External Codex implementer
 
-For a profile binding implementation to a Cloud transport subagent, use
-[Cloud implementation](claude-cloud.md) instead of this section. The Agent call
-runs the transport coordinator locally; the retained Cloud session runs the
-implementation. The coordinator returns evidence to the primary at each gate.
-
 Use `../../scripts/run-codex-exec.sh` when the profile binds the implementer to
 the Codex CLI. The profile supplies the model, effort, and instruction file.
 Create a fresh `reviews/implementer/run-N/` directory for every invocation and
@@ -109,6 +104,10 @@ drift signals: in its `events.jsonl`, how many read-like commands it ran against
 file changes since the last check and whether it keeps reading the same paths,
 and in the worktree, the latest modification time of task files. If work is
 still running without drift, start another heartbeat without writing any
-user-facing text. Stop the pending heartbeat once no
+user-facing text. If drift persists, restart the implementer as the skill's
+drift rule describes, within the profile's `automatic restarts: N`: stop its
+runner, start a fresh session of the same role (a new `start` with a fresh run
+directory for an external runner), and record the signals and restart in the
+journal, before presenting the choice to the user. Stop the pending heartbeat once no
 delegation is active. A heartbeat never establishes a hang; only a runner's
 stall exit or a reported failure does.

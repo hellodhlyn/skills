@@ -41,8 +41,9 @@ local-only work, record content identities instead and do not require a commit.
 - Follow repository commit conventions. For `LINEAR_REF`, keep the exact
   identifier in milestone subjects unless an explicit format conflicts;
   record the exception. Do not amend earlier commits merely to add it.
-- Apply identity and signing settings per command/session only:
-  `git -c user.name=seq030 -c user.email=218389549+seq030@users.noreply.github.com -c commit.gpgsign=false`.
+- Apply the identity and signing settings from the user's environment
+  instructions per command/session only (for example `git -c user.name=<name> -c user.email=<email>
+  -c commit.gpgsign=false`).
   Do not modify local Git configuration. Record each commit hash and scope.
 
 ## GitHub pull request

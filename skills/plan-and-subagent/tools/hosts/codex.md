@@ -74,3 +74,11 @@ workflow. Before a final response, confirm that no required delegation remains
 running unless an explicit user stop or an unresolved blocker requires ending.
 Apply the skill's communication rule while waiting; a progress message never
 substitutes for the next wait call.
+
+At each wait checkpoint, check the skill's drift signals in the runner's event
+log or the agent's reported activity and in the worktree. When drift persists,
+restart the implementer as the skill's drift rule describes, within the profile's
+`automatic restarts: N`: close the agent, spawn a fresh agent of the same role with
+the approved brief, scope packet, current worktree state, and remaining
+conditions, and record the signals and restart in the journal, before presenting
+the choice to the user.

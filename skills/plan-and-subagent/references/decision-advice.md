@@ -12,11 +12,16 @@ multiple viable alternatives. Also use it when decisive assumptions remain
 uncertain or the user asks for a second opinion. Routine changes following a
 verified existing pattern need no advisory call.
 
-The profile binds a frontier-capable advisor and its execution procedure. Resolve
-that capability before dependent decisions; unavailable required advice is a
-specific blocker, not permission to substitute a cheaper model or skip advice.
-Advice informs a decision; it never grants implementation or external-action
-approval. Material choices still belong to the user.
+The profile binds a frontier-capable advisor and its execution procedure, and
+declares an ordered `## Advisor fallback chain` with a timeout per entry. Resolve
+that capability before dependent decisions. A failed execution is a non-zero exit,
+an empty or unusable report, or no terminal output within the entry's timeout. On
+a failed execution, move to the next entry without asking, and record the
+substitution, the failure reason, and the entry used in `decisions.md`. Ask the
+user only when the chain is exhausted; do not skip required advice. A substituted
+advisor follows the same first-opinion contract below. Advice informs a decision;
+it never grants implementation or external-action approval. Material choices
+still belong to the user.
 
 ## Independent first opinion
 
@@ -61,5 +66,5 @@ primary's synthesis traceable to evidence and preserve unresolved objections.
 Store reports and execution evidence under `reviews/advice/`; distinguish first
 opinions, critiques, and the final user decision. Record model, effort, code
 state, duration and usage when available. Advice does not consume code-review
-rounds. Evaluate this extra stage on useful decision changes, verified risks,
+rounds, and failed advisor executions do not consume review rounds. Evaluate this extra stage on useful decision changes, verified risks,
 cost and delay; do not count agreement or longer reports as improvements.

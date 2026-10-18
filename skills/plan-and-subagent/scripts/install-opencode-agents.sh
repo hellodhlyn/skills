@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec bash "$script_directory/setup-plan-and-subagent.sh" --apply --component opencode "$@"
+echo "OpenCode agent definitions are local-only files now; this wrapper installs nothing. See skills/plan-and-subagent/references/profile-interface.md."

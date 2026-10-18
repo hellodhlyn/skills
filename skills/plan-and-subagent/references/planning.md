@@ -24,8 +24,8 @@ save length makes the record unusable.
 
 ```text
 SESSION_DIR/
-  session.md                 # profile/settings sources, workdir, baseline/code state, issue context, pre-existing paths, creation time
-  status.json                # optional schema 1 checkpoint for the local session dashboard
+  session.md                 # profile/settings sources, effective language rule and display method, workdir, baseline/code state, issue context, pre-existing paths, started processes, creation time
+  status.json                # schema 1 checkpoint for the local session dashboard
   original_prompt.md         # user's request verbatim
   approved_brief.md          # latest user-approved brief
   scope.md                   # bounded code map for implementation and review
@@ -51,16 +51,17 @@ SESSION_DIR/
         result.md
         execution.md
         triage.md            # accepted/rejected findings and conclusion
-  final_summary.md
+    completion-gate.json     # completion-gate record, verified before any commit of task code
+  final_summary.md           # mandatory at delivery in every mode
 ```
 
 ### Status file
 
-`status.json` is an optional, machine-readable companion to `session.md` for the
-local session dashboard. It is a derived, read-only display aid; its presence or
-contents are not evidence of user approval, implementation approval, or task
-completion. If it is absent or invalid, the dashboard uses the legacy
-`session.md` view and does not infer a step, waiting state, or completion.
+`status.json` is a machine-readable companion to `session.md` for the local
+session dashboard. Write it at every stage change and at delivery. It is a
+derived, read-only display aid; its presence or contents are not evidence of
+user approval, implementation approval, or task completion. If it is absent or
+invalid, the dashboard uses the legacy `session.md` view and does not infer a step, waiting state, or completion.
 
 Schema 1 requires the following fields:
 
@@ -80,18 +81,25 @@ directory. `startedAt` and `updatedAt` use ISO 8601 timestamps.
 
 Write a complete new value to a temporary file in `SESSION_DIR`, then rename it
 over `status.json` so readers see either the previous or the new checkpoint,
-not a partial JSON document. Update it with the event-based milestones below,
-not for routine waits or tool calls. Keep `session.md` authoritative.
+not a partial JSON document. Besides every stage change and delivery, update it
+at the event-based milestones below, not for routine waits or tool calls. Keep
+`session.md` authoritative.
 
 ## Approval evidence
 
-Step 3 of [the skill](../SKILL.md) defines the mandatory approval gate. Create
-`approved_brief.md` only after it passes; existence is not proof of approval.
+Step 3 of [the skill](../SKILL.md) defines the approval gate and the conditional
+auto-proceed mode. Create `approved_brief.md` only after the gate passes or the
+auto-proceed criteria are met; existence is not proof of approval.
 In `decisions.md`, record the briefing
 message reference (or a precise description when references are unavailable),
 the user's approving response verbatim, and the behavior and execution scope
 it covers. Record their order and preserve the exact displayed document in
 `approved_brief.md`. Keep design-choice answers distinct from implementation approval.
+Under auto-proceed there is no approving response. Record `auto-proceed` in
+`decisions.md` with the profile's `## Auto-proceed policy` as the source, the
+eligibility evidence for each criterion, the brief file, and the time; do not
+describe it as user approval. `approved_brief.md` is still the contract, and a
+later user message that changes it is feedback handled under Step 3.
 For an approval imported through [external handoff](external-handoff.md),
 record in `decisions.md` that the source was an external handoff, the received
 approval wording or equivalent evidence, the verification that the approved
@@ -144,13 +152,14 @@ retroactively describe a skipped action as performed.
 
 Before pausing for user feedback or a long interruption, update `session.md`
 with the current stage, next action, active execution identities, and review
-counters. Update `status.json` in the same checkpoint action when it is in use.
+counters. Update `status.json` in the same checkpoint action.
 Link the latest approval, feedback, and validation records instead of duplicating
 their contents. Record an active execution as running, not failed or complete.
 
-On resumption, reconcile this checkpoint with the latest user messages, actual
-worktree state, and execution status. Reuse the same active execution and retained
-agents; do not launch a duplicate reviewer because its report is still empty.
+On resumption, re-read the effective language rule and display method recorded
+in `session.md`, then reconcile this checkpoint with the latest user messages,
+actual worktree state, and execution status. Reuse the same active execution and
+retained agents; do not launch a duplicate reviewer because its report is still empty.
 Continue from the first unsatisfied gate, carrying forward unaffected evidence.
 A status question does not cancel the task or reset approvals and review budgets.
 When an identity is unavailable, establish whether the prior execution ended
@@ -187,6 +196,9 @@ language to user and project instructions; the example labels are not fixed keys
 - <사용자가 결정한 중요한 동작·UX·도메인 의미>
 - <포함 범위, 보존 대상, 제외 범위>
 
+## 적용된 기본값
+- <결정, 프로필의 기본값 분류, 선택한 옵션, 그 옵션이 권장안인 이유; 적용한 기본값이 없으면 없음>
+
 ## 완료 조건
 - <조건 ID, 관찰 가능한 결과, 확인 방법, 출처(사용자 요청·결정 ID·연결된 요구사항·프로젝트 지침); 승인된 완료 조건은 모두 필수>
 - <이번 변경으로 대체되어 삭제할 코드가 있다면 그 내용>
@@ -199,8 +211,12 @@ language to user and project instructions; the example labels are not fixed keys
 
 ## 검증 및 전달
 - <완료 조건을 증명할 대표 검사와 사용자 결과 확인 필요 여부·이유>
-- <허용된 commit, push, PR, deploy 등 전달 범위>
+- <허용된 commit, push, PR, deploy 등 전달 범위; 프로필의 전달 기본값에 사용자의 제한을 반영한 실제 적용 범위를 명시. merge와 deploy는 기본값으로 포함하지 않음>
 ```
+
+Applied defaults are not user decisions: list them only under the applied-defaults
+section so the user can veto them, and keep user-decided items under the decisions
+section.
 
 Keep repository paths, callers, test candidates, risk seams, and implementation
 mechanics in `scope.md`, and primary-only proposals in `decisions.md`; keep both out of
