@@ -9,7 +9,7 @@ interpret profile text as shell code.
 Use the profile explicitly selected in the current request; otherwise use the
 one designated by applicable agent/project instructions. This skill has no
 built-in personal path or provider default. Do not search unrelated home
-directories or silently select a bundled example.
+directories or guess a profile.
 
 Treat profile settings as personal defaults, subject to higher-priority
 instructions, applicable project rules, and the current user request. A request
@@ -27,14 +27,25 @@ choices needed for the task; continue independent investigation meanwhile.
 The profile is a connection document, not a second workflow definition. Keep
 the pipeline, approval, validation, review budgets, and delivery contracts in
 this skill and its tools/references. Keep native models, providers, permissions,
-role definitions, and explicit start commands in the profile's native settings.
+role definitions, and explicit start commands in the profile and in the user's
+local agent definitions. Profiles, agent definitions, runbooks, and decision
+defaults are local-only files; this repository documents only the interface the
+profile must satisfy, in [Profile interface](profile-interface.md), and never
+contains a model, effort, or provider value.
 
 | Section | Required decisions |
 | --- | --- |
-| Native bindings | Each stage's role, model/provider, permission boundary, and actual harness configuration |
-| Start and status | Explicit profile selection, session start/continuation, and observable completion/status commands |
-| Runtime resources | Installation destinations and profile-specific values passed to shared executors |
-| Knowledge sources | Personal knowledge index and read-only knowledge roots, and how delegated roles obtain read access to them |
+| Native bindings | Each stage's role, model/effort, execution document, and session retention |
+| Advisor fallback chain | Ordered advisor bindings, timeouts, and substitution recording |
+| Decision defaults | Enabled default classes and the local decision-defaults document |
+| Auto-proceed policy | Whether auto-proceed is enabled and its delivery ceiling |
+| Delivery defaults | Default delivery shape for issue-linked and non-linked work |
+| Drift handling | Automatic restarts before asking the user |
+| Project runbooks | Repository root to local runbook, as standing environment authorizations |
+| Visualization and display | Per-host display method |
+| Journal | `SESSION_DIR`, `status.json`, and `final_summary.md` obligations |
+| Language | Reply language rule |
+| Installation targets | Where the skill is installed; what is local-only |
 
 Resolve the required decision advisor, conditional second opinion, designated
 final reviewer, and separate requirements-validation/external-review budgets. Optional
@@ -42,9 +53,9 @@ preliminary review cannot replace the final reviewer. Keep models in profile
 bindings and native invocation settings; the common contracts remain portable.
 
 Knowledge locations are personal environment values. The skill defines only
-how they are passed: project instructions may add or override sources, and the
-primary records the combined `KNOWLEDGE_SOURCES` in `session.md` and in each
-handoff that needs them.
+how they are passed: project instructions or the profile may add or override
+sources, and the primary records the combined `KNOWLEDGE_SOURCES` in
+`session.md` and in each handoff that needs them.
 
 Choose agents by role or definition reference. Keep model and reasoning values in
 native runtime settings rather than duplicating them in prose. Tool-specific

@@ -18,10 +18,13 @@ absolute paths in the brief. If the host cannot attach images, the brief's paths
 remain and the implementer must open them itself. Resend the images only when
 the approved set changes or a new implementer session starts.
 
-Retain the session for corrections. If it becomes unavailable, or the user
-chooses a fresh session after [drift](../SKILL.md#wait-for-delegated-work), use
-the same configured role with the complete brief, scope packet, and current
-state; do not silently substitute a role. For material changes, interrupt only
+Retain the session for corrections. If it becomes unavailable, or after
+[drift](../SKILL.md#wait-for-delegated-work) the primary restarts it within the
+profile's automatic restart budget or the user chooses a fresh session, use the
+same configured role with the complete brief, scope packet, current worktree
+state, and remaining conditions; do not silently substitute a role. A drift
+restart keeps the partial work in the worktree and records the signals and the
+restart in the journal. For material changes, interrupt only
 if continuing would violate the revised contract; otherwise wait for completion.
 Resolve the decision and renewed agreement, then resume with the changed contract.
 Send small contract-preserving corrections to the same session without restarting

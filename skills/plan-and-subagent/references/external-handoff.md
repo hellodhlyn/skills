@@ -129,7 +129,7 @@ The following shape is one possible example, not a mandatory schema:
 repository: owner/repo
 base-ref: main
 base-commit: abcdef123
-planner: ChatGPT GPT-6 Pro
+planner: <external planner name>
 
 ## Approval evidence
 

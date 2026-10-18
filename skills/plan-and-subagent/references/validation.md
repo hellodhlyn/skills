@@ -98,6 +98,17 @@ code, and record both results.
 Use these checks when preparing a UI preview as well as final UI verification;
 preview checks do not replace the feedback gate or start formal review.
 
+Before asking the user about dev servers, ports, remote display, login or test
+accounts, or local services, consult the profile's `## Project runbooks` entry for
+the repository and its `## Visualization and display`. A runbook is a standing
+authorization: the actions it lists proceed without a question, for example
+starting one dev server per task worktree with the listed command, restarting or
+stopping processes the session itself started, and exposing the task port through
+the listed remote method and reverting it afterward. Record the PID, command, and
+port of each started process in `session.md`. Anything the runbook does not list
+keeps the existing authorization rules, and a process the session did not start
+is never stopped without the existing confirmation.
+
 Before diagnosing missing test data or proposing fixtures, confirm the actual
 URL/host and port, selected resource environment, and visible login state and
 account against the project instructions and intended scenario. Do not treat
@@ -176,3 +187,15 @@ a finding. Missing required visual, interaction, runtime, or other evidence bloc
 completion even if tests pass or the reviewer found no defect. Obtain the missing
 evidence within scope, or report partial/blocked with the specific gap. Never
 silently remove a condition or redefine it as optional to pass the gate.
+
+Record the gate mechanically before any commit of task code. Write
+`SESSION_DIR/reviews/completion-gate.json` (schema 1; `node <skill>/scripts/completion-gate.mjs template`
+prints the skeleton) with the approved brief, the baseline and inspected code
+state, the approval mode (`approved` or `auto-proceed`) and its record, the
+passing requirements-validation and external-review rounds with their report
+files, the result-confirmation requirement and record, the delivery scope and
+ceiling, and every completion condition with its `PASS` state. Then run
+`node <skill>/scripts/completion-gate.mjs verify SESSION_DIR`; it must exit 0.
+Paths are relative to `SESSION_DIR`. A commit without a verified gate record is an
+authorization violation. The script checks the record's shape and that the cited
+files exist; it does not replace the evidence review above.

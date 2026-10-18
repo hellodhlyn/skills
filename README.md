@@ -13,21 +13,17 @@ skills/plan-and-subagent/
   tools/hosts/             # Codex, Claude Code (native and CLI), and OpenCode execution procedures
   tools/integrations/      # GitHub, Linear, and UI-browser procedures
   scripts/                 # installer, runners, tests, and UI-browser MCP
-profiles/
-  codex/                   # Codex native implementer
-  claude/                  # Codex CLI implementer instructions for the Claude profile
-  shared/                  # definitions shared by profiles (Claude UI/UX subagents, OpenCode reviewer)
 skills/advisor/            # standalone advisor skill
 runtimes/planagent/        # independent Pi workflow runtime; CLI: planagent / plana
 ```
 
 For `plan-and-subagent`, the common skill owns the pipeline and contracts while
-native role settings belong to the selected profile. The standalone `advisor`
+native role settings belong to the user's local profile. The standalone `advisor`
 skill runs its own fixed Claude Agent SDK configuration.
 
 [Planagent](runtimes/planagent/README.md) is a separate runtime package. Its
 configuration, role definitions, dependencies, and installation are independent
-of `skills/plan-and-subagent/`, the root `profiles/`, and the skill installers.
+of `skills/plan-and-subagent/` and its installer.
 The CLI runs planning, explicit plan approval, scoped implementation, validation,
 independent review, and repair through Pi. It stores progress for status, resume,
 and cancellation, with ChatGPT subscription login for its OpenAI roles.
@@ -37,8 +33,7 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 - GitHub CLI `gh` v2.90.0 or later with `gh skill` support
 - Personal environment installers: Node.js 22.19 or later
 - Planagent runtime: Node.js 24+, Git, and authenticated Pi providers
-- OpenCode CLI for OpenCode-backed roles
-- Claude Code CLI, signed in with `claude auth login`, for the Claude UI/UX roles
+- The agent CLIs that your local profile binds to roles (for example OpenCode or Claude Code), installed and signed in as that profile requires
 - For the `advisor` skill: Node.js 18 or later, a locally installed Claude Agent SDK, Claude Code CLI, and `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` (npm is needed only for global SDK lookup)
 - For the UI browser: pnpm and Playwright Chromium
 - For the `notify-discord-webhook` skill: `bash`, `curl`, and network access to Discord webhooks
@@ -46,67 +41,31 @@ and cancellation, with ChatGPT subscription login for its OpenAI roles.
 No installer mode invokes a paid model, changes credentials, or edits global
 `AGENTS.md`.
 
-## Profiles
+## Profiles are local
 
-### Codex
+Profiles, agent definitions, project runbooks, and decision defaults live on
+your machine, never in this repository. By convention they are under
+`~/.config/agents/profiles/`, `~/.claude/agents/`, `~/.codex/agents/`, and
+`~/.config/opencode/agents/`. The repository documents only the interface a
+profile must satisfy:
+[`profile-interface.md`](skills/plan-and-subagent/references/profile-interface.md).
+No model, effort, or provider value is stored here.
 
-The Codex profile documents GPT-6.1 Sol (`gpt-6.1-sol`) for the primary session and GPT-6
-Luna (`gpt-6-luna`, `xhigh`) for implementation. UI/UX design and briefing mockups
-use the shared Claude designer (Opus 5.5, `high`), run headless through
-`scripts/run-claude-agent.sh`. UI/UX conformance review and browser evidence use
-GPT-6.1 Sol (`gpt-6.1-sol`, `medium`) through `scripts/run-codex-review.mjs`
-with `--browser-request` and the request-scoped `ui-browser` MCP.
-Final independent code review uses GPT-6 Astra (`gpt-6-astra`, `high`) through
-the isolated read-only `scripts/run-codex-review.mjs` runner. The shared OpenCode
-`reviewer` is optional preliminary review and cannot replace the final gate.
-Important architecture and domain choices use a fresh Astra analysis first;
-unresolved consequential questions can receive a second opinion from the
-standalone Claude Agent SDK-backed `advisor` skill followed by bounded cross-critique.
-Definitions are sourced from `profiles/codex/` and `profiles/shared/`. Start a
-new Codex session after changing native role definitions.
-
-### Claude
-
-The Claude profile uses Claude Opus 5.5 (`claude-opus-5-5`) for the primary
-Claude Code session, at `medium` effort by default. Implementation remains on
-Claude Haiku 5.5 (`claude-haiku-5-5`, `high`) in a retained Cloud session,
-managed by the local `claude-cloud-implementer` transport subagent. Cloud usage
-and promotional credit deduction must not be inferred from the launch flags.
-UI/UX design with briefing mockups (`claude-ui-ux-designer`, Opus 5.5 `high`)
-uses a native Claude subagent with its scoped `ui-browser` MCP. UI verification
-uses the same Sol CLI runner and browser request procedure as the Codex profile.
-Architecture advice uses Astra first and Claude advisor conditionally.
-Final independent code review uses the same read-only Astra runner; OpenCode is optional preliminary
-review. Definitions are sourced from
-`profiles/claude/` and `profiles/shared/`. Start a new Claude Code session after changing subagent
-definitions.
-
-## OpenCode agents
-
-The optional preliminary `reviewer` definition (GLM-5.3-flash, `max`; shared by both profiles)
-is installed under `~/.config/opencode/agents/`; the older `~/.opencode/agents/`
-location is reported for migration and is never deleted automatically. The
-independent GLM profile is retired. Its receipt-tracked files are removed by the
-Codex installer when they still match the recorded hashes; locally changed files
-are preserved and reported.
-
-For a complete profile refresh, use the unified setup below. To intentionally
-install only the OpenCode reviewer definition:
-
-```bash
-bash skills/plan-and-subagent/scripts/install-opencode-agents.sh
-opencode agent list
-```
-
-The component wrapper uses the same inventory and receipt as complete setup; it
-does not establish full profile readiness.
+The installer synchronizes the skill and the UI-browser runtime and checks your
+local profile (see below). It never writes, overwrites, or removes the local
+files, and it never edits global `AGENTS.md` or `CLAUDE.md`. Entries that an
+earlier installer recorded for profiles or agent definitions are released to
+local ownership on the next `--apply` and reported as
+`released to local ownership`; the files are left untouched. The
+`install-agent-environment.sh` and `install-opencode-agents.sh` wrappers remain
+only as no-op notices.
 
 ## Plan and subagent environment
 
 `skills/plan-and-subagent` defines workflow responsibilities, approval gates,
-validation, and completion criteria. Profile-specific tools and native settings
-live under `profiles/`; changing a profile does not require duplicating the
-common pipeline or adding a Markdown configuration parser.
+validation, and completion criteria. Your local profile supplies native tools
+and settings; changing it does not require duplicating the common pipeline or
+adding a Markdown configuration parser.
 
 ### Complete setup
 
@@ -128,30 +87,34 @@ Inspect an existing installation without writing managed files:
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
 ```
 
-Use `--profile claude` instead of `--profile codex` for the Claude profile.
-The two profiles can be installed side by side; each run manages only the
-selected profile's files and the shared ones.
+Use `--profile claude` instead of `--profile codex` for the Claude Code host.
+The two hosts can be installed side by side; each run manages only the
+selected host's skill copy and the shared UI-browser runtime.
 
-Complete setup synchronizes the selected skill, profile, native roles/config,
-and UI browser package, then performs the applicable local checks. It
-does not install software or credentials in dry-run/check modes and never invokes
-a paid model.
+Setup synchronizes the selected skill and the UI browser package, then performs
+the applicable local checks. It does not install software or credentials in
+dry-run/check modes and never invokes a paid model.
 
 The shared inventory is
-`skills/plan-and-subagent/scripts/plan-and-subagent-install.json`. Managed
-directories are enumerated from the source; runtime dependencies and generated
-output are outside the inventory. Before writing, setup checks source links,
-destinations, conflicts, and required tools. Unchanged files are retained,
-receipt-matching files update automatically, and other differences are conflicts.
-Inspect them before using `--apply --force`; force cannot bypass invalid paths or
-symlink destinations.
+`skills/plan-and-subagent/scripts/plan-and-subagent-install.json`; it has only
+`skill` and `ui-browser` components. Managed directories are enumerated from the
+source; runtime dependencies and generated output are outside the inventory.
+Before writing, setup checks source links, destinations, conflicts, and required
+tools. Unchanged files are retained, receipt-matching files update
+automatically, and other differences are conflicts. Inspect them before using
+`--apply --force`; force cannot bypass invalid paths or symlink destinations.
 
-Untracked files and obsolete legacy targets are reported and preserved. The one
-retired GLM profile is removed only when each file is receipt-tracked and still
-matches its recorded hash; changed files are preserved and block the apply. The
+Untracked files and obsolete legacy targets are reported and preserved. The
 receipt records completed file hashes at
 `~/.local/share/plan-and-subagent/setup/receipt.json`; if a later runtime stage
 fails, completed writes remain recorded so the same setup can be resumed safely.
+
+The profile check reads the global instruction file for the host
+(`AGENTS.override.md` or `AGENTS.md` under the Codex directory, `CLAUDE.md` under
+the Claude directory), finds the referenced absolute or `~`-prefixed
+`PROFILE.md` path, verifies that the file exists, and verifies that it contains
+every required H2 heading of the profile interface, naming any that are missing.
+It checks existence and headings only, not content or a model call.
 
 Exit codes distinguish outcomes:
 
@@ -159,97 +122,49 @@ Exit codes distinguish outcomes:
 | --- | --- |
 | `0` | Requested checks passed; for dry-run, the plan has no conflicts |
 | `1` | Conflict, installation failure, or failed/unverified technical check |
-| `2` | Files/runtime checks passed, but authentication or profile designation needs user action |
+| `2` | Files/runtime checks passed, but the local profile designation or headings need user action |
 
-Report file synchronization, runtime/browser checks, authentication, and session
-restart separately. An authentication problem does not undo installed files and
+Report file synchronization, runtime/browser checks, the profile check, and
+session restart separately. A profile problem does not undo installed files and
 must not be reported as a fully ready environment.
 
-### Destinations and component entry points
+### Destinations
 
 | Component | Default | Override |
 | --- | --- | --- |
-| Codex skill and roles | `$CODEX_HOME` or `~/.codex` | `PLAN_AND_SUBAGENT_CODEX_DIR` |
-| Claude Code skill and subagents | `$CLAUDE_CONFIG_DIR` or `~/.claude` | `PLAN_AND_SUBAGENT_CLAUDE_DIR` |
-| Profile documents | `~/.config/agents` | `AGENT_ENVIRONMENT_DIR` |
-| OpenCode config | `~/.config/opencode` | `OPENCODE_CONFIG_DIR` |
+| Codex skill | `$CODEX_HOME` or `~/.codex` | `PLAN_AND_SUBAGENT_CODEX_DIR` |
+| Claude Code skill | `$CLAUDE_CONFIG_DIR` or `~/.claude` | `PLAN_AND_SUBAGENT_CLAUDE_DIR` |
 | UI browser runtime | `~/.local/share/plan-and-subagent/opencode-ui-browser` | `PLAN_AND_SUBAGENT_UI_BROWSER_DIR` |
 | Installation receipt | `~/.local/share/plan-and-subagent/setup` | `PLAN_AND_SUBAGENT_SETUP_DIR` |
 
-Use absolute paths and set all six overrides for disposable full-install tests.
-Do not run concurrent installers against the same destinations. The existing
-`install-agent-environment.sh` and `install-opencode-agents.sh` wrappers remain
-component-only entry points over the same engine and inventory.
+Use absolute paths and set the overrides (also `AGENT_ENVIRONMENT_DIR` and
+`OPENCODE_CONFIG_DIR`, which are resolved but never written) for disposable
+full-install tests. Do not run concurrent installers against the same
+destinations.
 
 ### Global instructions and profile switching
 
-The applicable global Codex instruction should designate this profile:
+Designate your local profile in the applicable global instruction file, with an
+absolute or `~`-prefixed path:
 
 ```markdown
-When running plan-and-subagent, read ~/.config/agents/profiles/codex/PROFILE.md
+When running plan-and-subagent, read ~/.config/agents/profiles/<name>/PROFILE.md
 as the personal profile. Apply project instructions and explicit task choices
 over its defaults.
 ```
 
-For the Claude profile, put the same instruction with
-`~/.config/agents/profiles/claude/PROFILE.md` in `~/.claude/CLAUDE.md`. Keep
-Codex and Claude global instructions as separate files, not a symlink, so each
-host designates its own profile.
+Keep Codex and Claude Code global instructions as separate files, not a
+symlink, so each host designates its own profile. This is a human-readable
+instruction, not automatic profile discovery. Neither the instruction nor the
+installer changes an already running session; start a new session after
+changing the skill or native role definitions.
 
-This is a human-readable instruction, not automatic profile discovery. Neither
-the instruction nor the installer changes an already running session; select
-GPT-6.1 Sol in Codex and start a new session after native role/configuration
-changes.
-
-Check each profile explicitly:
+Check each host explicitly:
 
 ```bash
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile codex --check
 bash skills/plan-and-subagent/scripts/setup-plan-and-subagent.sh --profile claude --check
-opencode agent list
-opencode debug config
 ```
-
-To migrate an existing installation, run the Codex dry-run, inspect the planned
-GLM cleanup and any conflicts, then apply. Update the applicable global
-instruction to the `profiles/codex/PROFILE.md` path manually; the installer never
-rewrites that instruction or deletes files from the older `~/.opencode/agents/`
-location.
-
-The Codex profile's earlier UI/UX files (`luna_mockup.toml`, the OpenCode
-`codex-ui-ux` agent, `profiles/codex/opencode.jsonc`, and the OpenCode skill
-copy) are reported as obsolete and preserved. Remove them after inspection.
-The retired `claude-mockup` subagent (`~/.claude/agents/claude-mockup.md`) is
-reported and preserved the same way; the designer now writes briefing mockups.
-
-### Knowledge sources
-
-The Codex profile uses the personal sources in `profiles/shared/KNOWLEDGE.md`
-and passes their roots to the Claude runner with `--read-dir`. The experimental
-Claude profile uses repository instructions and explicit handoffs instead; it
-has no personal knowledge-index or global knowledge-read permission requirement.
-
-### Experimental Claude Cloud implementer
-
-The Claude profile calls the native `claude-cloud-implementer` subagent, which
-uses the official Claude CLI to manage a retained Cloud Haiku 5.5 session.
-The coordinator itself runs locally on Haiku. Implementation stays in Cloud;
-implementation and corrections reuse its session ID. Codex Astra remains
-the independent final reviewer.
-
-Approved code is sent as a disposable source snapshot with one transport-only
-commit. Briefs, mockups, fixtures, and worker instructions are staged but
-uncommitted bundle inputs. Internal deliberation, hidden evaluation data,
-credentials, and original repository history are excluded. The worker returns
-an uncommitted binary patch; the primary verifies it before applying and reviewing
-it. No product commit or push is required for this transport.
-
-See [Cloud execution](skills/plan-and-subagent/tools/hosts/claude-cloud.md) for
-bundle construction, gates, official CLI retrieval, patch integrity, and timing.
-No-remote teleport transcript retrieval is experimental and must be verified;
-Cloud availability and promotional credit deduction are not established by
-installer checks. Changing source does not install this profile in the personal
-environment. An authorized installation still requires dry-run, then apply.
 
 ## Session dashboard
 
@@ -267,10 +182,9 @@ for the optional `status.json` checkpoint format and update rules.
 
 ## UI browser
 
-Both profiles install one local MCP server for browser evidence. Each Claude
-UI/UX role starts its own scoped server and binds the per-run request
-with `load_request`, whether it runs as a native subagent or through the Claude
-runner; the primary session does not receive the browser tools. A request
+Setup installs one local MCP server for browser evidence. Each UI/UX role your
+local profile binds starts its own scoped server and binds the per-run request
+with `load_request`; the primary session does not receive the browser tools. A request
 confines navigation to declared origins (or, for mockups, files under a declared
 root) and condition IDs, records the artifact directory and state change
 authorization, and binds screenshots and audits to the inspected code state. The
@@ -278,15 +192,14 @@ browser server has no model or credential configuration.
 
 ## Standalone advisor
 
-The standalone skill runs the Claude Agent SDK directly, using
-`claude-opus-5-5` at `medium` effort. It uses the SDK already installed in the
+The standalone skill runs the Claude Agent SDK directly with the fixed model
+and effort set in its own configuration. It uses the SDK already installed in the
 local Node environment or selected with `ADVISOR_SDK_PACKAGE_DIR`; it does not
 pin, install, or upgrade the SDK. The resolved version and package path are
 recorded in execution metadata. Generate
 the official subscription OAuth token with `claude setup-token` and provide it
-as `CLAUDE_CODE_OAUTH_TOKEN`. Calls use the Claude Code subscription allowance;
-medium effort is the default compromise for complex advice and usage. API keys
-and OpenCode profile credentials are not used.
+as `CLAUDE_CODE_OAUTH_TOKEN`. Calls use the Claude Code subscription allowance.
+API keys and OpenCode credentials are not used.
 
 Optional personal token-injection instructions belong in
 `${XDG_CONFIG_HOME:-$HOME/.config}/advisor/ENVIRONMENT.md`, independently of
@@ -327,7 +240,7 @@ pnpm --dir skills/plan-and-subagent/scripts/opencode-ui-browser run check
 gh skill publish --dry-run
 ```
 
-These checks do not install the profile into the user's real home or invoke a
+These checks do not install anything into the user's real home or invoke a
 paid model. Full installation tests use disposable destination overrides and
 simulated external commands. `gh skill publish --dry-run` validates skills
 discovered under `skills/*/SKILL.md`.
