@@ -37,6 +37,16 @@ design-system primitives. Reusing primitives does not require copying an
 unsuitable existing composition. Avoid unsupported stylistic preferences without
 suppressing reasoned visual design judgment.
 
+Spend text deliberately. Every label, description, hint, and notice must help the
+user understand, decide, or act on this surface; remove text that restates what
+the layout, an icon, a value, or a control already conveys, that duplicates
+another element, or that explains internal mechanics. Prefer one short label
+over a label with a description, show secondary explanation on demand (tooltip,
+disclosure, help link) rather than inline, and express status and repeated
+attributes through visual encoding where it stays accessible. Count the text
+elements on each screen of the proposal and justify the dense ones. Apply the
+profile's `## UI preferences` when present.
+
 Explain consequential choices and trade-offs, including why a materially different
 alternative is less suitable when one exists. Scale the proposal to the change;
 do not fabricate alternatives, exhaustive state inventories, or extra documents
@@ -46,7 +56,9 @@ resolve the design; a written proposal does not require a new mockup stage.
 
 ## Assess the result against its purpose
 
-Derive observable evaluation criteria from the user purpose and approved scope.
+Derive observable evaluation criteria from the user purpose and approved scope,
+including text economy: flag redundant, explanatory, or duplicated text as a
+purpose defect with the screen evidence.
 Select representative content, situations, and interactions that can establish
 whether the design supports that purpose; do not equate a successful action or
 the absence of errors with good UI/UX. Use rendered evidence for visual judgments

@@ -50,8 +50,10 @@ case "$mode" in
   *) usage ;;
 esac
 
-if ! command -v codex >/dev/null 2>&1; then
-  echo "ERROR: 'codex' CLI not found in PATH." >&2
+# CODEX_BIN pins the CLI when a version manager shim cannot resolve it in the workdir.
+codex_bin=${CODEX_BIN:-codex}
+if ! command -v "$codex_bin" >/dev/null 2>&1; then
+  echo "ERROR: Codex CLI not found: $codex_bin" >&2
   exit 127
 fi
 
@@ -91,11 +93,11 @@ fi
 status=0
 if [ "$mode" = start ]; then
   { cat "$instructions"; printf '\n\n---\n\n'; cat "$prompt_file"; } |
-    codex exec "$@" --json -C "$workdir" -m "$model" -c "model_reasoning_effort=\"$effort\"" \
+    "$codex_bin" exec "$@" --json -C "$workdir" -m "$model" -c "model_reasoning_effort=\"$effort\"" \
       -s workspace-write -o "$run_dir/result.md" - \
       > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" || status=$?
 else
-  (cd "$workdir" && codex exec resume "$@" --json -m "$model" -c "model_reasoning_effort=\"$effort\"" \
+  (cd "$workdir" && "$codex_bin" exec resume "$@" --json -m "$model" -c "model_reasoning_effort=\"$effort\"" \
       -c 'sandbox_mode="workspace-write"' -o "$run_dir/result.md" "$thread_id" - < "$prompt_file") \
     > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" || status=$?
 fi

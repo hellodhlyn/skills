@@ -115,3 +115,21 @@ State where the skill is installed for each host. The profile, agent
 definitions, decision-defaults document, and project runbooks are local-only
 files: the installer synchronizes the skill and the UI-browser runtime and
 checks this profile, and it never writes the local files.
+
+Optional sections, written in the profile as H2 headings with the names below.
+The installer does not check them; a missing section means the behavior it
+configures uses the skill's defaults.
+
+### Orchestration
+
+For [multi-stage orchestration](orchestration.md): the parent's binding, the
+stage-primary routing (the default stage binding and the conditions that move a
+stage to another binding, such as UI direction, security, or cross-system
+design), and the execution document for each. When the primary runs in T3 Code,
+state which roles use the [T3 transport](../tools/hosts/t3-code.md).
+
+### UI preferences
+
+The user's standing visual and copy preferences that every UI/UX design,
+mockup, implementation brief, and UI review applies, such as text density or
+tone. They inform the design; they do not replace product evidence or approval.

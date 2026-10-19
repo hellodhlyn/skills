@@ -23,6 +23,9 @@ Bash tool, as described below and in [OpenCode execution](opencode.md).
 
 ## External Codex implementer
 
+When the profile selects the T3 transport for the implementer and T3 Code tools
+are available, follow [T3 Code execution](t3-code.md) instead of this section.
+
 Use `../../scripts/run-codex-exec.sh` when the profile binds the implementer to
 the Codex CLI. The profile supplies the model, effort, and instruction file.
 Create a fresh `reviews/implementer/run-N/` directory for every invocation and
@@ -95,6 +98,17 @@ message, progress update, or file that is still being written does not prove
 completion. Confirm terminal completion or a reported blocker before accepting
 evidence, and record the identity, model binding, terminal status, and report
 path in the journal. Never fabricate or predict a pending result.
+
+Never run a foreground `sleep`; the host blocks it. To wait for a file or
+process, run one bounded `until` loop in a single Bash call (at most ten
+minutes), or use Monitor.
+
+A delegated primary under [multi-stage orchestration](../../references/orchestration.md)
+must not end its turn while delegated work runs, because its parent receives the
+turn end as the stage result and later background notifications do not reach
+the parent. Start native subagents with `run_in_background: false`, and wait for
+background runners in the same turn with bounded `until` loops on their
+`exit-code` file. The heartbeat below applies only to a top-level primary.
 
 While delegated work runs, keep a silent heartbeat so the primary's prompt
 cache does not expire during long waits: start `sleep 1800` as a background

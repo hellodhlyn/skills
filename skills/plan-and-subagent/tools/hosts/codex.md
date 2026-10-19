@@ -69,6 +69,10 @@ finished; the returned command may still have an active `session_id`.
 Missing terminal metadata calls for recovering the execution state, not declaring
 the runner failed or reading a partial result as complete.
 
+A delegated primary under [multi-stage orchestration](../../references/orchestration.md)
+ends a turn only with one of its gate reports; the parent receives every turn
+end as the stage result.
+
 After terminal completion, read the full result and continue the authorized
 workflow. Before a final response, confirm that no required delegation remains
 running unless an explicit user stop or an unresolved blocker requires ending.

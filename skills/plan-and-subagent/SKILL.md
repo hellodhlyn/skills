@@ -58,6 +58,14 @@ user stop, or a concrete blocker that cannot be resolved within authorization.
 Before ending, account for every active delegation; slowness or a wait timeout
 alone does not establish a blocker.
 
+## Orchestrate stages
+
+When the user asks this primary to run several stages through delegated stage
+primaries, or when this primary was started by such a parent, also read
+[multi-stage orchestration](references/orchestration.md). It defines delegated
+approval, the escalations that always reach the user, and how a delegated
+primary ends its turns.
+
 ## Follow the stage contract
 
 Reconcile the [stage checkpoint](references/planning.md#stage-checkpoint) before
@@ -117,7 +125,9 @@ why it is the recommendation. Never default data-model, authorization or
 trust-boundary, domain-semantics, cross-system-contract, or meaning-changing
 user-facing copy decisions; those stay with the user. Blanket autonomy or an
 instruction to decide now and report later does not delegate these
-non-defaultable classes. When advice marks a choice as the user's, present it. A
+non-defaultable classes; only a parent's delegated authority under
+[multi-stage orchestration](references/orchestration.md) answers some of them,
+within its limits. When advice marks a choice as the user's, present it. A
 user veto in any later message is feedback that revises the brief.
 
 Batch the remaining questions: ask all unresolved material choices of a stage in
@@ -203,7 +213,9 @@ implement this complete brief, state that implementation is awaiting approval,
 and end the turn. Do not enter Step 4 or perform implementation-related tool
 calls in the briefing turn.
 Only a subsequent user message explicitly authorizing implementation of that
-displayed brief opens the gate. If the response is ambiguous, clarify and wait.
+displayed brief opens the gate. For a delegated primary, the parent's approval
+under delegated authority ([orchestration](references/orchestration.md)) is that
+message. If the response is ambiguous, clarify and wait.
 
 Match authorization to what the user actually saw and approved. A reply such as
 "proceed with the recommendation" to a design-choice question approves that

@@ -193,3 +193,24 @@ for (const [signal, expected] of [["SIGTERM", 143], ["SIGINT", 130]]) {
     assert.throws(() => process.kill(active.childPid, 0), { code: "ESRCH" });
   });
 }
+
+test("runs the CLI named by CODEX_BIN without resolving codex through PATH", (t) => {
+  const f = fixture(t);
+  const pinned = path.join(f.root, "pinned-codex");
+  fs.renameSync(path.join(f.root, "bin", "codex"), pinned);
+  const child = spawnSync(process.execPath, [runner, f.workdir, f.prompt, f.run, "gpt-6-astra", "high"], {
+    encoding: "utf8", timeout: 10000,
+    env: { ...f.env, REVIEW_TEST_MODE: "success", CODEX_BIN: pinned },
+  });
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(f.run, "execution.json"), "utf8")).codex, pinned);
+});
+
+test("rejects a relative CODEX_BIN", (t) => {
+  const f = fixture(t);
+  const child = spawnSync(process.execPath, [runner, f.workdir, f.prompt, f.run, "gpt-6-astra", "high"], {
+    encoding: "utf8", timeout: 10000, env: { ...f.env, CODEX_BIN: "bin/codex" },
+  });
+  assert.equal(child.status, 2);
+  assert.equal(fs.existsSync(f.run), false);
+});

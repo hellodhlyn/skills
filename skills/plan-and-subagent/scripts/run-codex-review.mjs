@@ -11,6 +11,12 @@ if (!workdir || !promptFile || !runDirectory || !model || !effort
   console.error("Usage: node run-codex-review.mjs <workdir> <prompt-file> <new-run-dir> <model> <effort> [--browser-request <file>]");
   process.exit(2);
 }
+// CODEX_BIN pins the CLI when a version manager shim cannot resolve it in the workdir.
+const codexBin = process.env.CODEX_BIN || "codex";
+if (process.env.CODEX_BIN && !path.isAbsolute(codexBin)) {
+  console.error("ERROR: CODEX_BIN must be an absolute path.");
+  process.exit(2);
+}
 if (!/^[a-zA-Z0-9._/-]+$/.test(model) || !["low", "medium", "high", "xhigh", "max"].includes(effort)) {
   console.error("ERROR: invalid model or reasoning effort.");
   process.exit(2);
@@ -55,7 +61,7 @@ async function main() {
     const config = `{ "ui-browser" = { command = ${JSON.stringify(process.execPath)}, args = [${JSON.stringify(browser.server)}], env = { PLAN_AND_SUBAGENT_UI_BROWSER_REQUEST = ${JSON.stringify(browser.request)} }, enabled_tools = ["load_request", "navigate", "viewport", "act", "capture", "audit"], default_tools_approval_mode = "approve", required = true } }`;
     args.splice(args.length - 1, 0, "-c", `mcp_servers=${config}`, "-c", "features.apps=false");
   }
-  const metadata = { model, effort, cwd, sandbox: "read-only", argv: args,
+  const metadata = { model, effort, cwd, sandbox: "read-only", codex: codexBin, argv: args,
     ...(browser ? { browser } : {}),
     startedAt: new Date().toISOString(), status: "running" };
   const save = () => writeFileSync(path.join(run, "execution.json"), `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
@@ -67,7 +73,7 @@ async function main() {
   let interrupted;
   const outcome = await new Promise((resolve) => {
     const grouped = process.platform !== "win32";
-    const child = spawn("codex", args, { cwd, detached: grouped, stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(codexBin, args, { cwd, detached: grouped, stdio: ["pipe", "pipe", "pipe"] });
     Object.assign(metadata, { runnerPid: process.pid, childPid: child.pid ?? null });
     save();
     let killTimer;
