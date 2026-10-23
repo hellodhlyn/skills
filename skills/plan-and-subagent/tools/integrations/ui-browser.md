@@ -1,7 +1,7 @@
 # UI browser evidence
 
-Use this procedure for UI checks when rendered or interaction evidence is
-required. Only the roles the selected profile grants the local `ui-browser`
+Use this procedure when the selected execution route uses the scoped `ui-browser`
+MCP for rendered or interaction evidence. Only the roles the selected profile grants the local `ui-browser`
 MCP may use it. The UI/UX role collects evidence and evaluates user-purpose
 support in the same context; it may not edit product code or decide an
 unresolved material product meaning.
@@ -44,6 +44,7 @@ takes the state's `url`, `viewport`, ordered `actions`, and `audit: true`, inste
 of separate navigate, viewport, act, capture, and audit calls. The accessibility
 snapshot is saved beside the screenshot and returned inline only with
 `accessibility: "inline"`; read the file when a judgment needs it. `components:
-true` returns the visible `data-component` marks. Pass `includeImage: false` for
+true` returns the visible `data-component` marks; require it for visual-reference
+captures. Pass `includeImage: false` for
 a capture whose image the agent will not judge in this run. The agent report must still distinguish observed evidence,
 contract conformance, and user-purpose support.

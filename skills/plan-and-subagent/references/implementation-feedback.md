@@ -39,7 +39,12 @@ scenario checks through [delegated UI execution](ui-execution.md). The primary
 checks the resulting evidence against the brief without routinely repeating
 browser execution. That preview includes the reference fidelity and
 preservation checks in [implemented UI verification](ui-execution.md#implemented-ui-verification).
-Fix a known reference deviation before presenting. When a reference state or
+Before presenting, reconcile the preview's assigned cases, missing states, and
+remaining deviations with the brief. Fix a known reference deviation before
+presenting; do not label a result passing while carrying an unapproved visible
+difference as "minor". If resolving it needs a material decision, report that
+decision with concrete evidence instead of asking the user to accept completion.
+When a reference state or
 preserved surface remains `UNVERIFIED`, say so first when presenting; never
 imply it matches. This does not start formal review or broad validation. For UI
 work, show the actual screen and relevant interactions with a usable
@@ -72,9 +77,13 @@ correction ticket (below), check the affected behavior, and show the updated res
 
 ### Route visual corrections
 
-Send each UI correction as a ticket: the user's words verbatim, the target
-element and surface, the allowed change, and what must stay unchanged. Do not
-paraphrase the request in place of the original wording.
+Batch related UI corrections into one ticket: the user's words verbatim, target
+elements and surfaces, allowed changes, and what must stay unchanged. Include
+the current phase, pending confirmation scope, and permitted checks in every
+ticket. During visual iteration, use affected visual/interaction checks and only
+necessary runtime diagnostics; do not append lint, typecheck, or broad suites by
+habit, or add tests that merely assert a styling class. The same implementer
+handles the ticket. Do not paraphrase the request in place of the original wording.
 
 The primary may fill in the allowed change itself only when the user stated the
 exact value, copy, or removal (for example `gap-x-2` to `gap-x-1`, or deleting a

@@ -32,6 +32,9 @@ Returning to user feedback does not reset either review counter. At a limit,
 proceed if that review has passed; otherwise report partial/blocked with unresolved
 findings or evidence. Do not exceed a review budget or use unlimited implementation
 iterations to bypass a review limit.
+An explicitly authorized extension records its approver, scope, and additional
+rounds separately; preserve the rounds already used. A new feedback label or
+inventory run does not erase a formal review execution.
 
 ## Completion evidence
 
@@ -93,21 +96,24 @@ sessions may run the same suite concurrently. When a timing-sensitive test fails
 under that load, rerun it without the concurrent load before diagnosing the
 code, and record both results.
 
+Before an expensive or long-running evaluation, use a small representative pilot
+within the authorized budget to estimate duration, timeout rate, and cost. Report
+those observations before scaling up or requesting a rerun; update the remaining
+budget and expected duration rather than repeating the original estimate. If the
+pilot shows the agreed evaluation is infeasible within its limits, resolve that
+gap before the full run. A pilot does not replace the required final evaluation.
+Record an explicit user stop as a user stop, preserving partial results and
+unmet conditions rather than calling it an agent failure or a passed gate.
+
 ## Environment and user scenarios
 
 Use these checks when preparing a UI preview as well as final UI verification;
 preview checks do not replace the feedback gate or start formal review.
 
-Before asking the user about dev servers, ports, remote display, login or test
-accounts, or local services, consult the profile's `## Project runbooks` entry for
-the repository and its `## Visualization and display`. A runbook is a standing
-authorization: the actions it lists proceed without a question, for example
-starting one dev server per task worktree with the listed command, restarting or
-stopping processes the session itself started, and exposing the task port through
-the listed remote method and reverting it afterward. Record the PID, command, and
-port of each started process in `session.md`. Anything the runbook does not list
-keeps the existing authorization rules, and a process the session did not start
-is never stopped without the existing confirmation.
+Use the project runbook, display method, and process-ownership rules resolved in
+[Step 1](../SKILL.md#1-resolve-the-environment-and-establish-the-task) before asking
+for environment details or starting browser checks. These checks grant no
+additional authority to change services, logins, or other sessions' processes.
 
 Before diagnosing missing test data or proposing fixtures, confirm the actual
 URL/host and port, selected resource environment, and visible login state and

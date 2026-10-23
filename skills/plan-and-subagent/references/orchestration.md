@@ -12,8 +12,8 @@ reports.
 
 ## Parent
 
-Delegate one stage primary per stage through the host's orchestration
-capability (for T3 Code, [T3 Code execution](../tools/hosts/t3-code.md)). Choose
+Delegate one stage primary per stage through the selected host's orchestration
+capability. Choose
 each stage's model from the profile's `## Orchestration` routing; record the
 choice and its reason in the parent journal. Give each stage a separate
 checkout. Tell it: its stage scope and requirement source, the relevant
@@ -24,9 +24,11 @@ The parent does not implement stage work. It may make a trivial fix itself only
 when that is faster than a round trip and the user's instructions allow it;
 record each such fix.
 
-Keep one parent journal with every stage's identity, model, state, open gate,
-and pull request. After context compaction, resume from that journal instead of
-re-reading skill references.
+Keep one parent journal with every stage's identity, model, worktree, owning
+primary, active executions, open gate, and pull request. Only one stage primary
+may direct writes in a stage's checkout. A replacement must reconcile and stop
+the previous owner's active work before taking over. After context compaction,
+resume from that journal instead of re-reading skill references.
 
 ### Delegated approval
 
@@ -67,7 +69,9 @@ A veto is feedback that revises the affected stage.
 
 Read each stage's report when the host notifies completion; do not poll a stage
 that has not reported. A stage report that only describes progress is not a
-gate: send it back with an instruction to continue in the same turn.
+gate. If the host explicitly tracks nested work and delivers its eventual result,
+leave that work pending; otherwise direct the stage to continue through the host's
+wait procedure. Never start a duplicate stage to obtain a missing report.
 
 Before merging a stage's pull request, verify the stage's completion gate
 record, its independent review result, and the pull request's required checks.
@@ -80,14 +84,15 @@ The parent is the user for this stage's gates only within the parent's
 delegated authority above. Questions outside it go to the parent marked
 `USER_DECISION`, and the parent relays them.
 
-Treat the end of every turn as a report to the parent. The parent's host treats
-it as the stage's result. Therefore:
+Distinguish a pending execution from a stage report using the selected host's
+completion procedure:
 
-- Never end a turn while work you delegated is still running. Wait for it in the
-  same turn with the host's blocking wait (see the host execution document).
-  Background completion notifications that would start a later turn do not reach
-  the parent.
-- End a turn only with one of these reports, as the first line:
+- When the host tracks nested work and resumes the stage on completion, record
+  its identities and next action before yielding. Do not label that wait a gate,
+  blocker, or completed stage.
+- Otherwise wait for delegated work in the same turn; a later background
+  notification must not be assumed to reach the parent.
+- Once the stage reaches a gate or terminal outcome, report it as the first line:
   `GATE: brief-approval`, `GATE: decision`, `GATE: merge-ready`,
   `BLOCKED`, or `DONE`.
 - Under `GATE: brief-approval`, present the complete brief as Step 3 requires.

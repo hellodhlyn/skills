@@ -1,104 +1,158 @@
 # T3 Code execution
 
-Read when the primary runs inside T3 Code (its `t3-code` MCP tools, such as
-`delegate_task`, are available) and the profile selects the T3 transport for a
-role. This file adds to the primary's host document (`claude-code.md` or
-`codex.md`) and replaces only its external implementer runner. Tool names may
-carry a host prefix such as `mcp__t3-code__`; the semantics are the same.
+Read when the primary runs inside T3 Code. This adapter owns role routing,
+workspace binding, and task lifecycle in that environment, overriding the
+underlying Codex/Claude host's transport and waiting instructions. It does not
+change the workflow's gates or the local profile's models, effort, role
+instructions, and permission requirements. Outside T3, use the normal host
+procedure. Tool names may carry an MCP prefix; use their live contracts.
 
-## Implementer
+## Resolve roles once
 
-Start the implementer with `delegate_task`:
+Discover `orchestrator_capabilities` and resolve the profile's bindings against
+its live provider/model catalog. Search the catalog when a requested model is
+not in the short list. Put supported model options in `target.options`, not just
+in the prompt, and verify the returned provider, model, and options. Report a
+capability mismatch rather than substituting a model or effort.
 
-- `target`: the provider, model, and effort the profile binds to the
-  implementer, chosen from `orchestrator_capabilities`.
-- `runtimeMode: "auto"`. On Codex this runs the `workspace-write` sandbox with
-  automatic review of escalation requests. Never request `full-access` for an
-  implementer.
-- `role: "implementation"`, `mode: "wait"`, and a `clientRequestId` that is
-  stable across retries of the same start, such as `<session-slug>-impl-<n>`.
-- `isolation`: `shared` when this primary's thread is already bound to the task
-  worktree (check with `t3_worktree_status`). Otherwise `worktree`: T3 creates a
-  checkout from this primary's current local commit, runs project setup, and
-  names the branch itself. Adopt that checkout as the task worktree. Uncommitted
-  edits are not copied. Before delivery, rename the branch to the profile's
-  branch convention with `git -C <worktree> branch -m <name>`.
+Use these routes consistently for the task:
 
-Write the task as: the profile's implementer instruction file, then the approved
-brief, the scope packet, and these lines:
+| Role | Execution route |
+| --- | --- |
+| Implementer, stage primary | T3-owned `delegate_task` |
+| Designer, mockup author, researcher | T3-owned `delegate_task` when the role's required tools and write scope can be preserved |
+| Independent code reviewer, decision advisor, UI verifier | The profile's read-only CLI runner; UI verification keeps its scoped browser MCP |
 
-- Report the absolute worktree path and branch as the first line of every report.
-- Do not call `delegate_task`, `create_threads`, `t3_thread_*`, or any other
-  agent-orchestration tool, and do not spawn subagents.
-- When the brief lists visual references, open each listed image file with the
-  image-viewing tool and confirm in the report that every image was viewed.
+T3's review role label and a no-edit prompt do not establish a read-only sandbox.
+Keep the CLI exception while the live host cannot enforce that boundary; do not
+wrap the reviewer in another T3 agent merely to make it appear in the tree. If
+another role requires enforcement or tools T3 cannot supply, record the concrete
+exception and use its configured compatible procedure. Do not silently weaken
+isolation or recreate a native role's tool restrictions from its name.
 
-Record `taskId`, `childThreadId` (this is `IMPLEMENTER`), the model binding, and
-the worktree path in the journal.
+Within this adapter, feasible roles are explicitly T3-owned children even when
+a provider also has a native subagent tool. Do not alternate those tools by
+provider. Read the profile's role instruction file and supply its applicable
+instructions and bounded context; a role name alone does not load a local agent
+definition. Keep model/provider values in the local profile, not this document.
 
-### Waiting and drift
+Use ordinary `t3_thread_launch` or `create_threads` only when the user explicitly
+requests a separate top-level conversation, never as a substitute for a child
+or stage. For an authorized separate thread, select its workspace in the launch
+call; a prompt that says `cd` does not bind the thread. Record its source thread
+and continuation relation in the journal.
 
-`mode: "wait"` returns on completion, a pending question, or its timeout.
-On `waitTimedOut`, keep waiting in the same turn with `t3_thread_wait` on
-`childThreadId` using the longest timeout the host accepts, then read the result
-with `task_status`. Do not poll with shell commands.
+## Bind the workspace and owner
 
-Each wait return is a drift checkpoint. Read the recent activity with
-`t3_thread_read` (`view: "activity"`) and apply the skill's drift signals to it
-and the worktree. A drift restart is `task_cancel` followed by a new
-`delegate_task` with a fresh `clientRequestId`, the approved brief, the scope
-packet, and the current worktree state.
+Check `t3_worktree_status` before delegating implementation. Use `isolation:
+"shared"` only when this primary is already bound to the task worktree;
+otherwise use `isolation: "worktree"` and adopt the checkout T3 prepares from
+the parent's local commit. Uncommitted parent edits are not copied: dependent
+stage work must have its prerequisite code available before starting.
 
-When `hasPendingQuestion` is true, read it with `t3_pending_request_list` and
-`t3_pending_request_read`. Answer within the approved contract with
-`t3_pending_request_respond`; treat anything else as a deviation report.
+The child confirms its absolute worktree path and branch before editing. Resolve
+that binding in the journal and scope packet; do not tell the child to create a
+second checkout to match a planned path or branch name. Rename a generated branch
+to the project's convention at delivery while executions are idle. Never move
+an active writer's checkout. A primary workspace move uses `t3_worktree_handoff`
+only when permitted by its current binding; that operation moves the caller,
+not an existing child, and its continuation resumes the task after the turn ends.
 
-A denied escalation that blocks a required check is reported by the
-implementer as a failure; the primary runs that check itself and records the
-evidence. It does not widen the implementer's runtime mode.
+Record one owning primary and one active product writer per task worktree.
+Stage primaries get separate checkouts. A resumed or replacement primary first
+reconciles the recorded owner, active/queued work, and actual worktree; it must
+not start a competing writer.
 
-### Corrections
+## Start and continue child work
 
-Send corrections, the revised contract after a deviation, and accepted review
-findings to the same implementer with `t3_thread_send` on `childThreadId`
-(`mode: "queue"`, a new `clientRequestId` per message). It returns a new
-`taskId`; wait for it as above. Start a new `delegate_task` only when the role
-must be replaced.
+Use `delegate_task` with the resolved `target`, the appropriate `role`, and a
+`clientRequestId` stable across retries of that start. Prefer `mode: "async"`
+for long work. Preserve the profile's permissions: implementation uses
+`runtimeMode: "auto"`, never `full-access`; a denied required check goes to the
+primary under its existing authorization, not a wider implementer mode.
 
-## Read-only roles
+Supply the role instructions, approved brief when applicable, scope packet,
+effective language rule, current phase and permitted checks, and artifact or
+product ownership in one self-contained handoff. Non-primary roles must not
+spawn agents or call agent-orchestration tools. Require implementers to view
+all approved reference images when images cannot be attached directly.
 
-Final code review, decision advice, and UI verification keep their runners
-([Codex independent analysis](codex-review.md)). T3 runtime modes do not provide
-a read-only sandbox, so never start these roles with `delegate_task`. Native
-Claude subagents (such as the UI/UX designer) stay native.
+Record the returned `taskId`, `childThreadId`, model/options, worktree, role, and
+purpose. Retain the implementer and designer identity for in-scope corrections.
+Send those follow-ups with `t3_thread_send` to `childThreadId`, `mode: "queue"`,
+and a new `clientRequestId` per message. Retain the returned follow-up `taskId`:
+its result is distinct from the original completed task's result. An in-flight
+steer may join the current task; inspect the returned identity instead of
+inventing a new one.
 
-## Pull requests
+Independent review always starts a fresh CLI context through its runner, with
+the relevant prior findings for a recheck.
 
-Call `link_pull_request` for every pull request the task creates. A top-level
-primary watches required checks with `watch_pull_request` instead of polling
-and calls `unwatch_pull_request` before handing the work back. A delegated
-primary cannot watch; it reports `GATE: merge-ready` and the parent watches.
+## Completion, questions, and recovery
+
+Async completion wakes the parent. Continue independent work or checkpoint and
+end the turn to await that notification; do not poll, start a watcher, or force
+same-turn blocking waits. Use `task_status` when a result is needed mid-turn or
+state is ambiguous. A `mode: "wait"` timeout leaves the task alive; retain its
+ID and follow the same completion procedure. Do not duplicate the task.
+
+`workState: "waiting_for_children"` is pending nested work, not a stage result.
+Before accepting completion, distinguish the task result, later pending child
+runs, and the latest terminal run. A terminal original task can still have
+`hasPendingChildRuns`. Judge workflow gates from the report, not a thread's
+status alone; an unstarted notification run can be cancelled after a valid report.
+
+For a pending question, read the fresh request with `t3_pending_request_list`
+and `t3_pending_request_read`, then answer within existing authority with
+`t3_pending_request_respond` or relay it to the user. A pending approval grants
+no authority to approve it; read it and preserve its existing approval holder.
+
+A lost response, auth failure, or resume error is not proof that work stopped.
+Retry an idempotent start/send with its original `clientRequestId`, or recover
+the existing child through `t3_thread_list` (including subagents) and its activity.
+Do not create a new task just because the response was lost. Missing tools may
+be lazily exposed: make one bounded capability call before declaring T3 absent;
+use the host-documented ACP transport when applicable, not a new CLI implementer.
+
+Before a drift restart or runtime replacement, call `task_cancel` on the owned
+work and confirm termination, including later queued/running turns. Inspect the
+relevant activity and current worktree, preserve partial edits, and only then
+start the replacement with the current contract. If ownership or termination
+cannot be established, block dependent writes and report the precise gap;
+never launch a competing writer or widen permissions to recover connectivity.
 
 ## Stage orchestration
 
-A parent under [multi-stage orchestration](../../references/orchestration.md)
-starts each stage primary with `delegate_task`: the target from the profile's
-`## Orchestration` routing, `isolation: "worktree"`, `mode: "async"`, and a
-`clientRequestId` such as `<epic>-stage-<id>-<n>`. Never use `t3_thread_launch`
-or `create_threads` for stages.
+Follow [multi-stage orchestration](../../references/orchestration.md). Start each
+stage primary with `delegate_task`, the profile's orchestration binding,
+`isolation: "worktree"`, `mode: "async"`, and its own stable request ID. The
+stage may itself yield with nested work pending; the parent waits for its gate
+report through T3's completion mechanism. Send authorized gate decisions to the
+same stage with `t3_thread_send` and track its returned task ID. Parent authority
+and user-only decisions remain exactly as the common contract defines.
 
-The completion notification wakes the parent; then read the stage report with
-`task_status`. `workState: "waiting_for_children"` means the stage turn ended
-with nested work still running; it is not a stage result. Judge a stage by its
-report, not its thread status: when a child finishes while the stage waits in
-the same turn, T3 may queue a wake-up run on the stage thread that is cancelled
-unstarted, so the thread shows `cancelled` after a valid gate report. Answer a gate with
-`t3_thread_send` on the stage's `childThreadId` and a new `clientRequestId`.
-If a send fails with a transport error, retry it with the same
-`clientRequestId`.
+## Browser, display, and delivery
 
-## Display
+For T3 designers and primary browser work, use the collaborative browser:
+`preview_status`, then `preview_open` if no usable tab is attached. Each executor
+uses its own tab and records/passes its `tabId`; do not operate another agent's
+or a human-controlled tab. Translate the UI handoff's phase, states, viewports,
+artifact ownership, and permitted interactions into the native tools. A native
+browser does not grant permission for additional state changes or logins.
+Pass this execution document with the designer's handoff. Read its browser
+request as the scenario contract; do not call the scoped MCP's `load_request`
+on this native route. Inspect rendered `data-component` marks for reference
+component maps when the native capture does not return them.
 
-Use the profile's `## Visualization and display` methods. To check a served page
-yourself, use `preview_open` with `open: false` and `preview_snapshot` with
-`save: true`, then close the tab with `t3_preview_close`.
+Use `html_preview` then `html_render` for self-contained in-conversation visuals.
+For served interactive mockups or product pages, use the authorized preview
+server and save needed reference screenshots with `preview_snapshot` (`save:
+true`). Close only owned tabs with `t3_preview_close`. Follow the live host's
+browser recovery rules for unsupported tools or repeated failures. Independent
+UI verification remains with the read-only CLI and scoped browser request, not
+a second primary browser pass.
+
+Use `link_pull_request` for every PR created or worked on by the task. The parent
+watches required checks with `watch_pull_request` and stops watching with
+`unwatch_pull_request` when handing work back; delegated primaries return their
+PRs, head SHA, gate, and pending checks to that parent instead of watching.

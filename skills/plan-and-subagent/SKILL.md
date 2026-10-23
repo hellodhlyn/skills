@@ -20,17 +20,22 @@ workflow. Read references and tool procedures only at the indicated stage.
 
 ## Wait for delegated work
 
-Wait for each internal subagent or external runner's terminal result, repeating
-bounded waits as needed. Slowness, silence, and partial output are not hangs.
+Obtain each delegated agent or external runner's terminal result through the
+selected host's completion procedure. Use bounded waits for blocking runners;
+when the host tracks pending child work and delivers completion to this task,
+record the pending work and yield to that notification instead of polling or
+starting a watcher. Yielding is not task completion or a user-input gate.
+Slowness, silence, and partial output are not hangs.
 Interrupt only for a confirmed hang, blocking failure, explicit cancellation,
 a drift restart or a drift response the user chose, or work that would violate
 the approved contract; record why before restarting.
 Do not announce elapsed time or routine status checks. Report material findings,
 blockers, decisions needed, and completed results; answer status requests briefly.
-An unchanged wait result calls for another wait, not a progress paragraph or a
-final response. Do not repeatedly describe what you will verify after completion.
+An unchanged wait result calls for continued waiting through that procedure,
+not a progress paragraph or a completion claim. Do not repeatedly describe what
+you will verify after completion.
 If higher-priority host instructions require periodic updates, keep each to one
-short sentence at the required cadence and continue waiting in the same turn.
+short sentence at the required cadence while the turn remains active.
 
 Slowness is not drift. Drift is an agent that keeps running without progress:
 task files unchanged for a long stretch, reads far outnumbering edits, the same
@@ -51,10 +56,11 @@ with these options and wait for the choice:
   within the approved brief; final review then comes from roles that did not
   write those fixes.
 
-Waiting on an agent is not waiting on the user. Keep the turn active while
-required delegated work is running, then proceed to the next authorized stage.
-End the turn only at an applicable user-input gate, completed delivery, explicit
-user stop, or a concrete blocker that cannot be resolved within authorization.
+Waiting on an agent is not waiting on the user. After its terminal result,
+proceed to the next authorized stage without asking the user to continue.
+Apart from a host-managed asynchronous wait, end the turn only at an applicable
+user-input gate, completed delivery, explicit user stop, or a concrete blocker
+that cannot be resolved within authorization.
 Before ending, account for every active delegation; slowness or a wait timeout
 alone does not establish a blocker.
 

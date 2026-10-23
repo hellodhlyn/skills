@@ -22,6 +22,15 @@ cites it; otherwise record the command, exit status, and pass/fail counts.
 Write journal entries as readable sentences: abbreviating or dropping spaces to
 save length makes the record unusable.
 
+Record the owning primary, effective worktree and writer, and each execution's
+role, host task/thread or CLI session identity, and purpose. Keep transport
+retries, implementation corrections, and formal review rounds distinct. For a
+new conversation continuing existing work, record `continuationOf`, the source
+conversation, journal, completed stages, and resume condition; do not invent a
+parent-child relation. Reuse the existing task journal when continuing that task.
+The host/runner owns execution liveness; the journal owns decisions and workflow
+gates. Neither a thread's terminal status nor the display checkpoint proves both.
+
 ```text
 SESSION_DIR/
   session.md                 # profile/settings sources, effective language rule and display method, workdir, baseline/code state, issue context, pre-existing paths, started processes, creation time
@@ -79,11 +88,24 @@ and `focus` (array of `{ path, note? }`). `runDir` and `focus.path` are paths
 relative to `SESSION_DIR`; they must not be absolute or escape the session
 directory. `startedAt` and `updatedAt` use ISO 8601 timestamps.
 
-Write a complete new value to a temporary file in `SESSION_DIR`, then rename it
-over `status.json` so readers see either the previous or the new checkpoint,
-not a partial JSON document. Besides every stage change and delivery, update it
-at the event-based milestones below, not for routine waits or tool calls. Keep
-`session.md` authoritative.
+Prepare a complete schema-1 checkpoint with a current `updatedAt`, then use the
+[status writer](../scripts/write-session-status.mjs):
+
+```bash
+node "$SKILL_ROOT/scripts/write-session-status.mjs" "$SESSION_DIR" "$CHECKPOINT_JSON"
+# Use - instead of the input path to read the JSON from stdin.
+```
+
+The writer validates the same schema as the dashboard before atomically replacing
+`status.json`. It does not merge old optional fields: omit completed `activeRuns`
+and answered `userDecision` entries in the new snapshot. Invalid input leaves the
+previous checkpoint intact. Host tasks without a local run directory belong in
+`session.md`, not a fabricated `activeRuns.runDir`.
+
+Besides every stage change and delivery, update at the event-based milestones
+below, not routine waits or tool calls. Check that the summary and next action
+agree with the latest journal entry; schema validity alone cannot establish that.
+Keep `session.md` authoritative for workflow decisions.
 
 ## Approval evidence
 
@@ -150,20 +172,25 @@ retroactively describe a skipped action as performed.
 
 ## Resume the same task
 
-Before pausing for user feedback or a long interruption, update `session.md`
-with the current stage, next action, active execution identities, and review
-counters. Update `status.json` in the same checkpoint action.
+Before pausing for user feedback, yielding to host-managed child work, or a long
+interruption, update one compact current checkpoint in `session.md`: effective
+reply language and display method, phase and permitted checks, owning primary,
+worktree/writer and active execution identities, open gate, next action, and
+review counters. Update `status.json` in the same checkpoint action.
 Link the latest approval, feedback, and validation records instead of duplicating
 their contents. Record an active execution as running, not failed or complete.
 
-On resumption, re-read the effective language rule and display method recorded
-in `session.md`, then reconcile this checkpoint with the latest user messages,
+On resumption, read this current checkpoint before sending a user-facing update,
+then reconcile it with the latest user messages,
 actual worktree state, and execution status. Reuse the same active execution and
 retained agents; do not launch a duplicate reviewer because its report is still empty.
 Continue from the first unsatisfied gate, carrying forward unaffected evidence.
 A status question does not cancel the task or reset approvals and review budgets.
 When an identity is unavailable, establish whether the prior execution ended
-before replacing it under the selected execution procedure.
+before replacing it under the selected execution procedure. Conflicting primary
+or writer ownership blocks dependent writes until resolved; do not add another
+execution to recover an unknown one. Keep the effective reply language through
+progress and final messages; it does not change code or repository language rules.
 
 ## Scope packet
 

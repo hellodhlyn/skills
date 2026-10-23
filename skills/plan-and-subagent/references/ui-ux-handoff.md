@@ -67,7 +67,8 @@ Primary는 근거를 확인하고 중요한 선택을 사용자에게 요청합�
 목업이 적용되면 제안을 작성한 같은 설계자에게 이어서 보냅니다. 설계자가 목업을 직접
 작성합니다. 설계자의 제안을 primary가 다시 요약하지 않고, 다음만 전달합니다: 적용
 판단과 목업 범위, 렌더링 전에 사용자와 정한 결정, browser request 절대 경로와 쓰기
-디렉터리, [브리핑 목업 지침](ui-ux-mockups.md)과 [UI 실행 위임](ui-execution.md),
+디렉터리, 선택한 환경의 브라우저 실행 문서 경로,
+[브리핑 목업 지침](ui-ux-mockups.md)과 [UI 실행 위임](ui-execution.md),
 profile의 시각화 지침 경로(설계자 정의에 이미 반영돼 있으면 생략). 사용자의 수정
 요청 반영이나 시각 참조 캡처처럼 새 browser request가 필요하면 같은 설계자에게 새
 request와 함께 이 지시를 다시 보냅니다.
@@ -83,10 +84,12 @@ names for it, or NEW where it has a visual form no existing component renders.
 Render alternatives only where supplied, and do not settle an open decision the
 primary has not resolved. Read the supplied guidance paths first.
 
-Call load_request with the supplied browser request before any other browser
-tool, check rendering and the relevant local interactions, and inspect the
-screenshots yourself. For a visual-reference capture, pass components: true and
-return each reference's component map.
+Read the supplied browser request and initialize the browser through the supplied
+environment execution procedure before browser actions. Use that procedure's
+tools to check rendering and the relevant local interactions, and inspect the
+screenshots yourself. For visual-reference captures, return each reference's
+component map from the rendered component marks, using the environment's capture
+support or inspecting the rendered marks directly.
 
 Return:
 ARTIFACTS: mockup and screenshot paths with covered states and viewports, and

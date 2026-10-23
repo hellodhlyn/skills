@@ -4,6 +4,11 @@ Read when the selected profile runs its primary session in Claude Code. The
 profile supplies role names, native subagent definitions, and external runner
 settings.
 
+Inside T3 Code, resolve routes through [T3 Code execution](t3-code.md) first.
+That adapter replaces the native/external start and wait procedures below for
+T3-owned roles, including stage primaries; do not run the heartbeat for those
+tasks. Its read-only runner exceptions remain unchanged.
+
 ## Roles
 
 Native roles are Claude Code subagent definitions installed under the user's
@@ -22,9 +27,6 @@ implementer or an OpenCode reviewer) run through their runner script with the
 Bash tool, as described below and in [OpenCode execution](opencode.md).
 
 ## External Codex implementer
-
-When the profile selects the T3 transport for the implementer and T3 Code tools
-are available, follow [T3 Code execution](t3-code.md) instead of this section.
 
 Use `../../scripts/run-codex-exec.sh` when the profile binds the implementer to
 the Codex CLI. The profile supplies the model, effort, and instruction file.

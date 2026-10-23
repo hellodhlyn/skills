@@ -28,7 +28,9 @@ implementer, UI/UX designer, UI/UX reviewer, final code reviewer, first-opinion
 decision advisor, and conditional second opinion. For each role state the
 model, the effort, the execution document in the installed skill that
 translates the role into tool calls, and the session retention rule (when a
-session is kept for corrections and when a fresh one starts).
+session is kept for corrections and when a fresh one starts). The selected
+execution host may adapt the transport as [environment resolution](environment.md)
+defines, while preserving the binding and its permission requirements.
 
 State separate budgets of five rounds each for requirements validation and for
 external review. An optional preliminary reviewer may be bound, but it cannot
@@ -125,8 +127,8 @@ configures uses the skill's defaults.
 For [multi-stage orchestration](orchestration.md): the parent's binding, the
 stage-primary routing (the default stage binding and the conditions that move a
 stage to another binding, such as UI direction, security, or cross-system
-design), and the execution document for each. When the primary runs in T3 Code,
-state which roles use the [T3 transport](../tools/hosts/t3-code.md).
+design), and the execution document for each. The selected host's adapter resolves
+stage delegation; a profile need not repeat its tool-routing rules.
 
 ### UI preferences
 

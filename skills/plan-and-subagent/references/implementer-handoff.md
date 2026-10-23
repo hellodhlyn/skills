@@ -11,6 +11,13 @@ provides entry points, ownership, direct callers and dependencies, tests, risk
 boundaries, and preserved work. It narrows discovery but does not authorize an
 incorrect change.
 
+Resolve the effective worktree through the selected host before product edits.
+Record the owning primary and active writer with that absolute path and branch.
+The implementer confirms the binding before editing; a planned path in a brief
+does not override the host's actual checkout. Do not create a second checkout or
+move one while an execution retains its working directory. A necessary rebind
+first stops the old execution and updates the host binding and scope packet.
+
 When the brief lists [approved visual references](ui-ux-mockups.md#approved-visual-references),
 attach every listed image to the first implementation message through the
 host's image input, as the environment procedure describes, and keep the
@@ -30,6 +37,13 @@ Resolve the decision and renewed agreement, then resume with the changed contrac
 Send small contract-preserving corrections to the same session without restarting
 planning. Follow the environment's wait procedure, preserve execution metadata,
 and record concise attempt outcomes in the journal.
+
+A lost response, unavailable tool, or resume error does not establish that the
+old writer stopped. Recover its identity and check active and queued work before
+retrying or replacing it. Stop and confirm termination before another writer
+uses the same checkout. If that cannot be established, keep dependent writes
+blocked and continue only independent read-only work; do not widen permissions
+or switch runtimes to bypass the unresolved ownership.
 
 ## Implementation
 

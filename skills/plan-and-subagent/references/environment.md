@@ -33,19 +33,8 @@ defaults are local-only files; this repository documents only the interface the
 profile must satisfy, in [Profile interface](profile-interface.md), and never
 contains a model, effort, or provider value.
 
-| Section | Required decisions |
-| --- | --- |
-| Native bindings | Each stage's role, model/effort, execution document, and session retention |
-| Advisor fallback chain | Ordered advisor bindings, timeouts, and substitution recording |
-| Decision defaults | Enabled default classes and the local decision-defaults document |
-| Auto-proceed policy | Whether auto-proceed is enabled and its delivery ceiling |
-| Delivery defaults | Default delivery shape for issue-linked and non-linked work |
-| Drift handling | Automatic restarts before asking the user |
-| Project runbooks | Repository root to local runbook, as standing environment authorizations |
-| Visualization and display | Per-host display method |
-| Journal | `SESSION_DIR`, `status.json`, and `final_summary.md` obligations |
-| Language | Reply language rule |
-| Installation targets | Where the skill is installed; what is local-only |
+Resolve every required section in that interface and any applicable optional
+section; it is the authoritative list of profile obligations.
 
 Resolve the required decision advisor, conditional second opinion, designated
 final reviewer, and separate requirements-validation/external-review budgets. Optional
@@ -69,6 +58,20 @@ its execution procedure is readable. Defer service access checks until the
 integration applies. Ask only for unresolved required choices. Never silently
 replace a missing tool, downgrade a required review, or treat unavailable
 evidence as passing. Optional integrations that do not apply need no setup.
+
+## Execution host
+
+Resolve the execution host separately from the model provider. When running
+inside T3 Code, read [T3 Code execution](../tools/hosts/t3-code.md) and use it for
+role routing, workspace binding, and task lifecycle; it overrides the underlying
+Codex/Claude host's transport and wait instructions. Outside that host, use the
+profile's normal execution documents. The optional adapter is not a dependency
+of the common workflow.
+
+At setup, record each required role's effective execution route and any capability
+exception. A host adapter changes tool calls, not the profile's chosen model,
+effort, independent context, permissions, or task ownership. Do not switch routes
+mid-task without reconciling the previous execution's state and those constraints.
 
 ## Execution contract
 

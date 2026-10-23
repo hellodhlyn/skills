@@ -3,6 +3,10 @@
 Read when the selected profile runs its primary session in Codex. The profile
 supplies the role names and native definitions.
 
+Inside T3 Code, resolve routes through [T3 Code execution](t3-code.md) first.
+That adapter replaces the native start/continue and wait procedures below for
+T3-owned roles; its read-only runner exceptions remain unchanged.
+
 ## Roles
 
 The profile must identify the implementation and UI/UX roles and their

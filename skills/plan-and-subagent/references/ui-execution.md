@@ -96,6 +96,12 @@ state with real or local test data; a state that cannot be reproduced is
 `UNVERIFIED`, never a match. Fidelity is judged in both preview and final
 verification.
 
+Before implementation, resolve reference precedence and any allowed differences
+in the UI/UX contract. Describe the intended visual outcome and relevant tolerance;
+do not invent a global pixel threshold or treat every font-rasterization or sample
+content difference as a defect. A later change to these criteria updates the
+agreement, not just the reviewer's private checklist.
+
 ### Preservation baseline
 
 When a change can alter page layout, shared components, or the arrangement of
@@ -121,6 +127,11 @@ Preview work checks representative behavior and omissions only. Cover the
 smallest scenario and viewport set that distinguishes the contract; do not repeat
 unchanged cells of a full matrix. It does not start
 formal conformance review, broad validation, or bypass required user feedback.
+Select that set before the first preview, including narrow/wide layouts and
+authenticated data where those change the affected UI. Include contract-relevant
+content extremes such as long labels or quantities rather than only an empty or
+signed-out screen. For each assigned case, report checked, missing, or deviating
+with its evidence; do not claim coverage from a desktop screenshot alone.
 Final verification follows the existing feedback entry gate and review budgets;
 delegation creates no additional review round or new approval gate.
 
